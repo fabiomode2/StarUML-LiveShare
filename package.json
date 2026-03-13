@@ -1,0 +1,23 @@
+{
+  "name": "fabiomode2.liveshare",
+  "title": "LiveShare",
+  "description": "Collaborative StarUML.",
+  "homepage": "https://github.com/staruml/staruml-helloworld",
+  "version": "1.0.0",
+  "keywords": [
+    "liveshare"
+  ],
+  "author": {
+    "name": "fabio",
+    "email": "fabio.mancebo@rai.usc.es",
+    "url": "https://github.com/fabiomode2"
+  },
+  "license": "MIT",
+  "engines": {
+    "staruml": ">=3.0.0"
+  },
+  "dependencies": {
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3"
+  }
+}
