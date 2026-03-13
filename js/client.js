@@ -1,53 +1,86 @@
-// meter aqui el codigo del cliente
+const io = require("socket.io-client");
+const mm_view = require("./mouses_view.js");
+const mm_net = require("./mouses_net.js");
 let socket = null; //cliente
-let adress = "";
+let address = "";
+const CONNECT_TIMEOUT = 500;
 
 function connectToServer(url, name) {
-  console.log("[LiveShare] Trying to connect to:", url);
   conectado = false;
+  try {
+    setTimeout(() => {
+      console.log("[LiveShare] Trying to connect to:", url);
 
-  socket = io(url, {
-    reconnectionAttempts: 3,
-    timeout: 10000,
-    auth: {
-      username: name,
-    },
-  });
+      socket = io(url, {
+        reconnectionAttempts: 3,
+        timeout: 10000,
+        auth: {
+          username: name,
+        },
+      });
 
-  socket.on("connect", () => {
-    console.log("[LiveShare] ¡Socket connected with ID:", socket.id);
-    fachada.INFO("Connected to session!");
-    conectado = true;
-  });
+      // connection
+      socket.on("connect", () => {
+        console.log("[LiveShare] ¡Socket connected with ID:", socket.id);
+        //fachad`a.INFO("Connected to session!");
+        conectado = true;
+      });
 
-  socket.on("connect_error", (err) => {
-    console.error("[LiveShare] Conexion error:", err);
-    fachada.ERR("Conexion error: " + err.message);
-    conectado = false;
-  });
+      //connection error
+      socket.on("connect_error", (err) => {
+        console.error("[LiveShare] Conexion error:", err);
+        fachada.ERR("Conexion error: " + err.message);
+        conectado = false;
+      });
 
-  app.repository.on("operationExecuted", (operation) => {
-    if (socket && socket.connected) {
-      // Si nosotros hicimos un cambio, lo enviamos al servidor
-      // No enviamos si el cambio vino de la red (bypassConfirmation)
-      socket.emit("sync-operation", operation);
-    }
-  });
+      // render other clients mouses
+      socket.on("update-mouse-pos", (data) => {
+        if (data.id == socket.id) return;
+        mm_view.updateMousePosition(data);
+      });
+      mm_net.addMouseMovementSharing(sendMousePosition);
 
-  socket.on("remote-operation", (op) => {
-    try {
-      app.repository.bypassConfirmation = true;
-      app.repository.doOperation(op);
-    } catch (err) {
-      console.error("Error aplying remote operation", err);
-    }
-  });
+      // diagram changes
+      // app.repository.on("operationExecuted", (operation) => {
+      //   if (socket && socket.connected) {
+      //     socket.emit("sync-operation", operation);
+      //   }
+      // });
 
-  server.address = url;
+      // socket.on("remote-operation", (op) => {
+      //   try {
+      //     app.repository.bypassConfirmation = true;
+      //     app.repository.doOperation(op);
+      //   } catch (err) {
+      //     console.error("Error aplying remote operation", err);
+      //   }
+      // });
+
+      address = url;
+    }, CONNECT_TIMEOUT);
+  } catch (e) {
+    console.log(e);
+    return false;
+  }
   return conectado;
 }
 
-function sendMousePosition(x, y, diagram) {}
+//data: {x:_, y:_, diagram:_}
+function sendMousePosition({ x, y, diagram }) {
+  if (!(socket && socket.connected)) return;
+  data = {
+    id: socket.id,
+    x: x,
+    y: y,
+    diagram: diagram,
+  };
+  socket.emit("client-mouse-moved", data);
+  console.log("Mouse pos sent:", data);
+}
+
+function getConnectedAddress() {
+  return address;
+}
 
 function disconnect() {}
 
@@ -55,4 +88,6 @@ module.exports = {
   connectToServer: connectToServer,
   sendMousePosition: sendMousePosition,
   disconnect: disconnect,
+  getConnectedAddress: getConnectedAddress,
+  sendMousePosition: sendMousePosition,
 };

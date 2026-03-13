@@ -1,20 +1,20 @@
 const fachada = require("./js/fachada.js");
-const server = require("./js/server.js");
+const net = require("./js/net.js");
 
 async function startSession() {
   app.toast.info("Start session");
   console.log(app);
-  console.log(app.diagrams.getZoomLevel());
 
   const data = await fachada.showSS();
-
-  console.log("await resuelto");
   if (!data) return;
 
-  server.startServer(server.defaultPort);
+  if (!net.startSession(data.name, data.type, data.network)) {
+    fachada.WARN("Couldnt start session");
+    return;
+  }
 
+  // hide start-session and join-session, show end-session and copy-session-link
   app.menu.updateStates(
-    // hide start-session and join-session, show end-session and copy-session-link
     {
       ls_ss: false,
       ls_js: false,
@@ -27,15 +27,18 @@ async function startSession() {
 }
 
 async function joinSession() {
-  app.toast.info("Join session");
-
   const data = await fachada.showJS();
   if (!data) return;
 
-  server.connectToServer(data.address, data.name);
+  if (!net.joinSession(data.name, data.address)) {
+    fachada.WARN("Couldnt join session");
+    return;
+  }
 
+  app.toast.info("Session joined!");
+
+  // hide start-session and join-session, show end-session and copy-session-link
   app.menu.updateStates(
-    // hide start-session and join-session, show end-session and copy-session-link
     {
       ls_ss: true,
       ls_js: true,
@@ -47,8 +50,9 @@ async function joinSession() {
   );
 }
 
-async function endSession() {
-  server.stopServer();
+function endSession() {
+  net.endSession();
+  fachada.INFO("Session ended");
 
   app.menu.updateStates(
     {
@@ -62,15 +66,18 @@ async function endSession() {
   );
 }
 
-async function copySessionLink() {
+function copySessionLink() {
+  let link = getSessionLink();
+
   navigator.clipboard
-    .writeText(server.getSessionLink())
+    .writeText(link)
     .then(() => {
       fachada.INFO("Session link copied!");
     })
     .catch((err) => {
       console.error("Error copying with navigator:", err);
-      fachada.ERR("Could copy. the link is: " + server.getSessionLink());
+      console.log("Couldnt copy. The link is: " + link);
+      fachada.ERR("Error. See console");
     });
 }
 
@@ -80,4 +87,5 @@ function init() {
   app.commands.register("liveshare:cs", copySessionLink);
   app.commands.register("liveshare:es", endSession);
 }
+
 exports.init = init;
