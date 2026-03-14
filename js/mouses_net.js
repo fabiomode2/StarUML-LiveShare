@@ -1,6 +1,7 @@
 let lastTimeMMsended = 0;
 let lastMPsent = { x: 0, y: 0 };
 const SEND_INTERVAL = 100; //ms
+let currentHandler = null;
 
 // app.diagrams.getZoomLevel()
 
@@ -12,20 +13,29 @@ function addMouseMovementSharing(sendFunction) {
     return;
   }
 
-  diagramArea.addEventListener("mousemove", (event) => {
+  currentHandler = (event) => {
     const now = Date.now();
 
     if (now - lastTimeMMsended >= SEND_INTERVAL) {
-      const editor = app.diagrams.diagramEditor;
+      const activeDiagram = app.diagrams.getCurrentDiagram();
+      if (!activeDiagram) return;
+
+      const editor = app.diagrams;
+
       if (editor) {
         // TODO
-        // falta añadir a la posicion la posicion DENTRO del diagrama
+        // añadir icono al minimapa (canvas id="minimap") (diagramArea.nextElementSibling) (opcional)
+        // añadir icono al workin diagrams (app.sidebar.$workingDiagrams)
+        const diagramX = activeDiagram._originX;
+        const diagramY = activeDiagram._originY;
         const scale = app.diagrams.getZoomLevel();
         const rect = diagramArea.getBoundingClientRect();
+        let diagram = activeDiagram._id;
+
         const dataToSend = {
-          x: (event.clientX - rect.left) / scale,
-          y: (event.clientY - rect.top) / scale,
-          diagramId: editor.diagram._id,
+          x: (event.clientX - rect.left) / scale - diagramX,
+          y: (event.clientY - rect.top) / scale - diagramY,
+          diagram: diagram,
         };
 
         if (lastMPsent.x == dataToSend.x && lastMPsent.y == dataToSend.y)
@@ -38,9 +48,20 @@ function addMouseMovementSharing(sendFunction) {
         lastMPsent.y = dataToSend.y;
       }
     }
-  });
+  };
+
+  diagramArea.addEventListener("mousemove", currentHandler);
+}
+
+function removeMouseMovementSharing() {
+  const diagramArea = app.diagrams.$diagramArea[0];
+  if (diagramArea && currentHandler) {
+    diagramArea.removeEventListener("mousemove", currentHandler);
+    currentHandler = null;
+  }
 }
 
 module.exports = {
   addMouseMovementSharing: addMouseMovementSharing,
+  removeMouseMovementSharing: removeMouseMovementSharing,
 };

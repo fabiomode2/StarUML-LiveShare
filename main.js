@@ -2,7 +2,6 @@ const fachada = require("./js/fachada.js");
 const net = require("./js/net.js");
 
 async function startSession() {
-  app.toast.info("Start session");
   console.log(app);
 
   const data = await fachada.showSS();
@@ -12,6 +11,8 @@ async function startSession() {
     fachada.WARN("Couldnt start session");
     return;
   }
+
+  fachada.INFO("Session started!");
 
   // hide start-session and join-session, show end-session and copy-session-link
   app.menu.updateStates(
@@ -30,18 +31,18 @@ async function joinSession() {
   const data = await fachada.showJS();
   if (!data) return;
 
-  if (!net.joinSession(data.name, data.address)) {
+  if (!(await net.joinSession(data.name, data.address))) {
     fachada.WARN("Couldnt join session");
     return;
   }
 
-  app.toast.info("Session joined!");
+  fachada.INFO("Session joined!");
 
   // hide start-session and join-session, show end-session and copy-session-link
   app.menu.updateStates(
     {
-      ls_ss: true,
-      ls_js: true,
+      ls_ss: false,
+      ls_js: false,
       ls_es: true,
       ls_cs: true,
     },
@@ -67,7 +68,7 @@ function endSession() {
 }
 
 function copySessionLink() {
-  let link = getSessionLink();
+  let link = net.getSessionLink();
 
   navigator.clipboard
     .writeText(link)
@@ -86,6 +87,10 @@ function init() {
   app.commands.register("liveshare:js", joinSession);
   app.commands.register("liveshare:cs", copySessionLink);
   app.commands.register("liveshare:es", endSession);
+  app.commands.register("liveshare:pa", () => {
+    console.log(app);
+    console.log(app.project.getProject());
+  });
 }
 
 exports.init = init;

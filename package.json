@@ -12,11 +12,15 @@
     "email": "fabio.mancebo@rai.usc.es",
     "url": "https://github.com/fabiomode2"
   },
+  "styles": [
+    "stylesheets/cursors.css"
+  ],
   "license": "MIT",
   "engines": {
     "staruml": ">=3.0.0"
   },
   "dependencies": {
+    "flatted": "^3.4.1",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3"
   }

@@ -5,6 +5,11 @@
       "label": "Live Share",
       "submenu": [
         {
+          "id": "ls_pa",
+          "label": "PRINT APP",
+          "command": "liveshare:pa"
+        },
+        {
           "id": "ls_ss",
           "label": "Start session",
           "command": "liveshare:ss"
