@@ -6,5 +6,7 @@
 
 - [ ] Lock element interaction
 - [ ] Follow host option (sync zoom and pos)
+- [ ] Read only session
+- [ ] Relay servers
 
 un saludo a gemini que ha carreado

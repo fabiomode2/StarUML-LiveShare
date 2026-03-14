@@ -2,8 +2,6 @@ const fachada = require("./js/fachada.js");
 const net = require("./js/net.js");
 
 async function startSession() {
-  console.log(app);
-
   const data = await fachada.showSS();
   if (!data) return;
 

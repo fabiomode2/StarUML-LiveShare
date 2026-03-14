@@ -13,7 +13,6 @@ function ERR(mensaje) {
   app.toast.error(mensaje);
 }
 
-// Función privada de ayuda para evitar repetir carga de archivos
 function _createDialog(templateName) {
   const dialogHTML = fs.readFileSync(
     path.join(__dirname, templateName),
@@ -38,7 +37,6 @@ async function showSSDialog() {
         return null;
       }
 
-      console.log("Sesión Creada:", data);
       dialog.close();
 
       resolve(data);
@@ -104,7 +102,7 @@ function changeKeyBindings(host) {
       //disable for clients
       app.commands.commands[cmdId] = () => {
         WARN("Only host can manage files.");
-        console.log(`[LiveShare] Bloqueado intento de ejecutar: ${cmdId}`);
+        console.log(`[LiveShare] Blocking: ${cmdId}`);
       };
     } else {
       //enable for host
@@ -131,10 +129,8 @@ function changeHostOptions(state) {
   try {
     // updateStates(visible, enabled, checked)
     app.menu.updateStates(null, menuStates, null);
-
-    console.log("[LiveShare] Menús bloqueados para invitado.");
   } catch (e) {
-    console.error("[LiveShare] Error actualizando estados del menú:", e);
+    console.error("[LiveShare] Error updating menu states:", e);
   }
 }
 
