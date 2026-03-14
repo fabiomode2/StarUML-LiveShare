@@ -4,9 +4,7 @@
 
 ### To do
 
-- [ ] Lock elements
-  - [ ] Show outline
-  - [ ] Block interaction
-- [ ] Sync creation
+- [ ] Lock element interaction
 - [ ] Follow host option (sync zoom and pos)
-- [ ] fix infinite loading screen sharing project
+
+un saludo a gemini que ha carreado

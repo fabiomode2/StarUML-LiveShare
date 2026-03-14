@@ -4,16 +4,17 @@ const mm_net = require("./mouses_net.js");
 const fachada = require("./fachada.js");
 const flatted = require("flatted");
 
-let socket = null; //cliente
+let socket = null;
 let address = "";
 let users = {};
 let am_i_host = false;
 let isRemoteChange = false;
 
+// Registro de elementos visuales de bloqueo
+let activeHighlights = {};
+
 async function connectToServer(url, name) {
   return new Promise((resolve, reject) => {
-    console.log("[LiveShare] Trying to connect to:", url);
-
     socket = io(url, {
       transports: ["websocket"],
       reconnectionAttempts: 3,
@@ -32,27 +33,21 @@ async function connectToServer(url, name) {
       if (am_i_host) fachada.hideLoadingOverlay();
     });
 
-    // render other clients mouses
     socket.on("update-mouse-pos", (data) => {
       if (data.id == socket.id) return;
       mm_view.updateMousePosition(data);
     });
 
     socket.on("get-whole-document", (data) => {
-      console.log("[LiveShare] Someone joined, sending project...");
       try {
         const projectObj = app.project.getProject();
         const cleanObject = app.repository.writeObject(projectObj);
         const str = flatted.stringify(cleanObject);
-
         socket.emit("host-delivers-document", {
           to: data.requesterId,
           json: str,
         });
-
-        console.log("[LiveShare] Proyect sent.");
       } catch (err) {
-        console.error("[LiveShare] Error serializando proyecto:", err);
         app.toast.error("Error al enviar el proyecto al invitado.");
       }
     });
@@ -61,10 +56,7 @@ async function connectToServer(url, name) {
       try {
         const projectObj = flatted.parse(data.json);
         app.repository.bypassConfirmation = true;
-        //app.project.closeProject();
-
         app.project.loadFromJson(projectObj);
-
         app.repository.bypassConfirmation = false;
       } catch (err) {
         console.error("Error loading remote project:", err);
@@ -73,92 +65,100 @@ async function connectToServer(url, name) {
     });
 
     socket.on("remote-operation", (opData) => {
+      isRemoteChange = true;
       try {
-        // app.repository.bypassConfirmation = true;
-
-        isRemoteChange = true;
-
         const operation = flatted.parse(opData);
-
         app.repository.doOperation(operation);
-
         app.diagrams.repaint();
+
+        updateAllHighlights();
+      } catch (err) {
+        console.error("[LiveShare] Operation Error:", err);
       } finally {
-        isRemoteChange = false;
-        // app.repository.bypassConfirmation = false;
+        // Un pequeño delay garantiza que todos los eventos síncronos de StarUML terminen
+        setTimeout(() => {
+          isRemoteChange = false;
+        }, 50);
       }
     });
 
+    // CORRECCIÓN VITAL: El execute es Asíncrono
+    socket.on("remote-undo", async () => {
+      isRemoteChange = true;
+      try {
+        await app.commands.execute("edit:undo");
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setTimeout(() => {
+          isRemoteChange = false;
+        }, 50);
+      }
+    });
+
+    socket.on("remote-redo", async () => {
+      isRemoteChange = true;
+      try {
+        await app.commands.execute("edit:redo");
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setTimeout(() => {
+          isRemoteChange = false;
+        }, 50);
+      }
+    });
+
+    // --- OUTLINE VISUAL ---
+    socket.on("element-locked", ({ viewId, ownerId, color }) => {
+      if (ownerId !== socket.id) {
+        highlightElement(viewId, color);
+      }
+    });
+
+    socket.on("element-unlocked", ({ viewId }) => {
+      removeHighlight(viewId);
+    });
+
     socket.on("user-left", (id) => {
-      console.log(`User ${users[id]} left.`);
       fachada.INFO(`${users[id]} left`);
       delete users[id];
       mm_view.removeCursor(id);
     });
 
-    socket.on("remote-undo", () => {
-      try {
-        isRemoteChange = true;
-        app.commands.execute("edit:undo");
-      } finally {
-        isRemoteChange = false;
-      }
-    });
-
-    socket.on("remote-redo", () => {
-      try {
-        isRemoteChange = true;
-        app.commands.execute("edit:redo");
-      } finally {
-        isRemoteChange = false;
-      }
-    });
-
-    socket.on("element-locked", ({ viewId, ownerId }) => {});
-
-    socket.on("element-locked", ({ viewId }) => {});
-
     socket.on("connect", () => {
-      console.log("[LiveShare] Connected with ID:", socket.id);
       address = url;
-
       mm_net.addMouseMovementSharing(sendMousePosition);
       fachada.showLoadingOverlay();
       addChangesHook();
       resolve(true);
     });
 
-    socket.on("connect_error", (err) => {
-      console.error("[LiveShare] Connection error:", err);
-      resolve(false); // Resolvemos como false para que la app no explote
-    });
+    socket.on("connect_error", (err) => resolve(false));
   });
 }
 
 function addChangesHook() {
   app.repository.on("operationExecuted", (operation) => {
-    if (isRemoteChange) return;
-    if (app.repository.bypassConfirmation) return;
-
+    if (isRemoteChange || app.repository.bypassConfirmation) return;
     if (socket && socket.connected) {
       const str = flatted.stringify(operation);
       socket.emit("sync-operation", str);
     }
   });
 
-  app.commands.on("afterExecute", (commandId, args, result) => {
+  app.commands.on("afterExecute", (commandId) => {
     if (isRemoteChange) return;
-
-    if (commandId === "edit:undo") {
-      socket.emit("sync-undo");
-    } else if (commandId === "edit:redo") {
-      socket.emit("sync-redo");
-    }
+    if (commandId === "edit:undo") socket.emit("sync-undo");
+    else if (commandId === "edit:redo") socket.emit("sync-redo");
   });
 
   app.selections.on("selectionChanged", (models, views) => {
     if (views.length > 0) {
-      socket.emit("lock-element", { viewIds: views.map((v) => v._id) });
+      socket.emit(
+        "lock-element",
+        views.map((v) => v._id),
+      );
     } else {
       socket.emit("unlock-elements");
     }
@@ -166,19 +166,85 @@ function addChangesHook() {
 }
 
 function removeChangesHook() {
-  app.repository.on("operationExecuted", (operation) => {});
+  app.repository.on("operationExecuted", () => {});
+  app.commands.on("afterExecute", () => {});
+  app.selections.on("selectionChanged", () => {});
 }
 
-//data: {x:_, y:_, diagram:_}
+// --- FUNCIONES DE HIGHLIGHT ---
+function highlightElement(viewId, color) {
+  const view = app.repository.get(viewId);
+  const diagramArea = app.diagrams.$diagramArea[0];
+
+  if (view && view instanceof type.View) {
+    // Evitar duplicados si ya estaba resaltado
+    removeHighlight(viewId);
+
+    const rect = {
+      left: view.left,
+      top: view.top,
+      width: view.width,
+      height: view.height,
+    };
+
+    const hl = document.createElement("div");
+    hl.className = "element-lock-highlight";
+    hl.style.cssText = `
+      position: absolute;
+      border: 3px solid ${color};
+      left: ${rect.left}px;
+      top: ${rect.top}px;
+      width: ${rect.width}px;
+      height: ${rect.height}px;
+      pointer-events: none;
+      z-index: 5;
+    `;
+    diagramArea.appendChild(hl);
+
+    // Lo guardamos para poder borrarlo después
+    activeHighlights[viewId] = hl;
+  }
+}
+
+function removeHighlight(viewId) {
+  if (activeHighlights[viewId]) {
+    activeHighlights[viewId].remove();
+    delete activeHighlights[viewId];
+  }
+}
+
+function removeAllHighlights() {
+  for (let viewId in activeHighlights) {
+    activeHighlights[viewId].remove();
+  }
+  activeHighlights = {};
+}
+
+function updateAllHighlights() {
+  for (let viewId in activeHighlights) {
+    const view = app.repository.get(viewId);
+    if (view && view instanceof type.View) {
+      const hl = activeHighlights[viewId];
+      // Actualizamos las coordenadas en tiempo real
+      hl.style.left = `${view.left}px`;
+      hl.style.top = `${view.top}px`;
+      hl.style.width = `${view.width}px`;
+      hl.style.height = `${view.height}px`;
+    } else {
+      // Si el elemento fue borrado, quitamos el aura
+      removeHighlight(viewId);
+    }
+  }
+}
+
 function sendMousePosition({ x, y, diagram }) {
   if (!(socket && socket.connected)) return;
-  data = {
+  socket.emit("client-mouse-moved", {
     id: socket.id,
     x: x,
     y: y,
     diagram: diagram,
-  };
-  socket.emit("client-mouse-moved", data);
+  });
 }
 
 function getConnectedAddress() {
@@ -191,15 +257,16 @@ function disconnect() {
     socket = null;
   }
   address = "";
+  removeAllHighlights();
   mm_net.removeMouseMovementSharing();
   mm_view.removeAllCursors();
   fachada.enableHostOptions();
   removeChangesHook();
 }
+
 module.exports = {
-  connectToServer: connectToServer,
-  sendMousePosition: sendMousePosition,
-  disconnect: disconnect,
-  getConnectedAddress: getConnectedAddress,
-  sendMousePosition: sendMousePosition,
+  connectToServer,
+  sendMousePosition,
+  disconnect,
+  getConnectedAddress,
 };
