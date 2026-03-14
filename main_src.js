@@ -1,0 +1,94 @@
+const fachada = require("./js/fachada.js");
+const net = require("./js/net.js");
+
+async function startSession() {
+  const data = await fachada.showSS();
+  if (!data) return;
+
+  if (!net.startSession(data.name, data.type, data.network)) {
+    fachada.WARN("Couldnt start session");
+    return;
+  }
+
+  fachada.INFO("Session started!");
+
+  // hide start-session and join-session, show end-session and copy-session-link
+  app.menu.updateStates(
+    {
+      ls_ss: false,
+      ls_js: false,
+      ls_es: true,
+      ls_cs: true,
+    },
+    null,
+    null,
+  );
+}
+
+async function joinSession() {
+  const data = await fachada.showJS();
+  if (!data) return;
+
+  if (!(await net.joinSession(data.name, data.address))) {
+    fachada.WARN("Couldnt join session");
+    return;
+  }
+
+  fachada.INFO("Session joined!");
+
+  // hide start-session and join-session, show end-session and copy-session-link
+  app.menu.updateStates(
+    {
+      ls_ss: false,
+      ls_js: false,
+      ls_es: true,
+      ls_cs: true,
+    },
+    null,
+    null,
+  );
+}
+
+function endSession() {
+  net.endSession();
+  fachada.INFO("Session ended");
+
+  app.menu.updateStates(
+    {
+      ls_ss: true,
+      ls_js: true,
+      ls_es: false,
+      ls_cs: false,
+    },
+    null,
+    null,
+  );
+}
+
+function copySessionLink() {
+  let link = net.getSessionLink();
+
+  navigator.clipboard
+    .writeText(link)
+    .then(() => {
+      fachada.INFO("Session link copied!");
+    })
+    .catch((err) => {
+      console.error("Error copying with navigator:", err);
+      console.log("Couldnt copy. The link is: " + link);
+      fachada.ERR("Error. See console");
+    });
+}
+
+function init() {
+  app.commands.register("liveshare:ss", startSession);
+  app.commands.register("liveshare:js", joinSession);
+  app.commands.register("liveshare:cs", copySessionLink);
+  app.commands.register("liveshare:es", endSession);
+  app.commands.register("liveshare:pa", () => {
+    console.log(app);
+    console.log(app.project.getProject());
+  });
+}
+
+exports.init = init;

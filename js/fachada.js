@@ -22,7 +22,8 @@ function _createDialog(templateName) {
 }
 async function showSSDialog() {
   return new Promise((resolve, reject) => {
-    const dialog = _createDialog("../html/ss_dialog.html");
+    const htmlPath = path.join("html", "ss_dialog.html");
+    const dialog = _createDialog(htmlPath);
     const $el = dialog.getElement();
 
     $el.on("click", "#ok-btn", () => {
@@ -51,7 +52,9 @@ async function showSSDialog() {
 
 async function showJSDialog() {
   return new Promise((resolve, reject) => {
-    const dialog = _createDialog("../html/js_dialog.html");
+    const htmlPath = path.join("html", "js_dialog.html");
+
+    const dialog = _createDialog(htmlPath);
     const $el = dialog.getElement();
 
     $el.on("click", "#ok-btn", () => {
