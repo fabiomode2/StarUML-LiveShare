@@ -1,9 +1,13 @@
 {
   "name": "fabiomode2.liveshare",
   "title": "LiveShare",
+  "main": "dist/main.js",
   "description": "Collaborative StarUML.",
   "homepage": "https://github.com/fabiomode2/StarUML-LiveShare",
   "version": "1.0.0",
+  "scripts": {
+    "build": "esbuild main.js --bundle --platform=node --target=node16 --outfile=dist/main.js --external:electron"
+  },
   "keywords": [
     "liveshare"
   ],
@@ -23,5 +27,8 @@
     "flatted": "^3.4.1",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.4"
   }
 }
