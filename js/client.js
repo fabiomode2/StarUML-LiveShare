@@ -251,6 +251,12 @@ function getConnectedAddress() {
   return address;
 }
 
+function requestDocument() {
+  if (!(socket && socket.connected)) return;
+  fachada.showLoadingOverlay();
+  socket.emit("request-doc");
+}
+
 function disconnect() {
   if (socket) {
     socket.disconnect();
@@ -269,4 +275,5 @@ module.exports = {
   sendMousePosition,
   disconnect,
   getConnectedAddress,
+  requestDocument,
 };

@@ -15,6 +15,12 @@
           "command": "liveshare:js"
         },
         {
+          "id": "ls_sd",
+          "label": "Sync document",
+          "command": "liveshare:sd",
+          "visible": false
+        },
+        {
           "id": "ls_cs",
           "label": "Copy session link",
           "command": "liveshare:cs",

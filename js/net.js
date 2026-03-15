@@ -40,9 +40,15 @@ function getSessionLink() {
   if (am_i_hosting) return client.getConnectedAddress();
 }
 
+function syncDoc() {
+  if (!am_i_connected) return;
+  client.requestDocument();
+}
+
 module.exports = {
   startSession: startSession,
   joinSession: joinSession,
   endSession: endSession,
   getSessionLink: getSessionLink,
+  syncDoc: syncDoc,
 };

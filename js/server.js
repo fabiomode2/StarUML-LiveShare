@@ -64,6 +64,12 @@ class LiveShareServer {
         });
       });
 
+      socket.on("request-doc", () => {
+        this.io
+          .to(this.host_id)
+          .emit("get-whole-document", { requesterId: socket.id });
+      });
+
       socket.on("sync-operation", (op) => {
         socket.broadcast.emit("remote-operation", op);
       });

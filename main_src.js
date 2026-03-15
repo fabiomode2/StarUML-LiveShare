@@ -19,6 +19,7 @@ async function startSession() {
       ls_js: false,
       ls_es: true,
       ls_cs: true,
+      ls_sd: true,
     },
     null,
     null,
@@ -43,6 +44,7 @@ async function joinSession() {
       ls_js: false,
       ls_es: true,
       ls_cs: true,
+      ls_sd: true,
     },
     null,
     null,
@@ -59,6 +61,7 @@ function endSession() {
       ls_js: true,
       ls_es: false,
       ls_cs: false,
+      ls_sd: false,
     },
     null,
     null,
@@ -80,11 +83,16 @@ function copySessionLink() {
     });
 }
 
+function syncDocument() {
+  net.syncDoc();
+}
+
 function init() {
   app.commands.register("liveshare:ss", startSession);
   app.commands.register("liveshare:js", joinSession);
   app.commands.register("liveshare:cs", copySessionLink);
   app.commands.register("liveshare:es", endSession);
+  app.commands.register("liveshare:sd", syncDocument);
   app.commands.register("liveshare:pa", () => {
     console.log(app);
     console.log(app.project.getProject());

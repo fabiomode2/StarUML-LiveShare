@@ -1,12 +1,7 @@
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __commonJS = (cb, mod) =>
-  function __require() {
-    return (
-      mod ||
-        (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod),
-      mod.exports
-    );
-  };
+var __commonJS = (cb, mod) => function __require() {
+  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+};
 
 // js/fachada.js
 var require_fachada = __commonJS({
@@ -25,7 +20,7 @@ var require_fachada = __commonJS({
     function _createDialog(templateName) {
       const dialogHTML = fs.readFileSync(
         path.join(__dirname, templateName),
-        "utf8",
+        "utf8"
       );
       return app.dialogs.showModalDialogUsingTemplate(dialogHTML);
     }
@@ -38,7 +33,7 @@ var require_fachada = __commonJS({
           const data = {
             name: $el.find("#name").val(),
             type: $el.find("#type").val(),
-            network: $el.find("#network").val(),
+            network: $el.find("#network").val()
           };
           if (data.name == "") {
             ERR("Username cant be null.");
@@ -61,7 +56,7 @@ var require_fachada = __commonJS({
         $el.on("click", "#ok-btn", () => {
           const data = {
             name: $el.find("#name").val(),
-            address: $el.find("#address").val(),
+            address: $el.find("#address").val()
           };
           if (data.name === "") {
             ERR("Username can't be null.");
@@ -88,7 +83,7 @@ var require_fachada = __commonJS({
         // "project:save-as",
         "project:import-fragment",
         "project:close",
-        "project:open-recent",
+        "project:open-recent"
       ];
       forbidden.forEach((cmdId) => {
         if (app.commands.commands[cmdId] && !originalHandlers[cmdId]) {
@@ -116,7 +111,7 @@ var require_fachada = __commonJS({
         "file.export-diagram-to-pdf": state,
         "file.close": state,
         "file.open-recent": state,
-        "file.new-from-template": state,
+        "file.new-from-template": state
       };
       try {
         app.menu.updateStates(null, menuStates, null);
@@ -172,9 +167,9 @@ var require_fachada = __commonJS({
       hideLoadingOverlay,
       INFO,
       WARN,
-      ERR,
+      ERR
     };
-  },
+  }
 });
 
 // node_modules/xmlhttprequest-ssl/lib/XMLHttpRequest.js
@@ -197,7 +192,7 @@ var require_XMLHttpRequest = __commonJS({
       var disableHeaderCheck = false;
       var defaultHeaders = {
         "User-Agent": "node-XMLHttpRequest",
-        Accept: "*/*",
+        "Accept": "*/*"
       };
       var headers = Object.assign({}, defaultHeaders);
       var forbiddenRequestHeaders = [
@@ -220,9 +215,13 @@ var require_XMLHttpRequest = __commonJS({
         "trailer",
         "transfer-encoding",
         "upgrade",
-        "via",
+        "via"
       ];
-      var forbiddenRequestMethods = ["TRACE", "TRACK", "CONNECT"];
+      var forbiddenRequestMethods = [
+        "TRACE",
+        "TRACK",
+        "CONNECT"
+      ];
       var sendFlag = false;
       var errorFlag = false;
       var abortedFlag = false;
@@ -239,17 +238,13 @@ var require_XMLHttpRequest = __commonJS({
       this.response = Buffer.alloc(0);
       this.status = null;
       this.statusText = null;
-      var isAllowedHttpHeader = function (header) {
-        return (
-          disableHeaderCheck ||
-          (header &&
-            forbiddenRequestHeaders.indexOf(header.toLowerCase()) === -1)
-        );
+      var isAllowedHttpHeader = function(header) {
+        return disableHeaderCheck || header && forbiddenRequestHeaders.indexOf(header.toLowerCase()) === -1;
       };
-      var isAllowedHttpMethod = function (method) {
+      var isAllowedHttpMethod = function(method) {
         return method && forbiddenRequestMethods.indexOf(method) === -1;
       };
-      this.open = function (method, url, async, user, password) {
+      this.open = function(method, url, async, user, password) {
         this.abort();
         errorFlag = false;
         abortedFlag = false;
@@ -257,22 +252,20 @@ var require_XMLHttpRequest = __commonJS({
           throw new Error("SecurityError: Request method not allowed");
         }
         settings = {
-          method: method,
-          url: url.toString(),
-          async: typeof async !== "boolean" ? true : async,
-          user: user || null,
-          password: password || null,
+          "method": method,
+          "url": url.toString(),
+          "async": typeof async !== "boolean" ? true : async,
+          "user": user || null,
+          "password": password || null
         };
         setState(this.OPENED);
       };
-      this.setDisableHeaderCheck = function (state) {
+      this.setDisableHeaderCheck = function(state) {
         disableHeaderCheck = state;
       };
-      this.setRequestHeader = function (header, value) {
+      this.setRequestHeader = function(header, value) {
         if (this.readyState != this.OPENED) {
-          throw new Error(
-            "INVALID_STATE_ERR: setRequestHeader can only be called when state is OPEN",
-          );
+          throw new Error("INVALID_STATE_ERR: setRequestHeader can only be called when state is OPEN");
         }
         if (!isAllowedHttpHeader(header)) {
           console.warn('Refused to set unsafe header "' + header + '"');
@@ -284,18 +277,13 @@ var require_XMLHttpRequest = __commonJS({
         headers[header] = value;
         return true;
       };
-      this.getResponseHeader = function (header) {
-        if (
-          typeof header === "string" &&
-          this.readyState > this.OPENED &&
-          response.headers[header.toLowerCase()] &&
-          !errorFlag
-        ) {
+      this.getResponseHeader = function(header) {
+        if (typeof header === "string" && this.readyState > this.OPENED && response.headers[header.toLowerCase()] && !errorFlag) {
           return response.headers[header.toLowerCase()];
         }
         return null;
       };
-      this.getAllResponseHeaders = function () {
+      this.getAllResponseHeaders = function() {
         if (this.readyState < this.HEADERS_RECEIVED || errorFlag) {
           return "";
         }
@@ -307,23 +295,20 @@ var require_XMLHttpRequest = __commonJS({
         }
         return result.substr(0, result.length - 2);
       };
-      this.getRequestHeader = function (name) {
+      this.getRequestHeader = function(name) {
         if (typeof name === "string" && headers[name]) {
           return headers[name];
         }
         return "";
       };
-      this.send = function (data) {
+      this.send = function(data) {
         if (this.readyState != this.OPENED) {
-          throw new Error(
-            "INVALID_STATE_ERR: connection must be opened before send() is called",
-          );
+          throw new Error("INVALID_STATE_ERR: connection must be opened before send() is called");
         }
         if (sendFlag) {
           throw new Error("INVALID_STATE_ERR: send has already been called");
         }
-        var ssl = false,
-          local = false;
+        var ssl = false, local = false;
         var url = Url.parse(settings.url);
         var host;
         switch (url.protocol) {
@@ -348,7 +333,7 @@ var require_XMLHttpRequest = __commonJS({
             throw new Error("XMLHttpRequest: Only GET method is supported");
           }
           if (settings.async) {
-            fs.readFile(unescape(url.pathname), function (error, data2) {
+            fs.readFile(unescape(url.pathname), function(error, data2) {
               if (error) {
                 self.handleError(error, error.errno || -1);
               } else {
@@ -373,7 +358,7 @@ var require_XMLHttpRequest = __commonJS({
         var port = url.port || (ssl ? 443 : 80);
         var uri = url.pathname + (url.search ? url.search : "");
         headers["Host"] = host;
-        if (!((ssl && port === 443) || port === 80)) {
+        if (!(ssl && port === 443 || port === 80)) {
           headers["Host"] += ":" + url.port;
         }
         if (settings.user) {
@@ -386,15 +371,11 @@ var require_XMLHttpRequest = __commonJS({
         if (settings.method === "GET" || settings.method === "HEAD") {
           data = null;
         } else if (data) {
-          headers["Content-Length"] = Buffer.isBuffer(data)
-            ? data.length
-            : Buffer.byteLength(data);
+          headers["Content-Length"] = Buffer.isBuffer(data) ? data.length : Buffer.byteLength(data);
           var headersKeys = Object.keys(headers);
-          if (
-            !headersKeys.some(function (h) {
-              return h.toLowerCase() === "content-type";
-            })
-          ) {
+          if (!headersKeys.some(function(h) {
+            return h.toLowerCase() === "content-type";
+          })) {
             headers["Content-Type"] = "text/plain;charset=UTF-8";
           }
         } else if (settings.method === "POST") {
@@ -407,7 +388,7 @@ var require_XMLHttpRequest = __commonJS({
           path: uri,
           method: settings.method,
           headers,
-          agent,
+          agent
         };
         if (ssl) {
           options.pfx = opts.pfx;
@@ -416,21 +397,16 @@ var require_XMLHttpRequest = __commonJS({
           options.cert = opts.cert;
           options.ca = opts.ca;
           options.ciphers = opts.ciphers;
-          options.rejectUnauthorized =
-            opts.rejectUnauthorized === false ? false : true;
+          options.rejectUnauthorized = opts.rejectUnauthorized === false ? false : true;
         }
         errorFlag = false;
         if (settings.async) {
           var doRequest = ssl ? https.request : http.request;
           sendFlag = true;
           self.dispatchEvent("readystatechange");
-          var responseHandler = function (resp2) {
+          var responseHandler = function(resp2) {
             response = resp2;
-            if (
-              response.statusCode === 302 ||
-              response.statusCode === 303 ||
-              response.statusCode === 307
-            ) {
+            if (response.statusCode === 302 || response.statusCode === 303 || response.statusCode === 307) {
               settings.url = response.headers.location;
               var url2 = Url.parse(settings.url);
               host = url2.hostname;
@@ -439,7 +415,7 @@ var require_XMLHttpRequest = __commonJS({
                 port: url2.port,
                 path: url2.path,
                 method: response.statusCode === 303 ? "GET" : settings.method,
-                headers,
+                headers
               };
               if (ssl) {
                 newOptions.pfx = opts.pfx;
@@ -448,19 +424,15 @@ var require_XMLHttpRequest = __commonJS({
                 newOptions.cert = opts.cert;
                 newOptions.ca = opts.ca;
                 newOptions.ciphers = opts.ciphers;
-                newOptions.rejectUnauthorized =
-                  opts.rejectUnauthorized === false ? false : true;
+                newOptions.rejectUnauthorized = opts.rejectUnauthorized === false ? false : true;
               }
-              request = doRequest(newOptions, responseHandler).on(
-                "error",
-                errorHandler,
-              );
+              request = doRequest(newOptions, responseHandler).on("error", errorHandler);
               request.end();
               return;
             }
             setState(self.HEADERS_RECEIVED);
             self.status = response.statusCode;
-            response.on("data", function (chunk) {
+            response.on("data", function(chunk) {
               if (chunk) {
                 var data2 = Buffer.from(chunk);
                 self.response = Buffer.concat([self.response, data2]);
@@ -469,29 +441,23 @@ var require_XMLHttpRequest = __commonJS({
                 setState(self.LOADING);
               }
             });
-            response.on("end", function () {
+            response.on("end", function() {
               if (sendFlag) {
                 sendFlag = false;
                 setState(self.DONE);
                 self.responseText = self.response.toString("utf8");
               }
             });
-            response.on("error", function (error) {
+            response.on("error", function(error) {
               self.handleError(error);
             });
           };
-          var errorHandler = function (error) {
+          var errorHandler = function(error) {
             if (request.reusedSocket && error.code === "ECONNRESET")
-              return doRequest(options, responseHandler).on(
-                "error",
-                errorHandler,
-              );
+              return doRequest(options, responseHandler).on("error", errorHandler);
             self.handleError(error);
           };
-          request = doRequest(options, responseHandler).on(
-            "error",
-            errorHandler,
-          );
+          request = doRequest(options, responseHandler).on("error", errorHandler);
           if (opts.autoUnref) {
             request.on("socket", (socket) => {
               socket.unref();
@@ -506,55 +472,23 @@ var require_XMLHttpRequest = __commonJS({
           var contentFile = ".node-xmlhttprequest-content-" + process.pid;
           var syncFile = ".node-xmlhttprequest-sync-" + process.pid;
           fs.writeFileSync(syncFile, "", "utf8");
-          var execString =
-            "var http = require('http'), https = require('https'), fs = require('fs');var doRequest = http" +
-            (ssl ? "s" : "") +
-            ".request;var options = " +
-            JSON.stringify(options) +
-            ";var responseText = '';var responseData = Buffer.alloc(0);var req = doRequest(options, function(response) {response.on('data', function(chunk) {  var data = Buffer.from(chunk);  responseText += data.toString('utf8');  responseData = Buffer.concat([responseData, data]);});response.on('end', function() {fs.writeFileSync('" +
-            contentFile +
-            "', JSON.stringify({err: null, data: {statusCode: response.statusCode, headers: response.headers, text: responseText, data: responseData.toString('base64')}}), 'utf8');fs.unlinkSync('" +
-            syncFile +
-            "');});response.on('error', function(error) {fs.writeFileSync('" +
-            contentFile +
-            "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');fs.unlinkSync('" +
-            syncFile +
-            "');});}).on('error', function(error) {fs.writeFileSync('" +
-            contentFile +
-            "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');fs.unlinkSync('" +
-            syncFile +
-            "');});" +
-            (data
-              ? "req.write('" +
-                JSON.stringify(data).slice(1, -1).replace(/'/g, "\\'") +
-                "');"
-              : "") +
-            "req.end();";
+          var execString = "var http = require('http'), https = require('https'), fs = require('fs');var doRequest = http" + (ssl ? "s" : "") + ".request;var options = " + JSON.stringify(options) + ";var responseText = '';var responseData = Buffer.alloc(0);var req = doRequest(options, function(response) {response.on('data', function(chunk) {  var data = Buffer.from(chunk);  responseText += data.toString('utf8');  responseData = Buffer.concat([responseData, data]);});response.on('end', function() {fs.writeFileSync('" + contentFile + "', JSON.stringify({err: null, data: {statusCode: response.statusCode, headers: response.headers, text: responseText, data: responseData.toString('base64')}}), 'utf8');fs.unlinkSync('" + syncFile + "');});response.on('error', function(error) {fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');fs.unlinkSync('" + syncFile + "');});}).on('error', function(error) {fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');fs.unlinkSync('" + syncFile + "');});" + (data ? "req.write('" + JSON.stringify(data).slice(1, -1).replace(/'/g, "\\'") + "');" : "") + "req.end();";
           var syncProc = spawn(process.argv[0], ["-e", execString]);
           var statusText;
-          while (fs.existsSync(syncFile)) {}
+          while (fs.existsSync(syncFile)) {
+          }
           self.responseText = fs.readFileSync(contentFile, "utf8");
           syncProc.stdin.end();
           fs.unlinkSync(contentFile);
           if (self.responseText.match(/^NODE-XMLHTTPREQUEST-ERROR:/)) {
-            var errorObj = JSON.parse(
-              self.responseText.replace(/^NODE-XMLHTTPREQUEST-ERROR:/, ""),
-            );
+            var errorObj = JSON.parse(self.responseText.replace(/^NODE-XMLHTTPREQUEST-ERROR:/, ""));
             self.handleError(errorObj, 503);
           } else {
-            self.status = self.responseText.replace(
-              /^NODE-XMLHTTPREQUEST-STATUS:([0-9]*),.*/,
-              "$1",
-            );
-            var resp = JSON.parse(
-              self.responseText.replace(
-                /^NODE-XMLHTTPREQUEST-STATUS:[0-9]*,(.*)/,
-                "$1",
-              ),
-            );
+            self.status = self.responseText.replace(/^NODE-XMLHTTPREQUEST-STATUS:([0-9]*),.*/, "$1");
+            var resp = JSON.parse(self.responseText.replace(/^NODE-XMLHTTPREQUEST-STATUS:[0-9]*,(.*)/, "$1"));
             response = {
               statusCode: self.status,
-              headers: resp.data.headers,
+              headers: resp.data.headers
             };
             self.responseText = resp.data.text;
             self.response = Buffer.from(resp.data.data, "base64");
@@ -562,14 +496,14 @@ var require_XMLHttpRequest = __commonJS({
           }
         }
       };
-      this.handleError = function (error, status) {
+      this.handleError = function(error, status) {
         this.status = status || 0;
         this.statusText = error;
         this.responseText = error.stack;
         errorFlag = true;
         setState(this.DONE);
       };
-      this.abort = function () {
+      this.abort = function() {
         if (request) {
           request.abort();
           request = null;
@@ -579,72 +513,66 @@ var require_XMLHttpRequest = __commonJS({
         this.responseXML = "";
         this.response = Buffer.alloc(0);
         errorFlag = abortedFlag = true;
-        if (
-          this.readyState !== this.UNSENT &&
-          (this.readyState !== this.OPENED || sendFlag) &&
-          this.readyState !== this.DONE
-        ) {
+        if (this.readyState !== this.UNSENT && (this.readyState !== this.OPENED || sendFlag) && this.readyState !== this.DONE) {
           sendFlag = false;
           setState(this.DONE);
         }
         this.readyState = this.UNSENT;
       };
-      this.addEventListener = function (event, callback) {
+      this.addEventListener = function(event, callback) {
         if (!(event in listeners)) {
           listeners[event] = [];
         }
         listeners[event].push(callback);
       };
-      this.removeEventListener = function (event, callback) {
+      this.removeEventListener = function(event, callback) {
         if (event in listeners) {
-          listeners[event] = listeners[event].filter(function (ev) {
+          listeners[event] = listeners[event].filter(function(ev) {
             return ev !== callback;
           });
         }
       };
-      this.dispatchEvent = function (event) {
+      this.dispatchEvent = function(event) {
         if (typeof self["on" + event] === "function") {
           if (this.readyState === this.DONE && settings.async)
-            setTimeout(function () {
+            setTimeout(function() {
               self["on" + event]();
             }, 0);
-          else self["on" + event]();
+          else
+            self["on" + event]();
         }
         if (event in listeners) {
           for (let i = 0, len = listeners[event].length; i < len; i++) {
             if (this.readyState === this.DONE)
-              setTimeout(function () {
+              setTimeout(function() {
                 listeners[event][i].call(self);
               }, 0);
-            else listeners[event][i].call(self);
+            else
+              listeners[event][i].call(self);
           }
         }
       };
-      var setState = function (state) {
-        if (
-          self.readyState === state ||
-          (self.readyState === self.UNSENT && abortedFlag)
-        )
+      var setState = function(state) {
+        if (self.readyState === state || self.readyState === self.UNSENT && abortedFlag)
           return;
         self.readyState = state;
-        if (
-          settings.async ||
-          self.readyState < self.OPENED ||
-          self.readyState === self.DONE
-        ) {
+        if (settings.async || self.readyState < self.OPENED || self.readyState === self.DONE) {
           self.dispatchEvent("readystatechange");
         }
         if (self.readyState === self.DONE) {
           let fire;
-          if (abortedFlag) fire = "abort";
-          else if (errorFlag) fire = "error";
-          else fire = "load";
+          if (abortedFlag)
+            fire = "abort";
+          else if (errorFlag)
+            fire = "error";
+          else
+            fire = "load";
           self.dispatchEvent(fire);
           self.dispatchEvent("loadend");
         }
       };
     }
-  },
+  }
 });
 
 // node_modules/engine.io-parser/build/cjs/commons.js
@@ -652,10 +580,7 @@ var require_commons = __commonJS({
   "node_modules/engine.io-parser/build/cjs/commons.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.ERROR_PACKET =
-      exports2.PACKET_TYPES_REVERSE =
-      exports2.PACKET_TYPES =
-        void 0;
+    exports2.ERROR_PACKET = exports2.PACKET_TYPES_REVERSE = exports2.PACKET_TYPES = void 0;
     var PACKET_TYPES = /* @__PURE__ */ Object.create(null);
     exports2.PACKET_TYPES = PACKET_TYPES;
     PACKET_TYPES["open"] = "0";
@@ -672,7 +597,7 @@ var require_commons = __commonJS({
     });
     var ERROR_PACKET = { type: "error", data: "parser error" };
     exports2.ERROR_PACKET = ERROR_PACKET;
-  },
+  }
 });
 
 // node_modules/engine.io-parser/build/cjs/encodePacket.js
@@ -685,18 +610,13 @@ var require_encodePacket = __commonJS({
     var commons_js_1 = require_commons();
     var encodePacket = ({ type: type2, data }, supportsBinary, callback) => {
       if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
-        return callback(
-          supportsBinary ? data : "b" + toBuffer(data, true).toString("base64"),
-        );
+        return callback(supportsBinary ? data : "b" + toBuffer(data, true).toString("base64"));
       }
       return callback(commons_js_1.PACKET_TYPES[type2] + (data || ""));
     };
     exports2.encodePacket = encodePacket;
     var toBuffer = (data, forceBufferConversion) => {
-      if (
-        Buffer.isBuffer(data) ||
-        (data instanceof Uint8Array && !forceBufferConversion)
-      ) {
+      if (Buffer.isBuffer(data) || data instanceof Uint8Array && !forceBufferConversion) {
         return data;
       } else if (data instanceof ArrayBuffer) {
         return Buffer.from(data);
@@ -706,10 +626,7 @@ var require_encodePacket = __commonJS({
     };
     var TEXT_ENCODER;
     function encodePacketToBinary(packet, callback) {
-      if (
-        packet.data instanceof ArrayBuffer ||
-        ArrayBuffer.isView(packet.data)
-      ) {
+      if (packet.data instanceof ArrayBuffer || ArrayBuffer.isView(packet.data)) {
         return callback(toBuffer(packet.data, false));
       }
       (0, exports2.encodePacket)(packet, true, (encoded) => {
@@ -719,7 +636,7 @@ var require_encodePacket = __commonJS({
         callback(TEXT_ENCODER.encode(encoded));
       });
     }
-  },
+  }
 });
 
 // node_modules/engine.io-parser/build/cjs/decodePacket.js
@@ -733,7 +650,7 @@ var require_decodePacket = __commonJS({
       if (typeof encodedPacket !== "string") {
         return {
           type: "message",
-          data: mapBinary(encodedPacket, binaryType),
+          data: mapBinary(encodedPacket, binaryType)
         };
       }
       const type2 = encodedPacket.charAt(0);
@@ -741,20 +658,18 @@ var require_decodePacket = __commonJS({
         const buffer = Buffer.from(encodedPacket.substring(1), "base64");
         return {
           type: "message",
-          data: mapBinary(buffer, binaryType),
+          data: mapBinary(buffer, binaryType)
         };
       }
       if (!commons_js_1.PACKET_TYPES_REVERSE[type2]) {
         return commons_js_1.ERROR_PACKET;
       }
-      return encodedPacket.length > 1
-        ? {
-            type: commons_js_1.PACKET_TYPES_REVERSE[type2],
-            data: encodedPacket.substring(1),
-          }
-        : {
-            type: commons_js_1.PACKET_TYPES_REVERSE[type2],
-          };
+      return encodedPacket.length > 1 ? {
+        type: commons_js_1.PACKET_TYPES_REVERSE[type2],
+        data: encodedPacket.substring(1)
+      } : {
+        type: commons_js_1.PACKET_TYPES_REVERSE[type2]
+      };
     };
     exports2.decodePacket = decodePacket;
     var mapBinary = (data, binaryType) => {
@@ -763,10 +678,7 @@ var require_decodePacket = __commonJS({
           if (data instanceof ArrayBuffer) {
             return data;
           } else if (Buffer.isBuffer(data)) {
-            return data.buffer.slice(
-              data.byteOffset,
-              data.byteOffset + data.byteLength,
-            );
+            return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
           } else {
             return data.buffer;
           }
@@ -779,7 +691,7 @@ var require_decodePacket = __commonJS({
           }
       }
     };
-  },
+  }
 });
 
 // node_modules/engine.io-parser/build/cjs/index.js
@@ -787,28 +699,17 @@ var require_cjs = __commonJS({
   "node_modules/engine.io-parser/build/cjs/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.decodePayload =
-      exports2.decodePacket =
-      exports2.encodePayload =
-      exports2.encodePacket =
-      exports2.protocol =
-        void 0;
+    exports2.decodePayload = exports2.decodePacket = exports2.encodePayload = exports2.encodePacket = exports2.protocol = void 0;
     exports2.createPacketEncoderStream = createPacketEncoderStream;
     exports2.createPacketDecoderStream = createPacketDecoderStream;
     var encodePacket_js_1 = require_encodePacket();
-    Object.defineProperty(exports2, "encodePacket", {
-      enumerable: true,
-      get: function () {
-        return encodePacket_js_1.encodePacket;
-      },
-    });
+    Object.defineProperty(exports2, "encodePacket", { enumerable: true, get: function() {
+      return encodePacket_js_1.encodePacket;
+    } });
     var decodePacket_js_1 = require_decodePacket();
-    Object.defineProperty(exports2, "decodePacket", {
-      enumerable: true,
-      get: function () {
-        return decodePacket_js_1.decodePacket;
-      },
-    });
+    Object.defineProperty(exports2, "decodePacket", { enumerable: true, get: function() {
+      return decodePacket_js_1.decodePacket;
+    } });
     var commons_js_1 = require_commons();
     var SEPARATOR = String.fromCharCode(30);
     var encodePayload = (packets, callback) => {
@@ -829,10 +730,7 @@ var require_cjs = __commonJS({
       const encodedPackets = encodedPayload.split(SEPARATOR);
       const packets = [];
       for (let i = 0; i < encodedPackets.length; i++) {
-        const decodedPacket = (0, decodePacket_js_1.decodePacket)(
-          encodedPackets[i],
-          binaryType,
-        );
+        const decodedPacket = (0, decodePacket_js_1.decodePacket)(encodedPackets[i], binaryType);
         packets.push(decodedPacket);
         if (decodedPacket.type === "error") {
           break;
@@ -844,33 +742,30 @@ var require_cjs = __commonJS({
     function createPacketEncoderStream() {
       return new TransformStream({
         transform(packet, controller) {
-          (0, encodePacket_js_1.encodePacketToBinary)(
-            packet,
-            (encodedPacket) => {
-              const payloadLength = encodedPacket.length;
-              let header;
-              if (payloadLength < 126) {
-                header = new Uint8Array(1);
-                new DataView(header.buffer).setUint8(0, payloadLength);
-              } else if (payloadLength < 65536) {
-                header = new Uint8Array(3);
-                const view = new DataView(header.buffer);
-                view.setUint8(0, 126);
-                view.setUint16(1, payloadLength);
-              } else {
-                header = new Uint8Array(9);
-                const view = new DataView(header.buffer);
-                view.setUint8(0, 127);
-                view.setBigUint64(1, BigInt(payloadLength));
-              }
-              if (packet.data && typeof packet.data !== "string") {
-                header[0] |= 128;
-              }
-              controller.enqueue(header);
-              controller.enqueue(encodedPacket);
-            },
-          );
-        },
+          (0, encodePacket_js_1.encodePacketToBinary)(packet, (encodedPacket) => {
+            const payloadLength = encodedPacket.length;
+            let header;
+            if (payloadLength < 126) {
+              header = new Uint8Array(1);
+              new DataView(header.buffer).setUint8(0, payloadLength);
+            } else if (payloadLength < 65536) {
+              header = new Uint8Array(3);
+              const view = new DataView(header.buffer);
+              view.setUint8(0, 126);
+              view.setUint16(1, payloadLength);
+            } else {
+              header = new Uint8Array(9);
+              const view = new DataView(header.buffer);
+              view.setUint8(0, 127);
+              view.setBigUint64(1, BigInt(payloadLength));
+            }
+            if (packet.data && typeof packet.data !== "string") {
+              header[0] |= 128;
+            }
+            controller.enqueue(header);
+            controller.enqueue(encodedPacket);
+          });
+        }
       });
     }
     var TEXT_DECODER;
@@ -926,22 +821,14 @@ var require_cjs = __commonJS({
                 break;
               }
               const headerArray = concatChunks(chunks, 2);
-              expectedLength = new DataView(
-                headerArray.buffer,
-                headerArray.byteOffset,
-                headerArray.length,
-              ).getUint16(0);
+              expectedLength = new DataView(headerArray.buffer, headerArray.byteOffset, headerArray.length).getUint16(0);
               state = 3;
             } else if (state === 2) {
               if (totalLength(chunks) < 8) {
                 break;
               }
               const headerArray = concatChunks(chunks, 8);
-              const view = new DataView(
-                headerArray.buffer,
-                headerArray.byteOffset,
-                headerArray.length,
-              );
+              const view = new DataView(headerArray.buffer, headerArray.byteOffset, headerArray.length);
               const n = view.getUint32(0);
               if (n > Math.pow(2, 53 - 32) - 1) {
                 controller.enqueue(commons_js_1.ERROR_PACKET);
@@ -954,12 +841,7 @@ var require_cjs = __commonJS({
                 break;
               }
               const data = concatChunks(chunks, expectedLength);
-              controller.enqueue(
-                (0, decodePacket_js_1.decodePacket)(
-                  isBinary ? data : TEXT_DECODER.decode(data),
-                  binaryType,
-                ),
-              );
+              controller.enqueue((0, decodePacket_js_1.decodePacket)(isBinary ? data : TEXT_DECODER.decode(data), binaryType));
               state = 0;
             }
             if (expectedLength === 0 || expectedLength > maxPayload) {
@@ -967,11 +849,11 @@ var require_cjs = __commonJS({
               break;
             }
           }
-        },
+        }
       });
     }
     exports2.protocol = 4;
-  },
+  }
 });
 
 // node_modules/@socket.io/component-emitter/lib/cjs/index.js
@@ -987,17 +869,12 @@ var require_cjs2 = __commonJS({
       }
       return obj;
     }
-    Emitter.prototype.on = Emitter.prototype.addEventListener = function (
-      event,
-      fn,
-    ) {
+    Emitter.prototype.on = Emitter.prototype.addEventListener = function(event, fn) {
       this._callbacks = this._callbacks || {};
-      (this._callbacks["$" + event] = this._callbacks["$" + event] || []).push(
-        fn,
-      );
+      (this._callbacks["$" + event] = this._callbacks["$" + event] || []).push(fn);
       return this;
     };
-    Emitter.prototype.once = function (event, fn) {
+    Emitter.prototype.once = function(event, fn) {
       function on() {
         this.off(event, on);
         fn.apply(this, arguments);
@@ -1006,39 +883,34 @@ var require_cjs2 = __commonJS({
       this.on(event, on);
       return this;
     };
-    Emitter.prototype.off =
-      Emitter.prototype.removeListener =
-      Emitter.prototype.removeAllListeners =
-      Emitter.prototype.removeEventListener =
-        function (event, fn) {
-          this._callbacks = this._callbacks || {};
-          if (0 == arguments.length) {
-            this._callbacks = {};
-            return this;
-          }
-          var callbacks = this._callbacks["$" + event];
-          if (!callbacks) return this;
-          if (1 == arguments.length) {
-            delete this._callbacks["$" + event];
-            return this;
-          }
-          var cb;
-          for (var i = 0; i < callbacks.length; i++) {
-            cb = callbacks[i];
-            if (cb === fn || cb.fn === fn) {
-              callbacks.splice(i, 1);
-              break;
-            }
-          }
-          if (callbacks.length === 0) {
-            delete this._callbacks["$" + event];
-          }
-          return this;
-        };
-    Emitter.prototype.emit = function (event) {
+    Emitter.prototype.off = Emitter.prototype.removeListener = Emitter.prototype.removeAllListeners = Emitter.prototype.removeEventListener = function(event, fn) {
       this._callbacks = this._callbacks || {};
-      var args = new Array(arguments.length - 1),
-        callbacks = this._callbacks["$" + event];
+      if (0 == arguments.length) {
+        this._callbacks = {};
+        return this;
+      }
+      var callbacks = this._callbacks["$" + event];
+      if (!callbacks) return this;
+      if (1 == arguments.length) {
+        delete this._callbacks["$" + event];
+        return this;
+      }
+      var cb;
+      for (var i = 0; i < callbacks.length; i++) {
+        cb = callbacks[i];
+        if (cb === fn || cb.fn === fn) {
+          callbacks.splice(i, 1);
+          break;
+        }
+      }
+      if (callbacks.length === 0) {
+        delete this._callbacks["$" + event];
+      }
+      return this;
+    };
+    Emitter.prototype.emit = function(event) {
+      this._callbacks = this._callbacks || {};
+      var args = new Array(arguments.length - 1), callbacks = this._callbacks["$" + event];
       for (var i = 1; i < arguments.length; i++) {
         args[i - 1] = arguments[i];
       }
@@ -1051,14 +923,14 @@ var require_cjs2 = __commonJS({
       return this;
     };
     Emitter.prototype.emitReserved = Emitter.prototype.emit;
-    Emitter.prototype.listeners = function (event) {
+    Emitter.prototype.listeners = function(event) {
       this._callbacks = this._callbacks || {};
       return this._callbacks["$" + event] || [];
     };
-    Emitter.prototype.hasListeners = function (event) {
+    Emitter.prototype.hasListeners = function(event) {
       return !!this.listeners(event).length;
     };
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/globals.node.js
@@ -1066,11 +938,7 @@ var require_globals_node = __commonJS({
   "node_modules/engine.io-client/build/cjs/globals.node.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.CookieJar =
-      exports2.defaultBinaryType =
-      exports2.globalThisShim =
-      exports2.nextTick =
-        void 0;
+    exports2.CookieJar = exports2.defaultBinaryType = exports2.globalThisShim = exports2.nextTick = void 0;
     exports2.createCookieJar = createCookieJar;
     exports2.parse = parse;
     exports2.nextTick = process.nextTick;
@@ -1095,7 +963,7 @@ var require_globals_node = __commonJS({
       }
       const cookie = {
         name,
-        value,
+        value
       };
       for (let j = 1; j < parts.length; j++) {
         const subParts = parts[j].split("=");
@@ -1110,9 +978,7 @@ var require_globals_node = __commonJS({
             break;
           case "Max-Age":
             const expiration = /* @__PURE__ */ new Date();
-            expiration.setUTCSeconds(
-              expiration.getUTCSeconds() + parseInt(value2, 10),
-            );
+            expiration.setUTCSeconds(expiration.getUTCSeconds() + parseInt(value2, 10));
             cookie.expires = expiration;
             break;
           default:
@@ -1139,11 +1005,7 @@ var require_globals_node = __commonJS({
         const now = Date.now();
         this._cookies.forEach((cookie, name) => {
           var _a;
-          if (
-            ((_a = cookie.expires) === null || _a === void 0
-              ? void 0
-              : _a.getTime()) < now
-          ) {
+          if (((_a = cookie.expires) === null || _a === void 0 ? void 0 : _a.getTime()) < now) {
             this._cookies.delete(name);
           }
         });
@@ -1166,7 +1028,7 @@ var require_globals_node = __commonJS({
       }
     };
     exports2.CookieJar = CookieJar;
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/util.js
@@ -1191,19 +1053,11 @@ var require_util = __commonJS({
     var NATIVE_CLEAR_TIMEOUT = globals_node_js_1.globalThisShim.clearTimeout;
     function installTimerFunctions(obj, opts) {
       if (opts.useNativeTimers) {
-        obj.setTimeoutFn = NATIVE_SET_TIMEOUT.bind(
-          globals_node_js_1.globalThisShim,
-        );
-        obj.clearTimeoutFn = NATIVE_CLEAR_TIMEOUT.bind(
-          globals_node_js_1.globalThisShim,
-        );
+        obj.setTimeoutFn = NATIVE_SET_TIMEOUT.bind(globals_node_js_1.globalThisShim);
+        obj.clearTimeoutFn = NATIVE_CLEAR_TIMEOUT.bind(globals_node_js_1.globalThisShim);
       } else {
-        obj.setTimeoutFn = globals_node_js_1.globalThisShim.setTimeout.bind(
-          globals_node_js_1.globalThisShim,
-        );
-        obj.clearTimeoutFn = globals_node_js_1.globalThisShim.clearTimeout.bind(
-          globals_node_js_1.globalThisShim,
-        );
+        obj.setTimeoutFn = globals_node_js_1.globalThisShim.setTimeout.bind(globals_node_js_1.globalThisShim);
+        obj.clearTimeoutFn = globals_node_js_1.globalThisShim.clearTimeout.bind(globals_node_js_1.globalThisShim);
       }
     }
     var BASE64_OVERHEAD = 1.33;
@@ -1214,8 +1068,7 @@ var require_util = __commonJS({
       return Math.ceil((obj.byteLength || obj.size) * BASE64_OVERHEAD);
     }
     function utf8Length(str) {
-      let c = 0,
-        length = 0;
+      let c = 0, length = 0;
       for (let i = 0, l = str.length; i < l; i++) {
         c = str.charCodeAt(i);
         if (c < 128) {
@@ -1232,12 +1085,9 @@ var require_util = __commonJS({
       return length;
     }
     function randomString() {
-      return (
-        Date.now().toString(36).substring(3) +
-        Math.random().toString(36).substring(2, 5)
-      );
+      return Date.now().toString(36).substring(3) + Math.random().toString(36).substring(2, 5);
     }
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/contrib/parseqs.js
@@ -1251,7 +1101,8 @@ var require_parseqs = __commonJS({
       let str = "";
       for (let i in obj) {
         if (obj.hasOwnProperty(i)) {
-          if (str.length) str += "&";
+          if (str.length)
+            str += "&";
           str += encodeURIComponent(i) + "=" + encodeURIComponent(obj[i]);
         }
       }
@@ -1266,7 +1117,7 @@ var require_parseqs = __commonJS({
       }
       return qry;
     }
-  },
+  }
 });
 
 // node_modules/ms/index.js
@@ -1278,7 +1129,7 @@ var require_ms = __commonJS({
     var d = h * 24;
     var w = d * 7;
     var y = d * 365.25;
-    module2.exports = function (val, options) {
+    module2.exports = function(val, options) {
       options = options || {};
       var type2 = typeof val;
       if (type2 === "string" && val.length > 0) {
@@ -1287,8 +1138,7 @@ var require_ms = __commonJS({
         return options.long ? fmtLong(val) : fmtShort(val);
       }
       throw new Error(
-        "val is not a non-empty string or a valid number. val=" +
-          JSON.stringify(val),
+        "val is not a non-empty string or a valid number. val=" + JSON.stringify(val)
       );
     };
     function parse(str) {
@@ -1296,10 +1146,9 @@ var require_ms = __commonJS({
       if (str.length > 100) {
         return;
       }
-      var match =
-        /^(-?(?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i.exec(
-          str,
-        );
+      var match = /^(-?(?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i.exec(
+        str
+      );
       if (!match) {
         return;
       }
@@ -1384,7 +1233,7 @@ var require_ms = __commonJS({
       var isPlural = msAbs >= n * 1.5;
       return Math.round(ms / n) + " " + name + (isPlural ? "s" : "");
     }
-  },
+  }
 });
 
 // node_modules/debug/src/common.js
@@ -1473,7 +1322,7 @@ var require_common = __commonJS({
           },
           set: (v) => {
             enableOverride = v;
-          },
+          }
         });
         if (typeof createDebug.init === "function") {
           createDebug.init(debug);
@@ -1481,11 +1330,7 @@ var require_common = __commonJS({
         return debug;
       }
       function extend(namespace, delimiter) {
-        const newDebug = createDebug(
-          this.namespace +
-            (typeof delimiter === "undefined" ? ":" : delimiter) +
-            namespace,
-        );
+        const newDebug = createDebug(this.namespace + (typeof delimiter === "undefined" ? ":" : delimiter) + namespace);
         newDebug.log = this.log;
         return newDebug;
       }
@@ -1494,11 +1339,7 @@ var require_common = __commonJS({
         createDebug.namespaces = namespaces;
         createDebug.names = [];
         createDebug.skips = [];
-        const split = (typeof namespaces === "string" ? namespaces : "")
-          .trim()
-          .replace(/\s+/g, ",")
-          .split(",")
-          .filter(Boolean);
+        const split = (typeof namespaces === "string" ? namespaces : "").trim().replace(/\s+/g, ",").split(",").filter(Boolean);
         for (const ns of split) {
           if (ns[0] === "-") {
             createDebug.skips.push(ns.slice(1));
@@ -1513,11 +1354,7 @@ var require_common = __commonJS({
         let starIndex = -1;
         let matchIndex = 0;
         while (searchIndex < search.length) {
-          if (
-            templateIndex < template.length &&
-            (template[templateIndex] === search[searchIndex] ||
-              template[templateIndex] === "*")
-          ) {
+          if (templateIndex < template.length && (template[templateIndex] === search[searchIndex] || template[templateIndex] === "*")) {
             if (template[templateIndex] === "*") {
               starIndex = templateIndex;
               matchIndex = searchIndex;
@@ -1534,10 +1371,7 @@ var require_common = __commonJS({
             return false;
           }
         }
-        while (
-          templateIndex < template.length &&
-          template[templateIndex] === "*"
-        ) {
+        while (templateIndex < template.length && template[templateIndex] === "*") {
           templateIndex++;
         }
         return templateIndex === template.length;
@@ -1545,7 +1379,7 @@ var require_common = __commonJS({
       function disable() {
         const namespaces = [
           ...createDebug.names,
-          ...createDebug.skips.map((namespace) => "-" + namespace),
+          ...createDebug.skips.map((namespace) => "-" + namespace)
         ].join(",");
         createDebug.enable("");
         return namespaces;
@@ -1570,15 +1404,13 @@ var require_common = __commonJS({
         return val;
       }
       function destroy() {
-        console.warn(
-          "Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.",
-        );
+        console.warn("Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.");
       }
       createDebug.enable(createDebug.load());
       return createDebug;
     }
     module2.exports = setup;
-  },
+  }
 });
 
 // node_modules/debug/src/browser.js
@@ -1594,9 +1426,7 @@ var require_browser = __commonJS({
       return () => {
         if (!warned) {
           warned = true;
-          console.warn(
-            "Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.",
-          );
+          console.warn("Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.");
         }
       };
     })();
@@ -1676,52 +1506,24 @@ var require_browser = __commonJS({
       "#FF9900",
       "#FF9933",
       "#FFCC00",
-      "#FFCC33",
+      "#FFCC33"
     ];
     function useColors() {
-      if (
-        typeof window !== "undefined" &&
-        window.process &&
-        (window.process.type === "renderer" || window.process.__nwjs)
-      ) {
+      if (typeof window !== "undefined" && window.process && (window.process.type === "renderer" || window.process.__nwjs)) {
         return true;
       }
-      if (
-        typeof navigator !== "undefined" &&
-        navigator.userAgent &&
-        navigator.userAgent.toLowerCase().match(/(edge|trident)\/(\d+)/)
-      ) {
+      if (typeof navigator !== "undefined" && navigator.userAgent && navigator.userAgent.toLowerCase().match(/(edge|trident)\/(\d+)/)) {
         return false;
       }
       let m;
-      return (
-        (typeof document !== "undefined" &&
-          document.documentElement &&
-          document.documentElement.style &&
-          document.documentElement.style.WebkitAppearance) || // Is firebug? http://stackoverflow.com/a/398120/376773
-        (typeof window !== "undefined" &&
-          window.console &&
-          (window.console.firebug ||
-            (window.console.exception && window.console.table))) || // Is firefox >= v31?
-        // https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
-        (typeof navigator !== "undefined" &&
-          navigator.userAgent &&
-          (m = navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/)) &&
-          parseInt(m[1], 10) >= 31) || // Double check webkit in userAgent just in case we are in a worker
-        (typeof navigator !== "undefined" &&
-          navigator.userAgent &&
-          navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/))
-      );
+      return typeof document !== "undefined" && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance || // Is firebug? http://stackoverflow.com/a/398120/376773
+      typeof window !== "undefined" && window.console && (window.console.firebug || window.console.exception && window.console.table) || // Is firefox >= v31?
+      // https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
+      typeof navigator !== "undefined" && navigator.userAgent && (m = navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/)) && parseInt(m[1], 10) >= 31 || // Double check webkit in userAgent just in case we are in a worker
+      typeof navigator !== "undefined" && navigator.userAgent && navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/);
     }
     function formatArgs(args) {
-      args[0] =
-        (this.useColors ? "%c" : "") +
-        this.namespace +
-        (this.useColors ? " %c" : " ") +
-        args[0] +
-        (this.useColors ? "%c " : " ") +
-        "+" +
-        module2.exports.humanize(this.diff);
+      args[0] = (this.useColors ? "%c" : "") + this.namespace + (this.useColors ? " %c" : " ") + args[0] + (this.useColors ? "%c " : " ") + "+" + module2.exports.humanize(this.diff);
       if (!this.useColors) {
         return;
       }
@@ -1740,7 +1542,8 @@ var require_browser = __commonJS({
       });
       args.splice(lastC, 0, c);
     }
-    exports2.log = console.debug || console.log || (() => {});
+    exports2.log = console.debug || console.log || (() => {
+    });
     function save(namespaces) {
       try {
         if (namespaces) {
@@ -1748,15 +1551,15 @@ var require_browser = __commonJS({
         } else {
           exports2.storage.removeItem("debug");
         }
-      } catch (error) {}
+      } catch (error) {
+      }
     }
     function load() {
       let r;
       try {
-        r =
-          exports2.storage.getItem("debug") ||
-          exports2.storage.getItem("DEBUG");
-      } catch (error) {}
+        r = exports2.storage.getItem("debug") || exports2.storage.getItem("DEBUG");
+      } catch (error) {
+      }
       if (!r && typeof process !== "undefined" && "env" in process) {
         r = process.env.DEBUG;
       }
@@ -1765,18 +1568,19 @@ var require_browser = __commonJS({
     function localstorage() {
       try {
         return localStorage;
-      } catch (error) {}
+      } catch (error) {
+      }
     }
     module2.exports = require_common()(exports2);
     var { formatters } = module2.exports;
-    formatters.j = function (v) {
+    formatters.j = function(v) {
       try {
         return JSON.stringify(v);
       } catch (error) {
         return "[UnexpectedJSONParseError]: " + error.message;
       }
     };
-  },
+  }
 });
 
 // node_modules/debug/src/node.js
@@ -1791,50 +1595,116 @@ var require_node = __commonJS({
     exports2.load = load;
     exports2.useColors = useColors;
     exports2.destroy = util.deprecate(
-      () => {},
-      "Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.",
+      () => {
+      },
+      "Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`."
     );
     exports2.colors = [6, 2, 3, 4, 5, 1];
     try {
       const supportsColor = require("supports-color");
       if (supportsColor && (supportsColor.stderr || supportsColor).level >= 2) {
         exports2.colors = [
-          20, 21, 26, 27, 32, 33, 38, 39, 40, 41, 42, 43, 44, 45, 56, 57, 62,
-          63, 68, 69, 74, 75, 76, 77, 78, 79, 80, 81, 92, 93, 98, 99, 112, 113,
-          128, 129, 134, 135, 148, 149, 160, 161, 162, 163, 164, 165, 166, 167,
-          168, 169, 170, 171, 172, 173, 178, 179, 184, 185, 196, 197, 198, 199,
-          200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 214, 215, 220, 221,
+          20,
+          21,
+          26,
+          27,
+          32,
+          33,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          56,
+          57,
+          62,
+          63,
+          68,
+          69,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          92,
+          93,
+          98,
+          99,
+          112,
+          113,
+          128,
+          129,
+          134,
+          135,
+          148,
+          149,
+          160,
+          161,
+          162,
+          163,
+          164,
+          165,
+          166,
+          167,
+          168,
+          169,
+          170,
+          171,
+          172,
+          173,
+          178,
+          179,
+          184,
+          185,
+          196,
+          197,
+          198,
+          199,
+          200,
+          201,
+          202,
+          203,
+          204,
+          205,
+          206,
+          207,
+          208,
+          209,
+          214,
+          215,
+          220,
+          221
         ];
       }
-    } catch (error) {}
-    exports2.inspectOpts = Object.keys(process.env)
-      .filter((key) => {
-        return /^debug_/i.test(key);
-      })
-      .reduce((obj, key) => {
-        const prop = key
-          .substring(6)
-          .toLowerCase()
-          .replace(/_([a-z])/g, (_, k) => {
-            return k.toUpperCase();
-          });
-        let val = process.env[key];
-        if (/^(yes|on|true|enabled)$/i.test(val)) {
-          val = true;
-        } else if (/^(no|off|false|disabled)$/i.test(val)) {
-          val = false;
-        } else if (val === "null") {
-          val = null;
-        } else {
-          val = Number(val);
-        }
-        obj[prop] = val;
-        return obj;
-      }, {});
+    } catch (error) {
+    }
+    exports2.inspectOpts = Object.keys(process.env).filter((key) => {
+      return /^debug_/i.test(key);
+    }).reduce((obj, key) => {
+      const prop = key.substring(6).toLowerCase().replace(/_([a-z])/g, (_, k) => {
+        return k.toUpperCase();
+      });
+      let val = process.env[key];
+      if (/^(yes|on|true|enabled)$/i.test(val)) {
+        val = true;
+      } else if (/^(no|off|false|disabled)$/i.test(val)) {
+        val = false;
+      } else if (val === "null") {
+        val = null;
+      } else {
+        val = Number(val);
+      }
+      obj[prop] = val;
+      return obj;
+    }, {});
     function useColors() {
-      return "colors" in exports2.inspectOpts
-        ? Boolean(exports2.inspectOpts.colors)
-        : tty.isatty(process.stderr.fd);
+      return "colors" in exports2.inspectOpts ? Boolean(exports2.inspectOpts.colors) : tty.isatty(process.stderr.fd);
     }
     function formatArgs(args) {
       const { namespace: name, useColors: useColors2 } = this;
@@ -1843,9 +1713,7 @@ var require_node = __commonJS({
         const colorCode = "\x1B[3" + (c < 8 ? c : "8;5;" + c);
         const prefix = `  ${colorCode};1m${name} \x1B[0m`;
         args[0] = prefix + args[0].split("\n").join("\n" + prefix);
-        args.push(
-          colorCode + "m+" + module2.exports.humanize(this.diff) + "\x1B[0m",
-        );
+        args.push(colorCode + "m+" + module2.exports.humanize(this.diff) + "\x1B[0m");
       } else {
         args[0] = getDate() + name + " " + args[0];
       }
@@ -1854,12 +1722,10 @@ var require_node = __commonJS({
       if (exports2.inspectOpts.hideDate) {
         return "";
       }
-      return /* @__PURE__ */ new Date().toISOString() + " ";
+      return (/* @__PURE__ */ new Date()).toISOString() + " ";
     }
     function log(...args) {
-      return process.stderr.write(
-        util.formatWithOptions(exports2.inspectOpts, ...args) + "\n",
-      );
+      return process.stderr.write(util.formatWithOptions(exports2.inspectOpts, ...args) + "\n");
     }
     function save(namespaces) {
       if (namespaces) {
@@ -1880,46 +1746,35 @@ var require_node = __commonJS({
     }
     module2.exports = require_common()(exports2);
     var { formatters } = module2.exports;
-    formatters.o = function (v) {
+    formatters.o = function(v) {
       this.inspectOpts.colors = this.useColors;
-      return util
-        .inspect(v, this.inspectOpts)
-        .split("\n")
-        .map((str) => str.trim())
-        .join(" ");
+      return util.inspect(v, this.inspectOpts).split("\n").map((str) => str.trim()).join(" ");
     };
-    formatters.O = function (v) {
+    formatters.O = function(v) {
       this.inspectOpts.colors = this.useColors;
       return util.inspect(v, this.inspectOpts);
     };
-  },
+  }
 });
 
 // node_modules/debug/src/index.js
 var require_src = __commonJS({
   "node_modules/debug/src/index.js"(exports2, module2) {
-    if (
-      typeof process === "undefined" ||
-      process.type === "renderer" ||
-      process.browser === true ||
-      process.__nwjs
-    ) {
+    if (typeof process === "undefined" || process.type === "renderer" || process.browser === true || process.__nwjs) {
       module2.exports = require_browser();
     } else {
       module2.exports = require_node();
     }
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/transport.js
 var require_transport = __commonJS({
   "node_modules/engine.io-client/build/cjs/transport.js"(exports2) {
     "use strict";
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Transport = exports2.TransportError = void 0;
     var engine_io_parser_1 = require_cjs();
@@ -1963,10 +1818,7 @@ var require_transport = __commonJS({
        * @protected
        */
       onError(reason, description, context) {
-        super.emitReserved(
-          "error",
-          new TransportError(reason, description, context),
-        );
+        super.emitReserved("error", new TransportError(reason, description, context));
         return this;
       }
       /**
@@ -2016,10 +1868,7 @@ var require_transport = __commonJS({
        * @protected
        */
       onData(data) {
-        const packet = (0, engine_io_parser_1.decodePacket)(
-          data,
-          this.socket.binaryType,
-        );
+        const packet = (0, engine_io_parser_1.decodePacket)(data, this.socket.binaryType);
         this.onPacket(packet);
       }
       /**
@@ -2044,27 +1893,17 @@ var require_transport = __commonJS({
        *
        * @param onPause
        */
-      pause(onPause) {}
+      pause(onPause) {
+      }
       createUri(schema, query = {}) {
-        return (
-          schema +
-          "://" +
-          this._hostname() +
-          this._port() +
-          this.opts.path +
-          this._query(query)
-        );
+        return schema + "://" + this._hostname() + this._port() + this.opts.path + this._query(query);
       }
       _hostname() {
         const hostname = this.opts.hostname;
         return hostname.indexOf(":") === -1 ? hostname : "[" + hostname + "]";
       }
       _port() {
-        if (
-          this.opts.port &&
-          ((this.opts.secure && Number(this.opts.port) !== 443) ||
-            (!this.opts.secure && Number(this.opts.port) !== 80))
-        ) {
+        if (this.opts.port && (this.opts.secure && Number(this.opts.port) !== 443 || !this.opts.secure && Number(this.opts.port) !== 80)) {
           return ":" + this.opts.port;
         } else {
           return "";
@@ -2076,18 +1915,16 @@ var require_transport = __commonJS({
       }
     };
     exports2.Transport = Transport;
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/transports/polling.js
 var require_polling = __commonJS({
   "node_modules/engine.io-client/build/cjs/transports/polling.js"(exports2) {
     "use strict";
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Polling = void 0;
     var transport_js_1 = require_transport();
@@ -2130,7 +1967,7 @@ var require_polling = __commonJS({
           if (this._polling) {
             debug("we are currently polling - waiting to pause");
             total++;
-            this.once("pollComplete", function () {
+            this.once("pollComplete", function() {
               debug("pre-pause polling complete");
               --total || pause();
             });
@@ -2138,7 +1975,7 @@ var require_polling = __commonJS({
           if (!this.writable) {
             debug("we are currently writing - waiting to pause");
             total++;
-            this.once("drain", function () {
+            this.once("drain", function() {
               debug("pre-pause writing complete");
               --total || pause();
             });
@@ -2175,10 +2012,7 @@ var require_polling = __commonJS({
           }
           this.onPacket(packet);
         };
-        (0, engine_io_parser_1.decodePayload)(
-          data,
-          this.socket.binaryType,
-        ).forEach(callback);
+        (0, engine_io_parser_1.decodePayload)(data, this.socket.binaryType).forEach(callback);
         if ("closed" !== this.readyState) {
           this._polling = false;
           this.emitReserved("pollComplete");
@@ -2240,7 +2074,7 @@ var require_polling = __commonJS({
       }
     };
     exports2.Polling = Polling;
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/contrib/has-cors.js
@@ -2251,25 +2085,20 @@ var require_has_cors = __commonJS({
     exports2.hasCORS = void 0;
     var value = false;
     try {
-      value =
-        typeof XMLHttpRequest !== "undefined" &&
-        "withCredentials" in new XMLHttpRequest();
-    } catch (err) {}
+      value = typeof XMLHttpRequest !== "undefined" && "withCredentials" in new XMLHttpRequest();
+    } catch (err) {
+    }
     exports2.hasCORS = value;
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/transports/polling-xhr.js
 var require_polling_xhr = __commonJS({
-  "node_modules/engine.io-client/build/cjs/transports/polling-xhr.js"(
-    exports2,
-  ) {
+  "node_modules/engine.io-client/build/cjs/transports/polling-xhr.js"(exports2) {
     "use strict";
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.XHR = exports2.Request = exports2.BaseXHR = void 0;
     var polling_js_1 = require_polling();
@@ -2279,7 +2108,8 @@ var require_polling_xhr = __commonJS({
     var has_cors_js_1 = require_has_cors();
     var debug_1 = __importDefault(require_src());
     var debug = (0, debug_1.default)("engine.io-client:polling");
-    function empty() {}
+    function empty() {
+    }
     var BaseXHR = class extends polling_js_1.Polling {
       /**
        * XHR Polling constructor.
@@ -2295,10 +2125,7 @@ var require_polling_xhr = __commonJS({
           if (!port) {
             port = isSSL ? "443" : "80";
           }
-          this.xd =
-            (typeof location !== "undefined" &&
-              opts.hostname !== location.hostname) ||
-            port !== opts.port;
+          this.xd = typeof location !== "undefined" && opts.hostname !== location.hostname || port !== opts.port;
         }
       }
       /**
@@ -2311,7 +2138,7 @@ var require_polling_xhr = __commonJS({
       doWrite(data, fn) {
         const req = this.request({
           method: "POST",
-          data,
+          data
         });
         req.on("success", fn);
         req.on("error", (xhrStatus, context) => {
@@ -2358,20 +2185,9 @@ var require_polling_xhr = __commonJS({
        */
       _create() {
         var _a;
-        const opts = (0, util_js_1.pick)(
-          this._opts,
-          "agent",
-          "pfx",
-          "key",
-          "passphrase",
-          "cert",
-          "ca",
-          "ciphers",
-          "rejectUnauthorized",
-          "autoUnref",
-        );
+        const opts = (0, util_js_1.pick)(this._opts, "agent", "pfx", "key", "passphrase", "cert", "ca", "ciphers", "rejectUnauthorized", "autoUnref");
         opts.xdomain = !!this._opts.xd;
-        const xhr = (this._xhr = this.createRequest(opts));
+        const xhr = this._xhr = this.createRequest(opts);
         try {
           debug("xhr open %s: %s", this._method, this._uri);
           xhr.open(this._method, this._uri, true);
@@ -2384,18 +2200,19 @@ var require_polling_xhr = __commonJS({
                 }
               }
             }
-          } catch (e) {}
+          } catch (e) {
+          }
           if ("POST" === this._method) {
             try {
               xhr.setRequestHeader("Content-type", "text/plain;charset=UTF-8");
-            } catch (e) {}
+            } catch (e) {
+            }
           }
           try {
             xhr.setRequestHeader("Accept", "*/*");
-          } catch (e) {}
-          (_a = this._opts.cookieJar) === null || _a === void 0
-            ? void 0
-            : _a.addCookies(xhr);
+          } catch (e) {
+          }
+          (_a = this._opts.cookieJar) === null || _a === void 0 ? void 0 : _a.addCookies(xhr);
           if ("withCredentials" in xhr) {
             xhr.withCredentials = this._opts.withCredentials;
           }
@@ -2405,14 +2222,13 @@ var require_polling_xhr = __commonJS({
           xhr.onreadystatechange = () => {
             var _a2;
             if (xhr.readyState === 3) {
-              (_a2 = this._opts.cookieJar) === null || _a2 === void 0
-                ? void 0
-                : _a2.parseCookies(
-                    // @ts-ignore
-                    xhr.getResponseHeader("set-cookie"),
-                  );
+              (_a2 = this._opts.cookieJar) === null || _a2 === void 0 ? void 0 : _a2.parseCookies(
+                // @ts-ignore
+                xhr.getResponseHeader("set-cookie")
+              );
             }
-            if (4 !== xhr.readyState) return;
+            if (4 !== xhr.readyState)
+              return;
             if (200 === xhr.status || 1223 === xhr.status) {
               this._onLoad();
             } else {
@@ -2456,7 +2272,8 @@ var require_polling_xhr = __commonJS({
         if (fromError) {
           try {
             this._xhr.abort();
-          } catch (e) {}
+          } catch (e) {
+          }
         }
         if (typeof document !== "undefined") {
           delete _Request.requests[this._index];
@@ -2492,10 +2309,7 @@ var require_polling_xhr = __commonJS({
       if (typeof attachEvent === "function") {
         attachEvent("onunload", unloadHandler);
       } else if (typeof addEventListener === "function") {
-        const terminationEvent =
-          "onpagehide" in globals_node_js_1.globalThisShim
-            ? "pagehide"
-            : "unload";
+        const terminationEvent = "onpagehide" in globals_node_js_1.globalThisShim ? "pagehide" : "unload";
         addEventListener(terminationEvent, unloadHandler, false);
       }
     }
@@ -2506,9 +2320,9 @@ var require_polling_xhr = __commonJS({
         }
       }
     }
-    var hasXHR2 = (function () {
+    var hasXHR2 = (function() {
       const xhr = newRequest({
-        xdomain: false,
+        xdomain: false
       });
       return xhr && xhr.responseType !== null;
     })();
@@ -2527,77 +2341,52 @@ var require_polling_xhr = __commonJS({
     function newRequest(opts) {
       const xdomain = opts.xdomain;
       try {
-        if (
-          "undefined" !== typeof XMLHttpRequest &&
-          (!xdomain || has_cors_js_1.hasCORS)
-        ) {
+        if ("undefined" !== typeof XMLHttpRequest && (!xdomain || has_cors_js_1.hasCORS)) {
           return new XMLHttpRequest();
         }
-      } catch (e) {}
+      } catch (e) {
+      }
       if (!xdomain) {
         try {
-          return new globals_node_js_1.globalThisShim[
-            ["Active"].concat("Object").join("X")
-          ]("Microsoft.XMLHTTP");
-        } catch (e) {}
+          return new globals_node_js_1.globalThisShim[["Active"].concat("Object").join("X")]("Microsoft.XMLHTTP");
+        } catch (e) {
+        }
       }
     }
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/transports/polling-xhr.node.js
 var require_polling_xhr_node = __commonJS({
-  "node_modules/engine.io-client/build/cjs/transports/polling-xhr.node.js"(
-    exports2,
-  ) {
+  "node_modules/engine.io-client/build/cjs/transports/polling-xhr.node.js"(exports2) {
     "use strict";
-    var __createBinding =
-      (exports2 && exports2.__createBinding) ||
-      (Object.create
-        ? function (o, m, k, k2) {
-            if (k2 === void 0) k2 = k;
-            var desc = Object.getOwnPropertyDescriptor(m, k);
-            if (
-              !desc ||
-              ("get" in desc
-                ? !m.__esModule
-                : desc.writable || desc.configurable)
-            ) {
-              desc = {
-                enumerable: true,
-                get: function () {
-                  return m[k];
-                },
-              };
-            }
-            Object.defineProperty(o, k2, desc);
-          }
-        : function (o, m, k, k2) {
-            if (k2 === void 0) k2 = k;
-            o[k2] = m[k];
-          });
-    var __setModuleDefault =
-      (exports2 && exports2.__setModuleDefault) ||
-      (Object.create
-        ? function (o, v) {
-            Object.defineProperty(o, "default", { enumerable: true, value: v });
-          }
-        : function (o, v) {
-            o["default"] = v;
-          });
-    var __importStar =
-      (exports2 && exports2.__importStar) ||
-      function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) {
-          for (var k in mod)
-            if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
-              __createBinding(result, mod, k);
-        }
-        __setModuleDefault(result, mod);
-        return result;
-      };
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
+      if (k2 === void 0) k2 = k;
+      var desc = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+        desc = { enumerable: true, get: function() {
+          return m[k];
+        } };
+      }
+      Object.defineProperty(o, k2, desc);
+    }) : (function(o, m, k, k2) {
+      if (k2 === void 0) k2 = k;
+      o[k2] = m[k];
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
+      Object.defineProperty(o, "default", { enumerable: true, value: v });
+    }) : function(o, v) {
+      o["default"] = v;
+    });
+    var __importStar = exports2 && exports2.__importStar || function(mod) {
+      if (mod && mod.__esModule) return mod;
+      var result = {};
+      if (mod != null) {
+        for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+      }
+      __setModuleDefault(result, mod);
+      return result;
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.XHR = void 0;
     var XMLHttpRequestModule = __importStar(require_XMLHttpRequest());
@@ -2606,26 +2395,12 @@ var require_polling_xhr_node = __commonJS({
     var XHR = class extends polling_xhr_js_1.BaseXHR {
       request(opts = {}) {
         var _a;
-        Object.assign(
-          opts,
-          {
-            xd: this.xd,
-            cookieJar:
-              (_a = this.socket) === null || _a === void 0
-                ? void 0
-                : _a._cookieJar,
-          },
-          this.opts,
-        );
-        return new polling_xhr_js_1.Request(
-          (opts2) => new XMLHttpRequest2(opts2),
-          this.uri(),
-          opts,
-        );
+        Object.assign(opts, { xd: this.xd, cookieJar: (_a = this.socket) === null || _a === void 0 ? void 0 : _a._cookieJar }, this.opts);
+        return new polling_xhr_js_1.Request((opts2) => new XMLHttpRequest2(opts2), this.uri(), opts);
       }
     };
     exports2.XHR = XHR;
-  },
+  }
 });
 
 // node_modules/ws/lib/constants.js
@@ -2644,9 +2419,10 @@ var require_constants = __commonJS({
       kListener: /* @__PURE__ */ Symbol("kListener"),
       kStatusCode: /* @__PURE__ */ Symbol("status-code"),
       kWebSocket: /* @__PURE__ */ Symbol("websocket"),
-      NOOP: () => {},
+      NOOP: () => {
+      }
     };
-  },
+  }
 });
 
 // node_modules/ws/lib/buffer-util.js
@@ -2705,22 +2481,23 @@ var require_buffer_util = __commonJS({
       mask: _mask,
       toArrayBuffer,
       toBuffer,
-      unmask: _unmask,
+      unmask: _unmask
     };
     if (!process.env.WS_NO_BUFFER_UTIL) {
       try {
         const bufferUtil = require("bufferutil");
-        module2.exports.mask = function (source, mask, output, offset, length) {
+        module2.exports.mask = function(source, mask, output, offset, length) {
           if (length < 48) _mask(source, mask, output, offset, length);
           else bufferUtil.mask(source, mask, output, offset, length);
         };
-        module2.exports.unmask = function (buffer, mask) {
+        module2.exports.unmask = function(buffer, mask) {
           if (buffer.length < 32) _unmask(buffer, mask);
           else bufferUtil.unmask(buffer, mask);
         };
-      } catch (e) {}
+      } catch (e) {
+      }
     }
-  },
+  }
 });
 
 // node_modules/ws/lib/limiter.js
@@ -2770,7 +2547,7 @@ var require_limiter = __commonJS({
       }
     };
     module2.exports = Limiter;
-  },
+  }
 });
 
 // node_modules/ws/lib/permessage-deflate.js
@@ -2817,17 +2594,13 @@ var require_permessage_deflate = __commonJS({
       constructor(options, isServer, maxPayload) {
         this._maxPayload = maxPayload | 0;
         this._options = options || {};
-        this._threshold =
-          this._options.threshold !== void 0 ? this._options.threshold : 1024;
+        this._threshold = this._options.threshold !== void 0 ? this._options.threshold : 1024;
         this._isServer = !!isServer;
         this._deflate = null;
         this._inflate = null;
         this.params = null;
         if (!zlibLimiter) {
-          const concurrency =
-            this._options.concurrencyLimit !== void 0
-              ? this._options.concurrencyLimit
-              : 10;
+          const concurrency = this._options.concurrencyLimit !== void 0 ? this._options.concurrencyLimit : 10;
           zlibLimiter = new Limiter(concurrency);
         }
       }
@@ -2870,9 +2643,7 @@ var require_permessage_deflate = __commonJS({
        */
       accept(configurations) {
         configurations = this.normalizeParams(configurations);
-        this.params = this._isServer
-          ? this.acceptAsServer(configurations)
-          : this.acceptAsClient(configurations);
+        this.params = this._isServer ? this.acceptAsServer(configurations) : this.acceptAsClient(configurations);
         return this.params;
       }
       /**
@@ -2892,8 +2663,8 @@ var require_permessage_deflate = __commonJS({
           if (callback) {
             callback(
               new Error(
-                "The deflate stream was closed while data was being processed",
-              ),
+                "The deflate stream was closed while data was being processed"
+              )
             );
           }
         }
@@ -2908,16 +2679,7 @@ var require_permessage_deflate = __commonJS({
       acceptAsServer(offers) {
         const opts = this._options;
         const accepted = offers.find((params) => {
-          if (
-            (opts.serverNoContextTakeover === false &&
-              params.server_no_context_takeover) ||
-            (params.server_max_window_bits &&
-              (opts.serverMaxWindowBits === false ||
-                (typeof opts.serverMaxWindowBits === "number" &&
-                  opts.serverMaxWindowBits > params.server_max_window_bits))) ||
-            (typeof opts.clientMaxWindowBits === "number" &&
-              !params.client_max_window_bits)
-          ) {
+          if (opts.serverNoContextTakeover === false && params.server_no_context_takeover || params.server_max_window_bits && (opts.serverMaxWindowBits === false || typeof opts.serverMaxWindowBits === "number" && opts.serverMaxWindowBits > params.server_max_window_bits) || typeof opts.clientMaxWindowBits === "number" && !params.client_max_window_bits) {
             return false;
           }
           return true;
@@ -2936,10 +2698,7 @@ var require_permessage_deflate = __commonJS({
         }
         if (typeof opts.clientMaxWindowBits === "number") {
           accepted.client_max_window_bits = opts.clientMaxWindowBits;
-        } else if (
-          accepted.client_max_window_bits === true ||
-          opts.clientMaxWindowBits === false
-        ) {
+        } else if (accepted.client_max_window_bits === true || opts.clientMaxWindowBits === false) {
           delete accepted.client_max_window_bits;
         }
         return accepted;
@@ -2953,23 +2712,16 @@ var require_permessage_deflate = __commonJS({
        */
       acceptAsClient(response) {
         const params = response[0];
-        if (
-          this._options.clientNoContextTakeover === false &&
-          params.client_no_context_takeover
-        ) {
+        if (this._options.clientNoContextTakeover === false && params.client_no_context_takeover) {
           throw new Error('Unexpected parameter "client_no_context_takeover"');
         }
         if (!params.client_max_window_bits) {
           if (typeof this._options.clientMaxWindowBits === "number") {
             params.client_max_window_bits = this._options.clientMaxWindowBits;
           }
-        } else if (
-          this._options.clientMaxWindowBits === false ||
-          (typeof this._options.clientMaxWindowBits === "number" &&
-            params.client_max_window_bits > this._options.clientMaxWindowBits)
-        ) {
+        } else if (this._options.clientMaxWindowBits === false || typeof this._options.clientMaxWindowBits === "number" && params.client_max_window_bits > this._options.clientMaxWindowBits) {
           throw new Error(
-            'Unexpected or invalid parameter "client_max_window_bits"',
+            'Unexpected or invalid parameter "client_max_window_bits"'
           );
         }
         return params;
@@ -2986,9 +2738,7 @@ var require_permessage_deflate = __commonJS({
           Object.keys(params).forEach((key) => {
             let value = params[key];
             if (value.length > 1) {
-              throw new Error(
-                `Parameter "${key}" must have only a single value`,
-              );
+              throw new Error(`Parameter "${key}" must have only a single value`);
             }
             value = value[0];
             if (key === "client_max_window_bits") {
@@ -2996,30 +2746,27 @@ var require_permessage_deflate = __commonJS({
                 const num = +value;
                 if (!Number.isInteger(num) || num < 8 || num > 15) {
                   throw new TypeError(
-                    `Invalid value for parameter "${key}": ${value}`,
+                    `Invalid value for parameter "${key}": ${value}`
                   );
                 }
                 value = num;
               } else if (!this._isServer) {
                 throw new TypeError(
-                  `Invalid value for parameter "${key}": ${value}`,
+                  `Invalid value for parameter "${key}": ${value}`
                 );
               }
             } else if (key === "server_max_window_bits") {
               const num = +value;
               if (!Number.isInteger(num) || num < 8 || num > 15) {
                 throw new TypeError(
-                  `Invalid value for parameter "${key}": ${value}`,
+                  `Invalid value for parameter "${key}": ${value}`
                 );
               }
               value = num;
-            } else if (
-              key === "client_no_context_takeover" ||
-              key === "server_no_context_takeover"
-            ) {
+            } else if (key === "client_no_context_takeover" || key === "server_no_context_takeover") {
               if (value !== true) {
                 throw new TypeError(
-                  `Invalid value for parameter "${key}": ${value}`,
+                  `Invalid value for parameter "${key}": ${value}`
                 );
               }
             } else {
@@ -3074,13 +2821,10 @@ var require_permessage_deflate = __commonJS({
         const endpoint = this._isServer ? "client" : "server";
         if (!this._inflate) {
           const key = `${endpoint}_max_window_bits`;
-          const windowBits =
-            typeof this.params[key] !== "number"
-              ? zlib.Z_DEFAULT_WINDOWBITS
-              : this.params[key];
+          const windowBits = typeof this.params[key] !== "number" ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key];
           this._inflate = zlib.createInflateRaw({
             ...this._options.zlibInflateOptions,
-            windowBits,
+            windowBits
           });
           this._inflate[kPerMessageDeflate] = this;
           this._inflate[kTotalLength] = 0;
@@ -3101,7 +2845,7 @@ var require_permessage_deflate = __commonJS({
           }
           const data2 = bufferUtil.concat(
             this._inflate[kBuffers],
-            this._inflate[kTotalLength],
+            this._inflate[kTotalLength]
           );
           if (this._inflate._readableState.endEmitted) {
             this._inflate.close();
@@ -3128,13 +2872,10 @@ var require_permessage_deflate = __commonJS({
         const endpoint = this._isServer ? "server" : "client";
         if (!this._deflate) {
           const key = `${endpoint}_max_window_bits`;
-          const windowBits =
-            typeof this.params[key] !== "number"
-              ? zlib.Z_DEFAULT_WINDOWBITS
-              : this.params[key];
+          const windowBits = typeof this.params[key] !== "number" ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key];
           this._deflate = zlib.createDeflateRaw({
             ...this._options.zlibDeflateOptions,
-            windowBits,
+            windowBits
           });
           this._deflate[kTotalLength] = 0;
           this._deflate[kBuffers] = [];
@@ -3148,14 +2889,10 @@ var require_permessage_deflate = __commonJS({
           }
           let data2 = bufferUtil.concat(
             this._deflate[kBuffers],
-            this._deflate[kTotalLength],
+            this._deflate[kTotalLength]
           );
           if (fin) {
-            data2 = new FastBuffer(
-              data2.buffer,
-              data2.byteOffset,
-              data2.length - 4,
-            );
+            data2 = new FastBuffer(data2.buffer, data2.byteOffset, data2.length - 4);
           }
           this._deflate[kCallback] = null;
           this._deflate[kTotalLength] = 0;
@@ -3174,10 +2911,7 @@ var require_permessage_deflate = __commonJS({
     }
     function inflateOnData(chunk) {
       this[kTotalLength] += chunk.length;
-      if (
-        this[kPerMessageDeflate]._maxPayload < 1 ||
-        this[kTotalLength] <= this[kPerMessageDeflate]._maxPayload
-      ) {
+      if (this[kPerMessageDeflate]._maxPayload < 1 || this[kTotalLength] <= this[kPerMessageDeflate]._maxPayload) {
         this[kBuffers].push(chunk);
         return;
       }
@@ -3196,7 +2930,7 @@ var require_permessage_deflate = __commonJS({
       err[kStatusCode] = 1007;
       this[kCallback](err);
     }
-  },
+  }
 });
 
 // node_modules/ws/lib/validation.js
@@ -3206,32 +2940,145 @@ var require_validation = __commonJS({
     var { isUtf8 } = require("buffer");
     var { hasBlob } = require_constants();
     var tokenChars = [
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       // 0 - 15
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       // 16 - 31
-      0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
       // 32 - 47
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       // 48 - 63
-      0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       // 64 - 79
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
       // 80 - 95
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       // 96 - 111
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      0,
+      1,
+      0
       // 112 - 127
     ];
     function isValidStatusCode(code) {
-      return (
-        (code >= 1e3 &&
-          code <= 1014 &&
-          code !== 1004 &&
-          code !== 1005 &&
-          code !== 1006) ||
-        (code >= 3e3 && code <= 4999)
-      );
+      return code >= 1e3 && code <= 1014 && code !== 1004 && code !== 1005 && code !== 1006 || code >= 3e3 && code <= 4999;
     }
     function _isValidUTF8(buf) {
       const len = buf.length;
@@ -3240,35 +3087,19 @@ var require_validation = __commonJS({
         if ((buf[i] & 128) === 0) {
           i++;
         } else if ((buf[i] & 224) === 192) {
-          if (
-            i + 1 === len ||
-            (buf[i + 1] & 192) !== 128 ||
-            (buf[i] & 254) === 192
-          ) {
+          if (i + 1 === len || (buf[i + 1] & 192) !== 128 || (buf[i] & 254) === 192) {
             return false;
           }
           i += 2;
         } else if ((buf[i] & 240) === 224) {
-          if (
-            i + 2 >= len ||
-            (buf[i + 1] & 192) !== 128 ||
-            (buf[i + 2] & 192) !== 128 ||
-            (buf[i] === 224 && (buf[i + 1] & 224) === 128) || // Overlong
-            (buf[i] === 237 && (buf[i + 1] & 224) === 160)
-          ) {
+          if (i + 2 >= len || (buf[i + 1] & 192) !== 128 || (buf[i + 2] & 192) !== 128 || buf[i] === 224 && (buf[i + 1] & 224) === 128 || // Overlong
+          buf[i] === 237 && (buf[i + 1] & 224) === 160) {
             return false;
           }
           i += 3;
         } else if ((buf[i] & 248) === 240) {
-          if (
-            i + 3 >= len ||
-            (buf[i + 1] & 192) !== 128 ||
-            (buf[i + 2] & 192) !== 128 ||
-            (buf[i + 3] & 192) !== 128 ||
-            (buf[i] === 240 && (buf[i + 1] & 240) === 128) || // Overlong
-            (buf[i] === 244 && buf[i + 1] > 143) ||
-            buf[i] > 244
-          ) {
+          if (i + 3 >= len || (buf[i + 1] & 192) !== 128 || (buf[i + 2] & 192) !== 128 || (buf[i + 3] & 192) !== 128 || buf[i] === 240 && (buf[i + 1] & 240) === 128 || // Overlong
+          buf[i] === 244 && buf[i + 1] > 143 || buf[i] > 244) {
             return false;
           }
           i += 4;
@@ -3279,35 +3110,28 @@ var require_validation = __commonJS({
       return true;
     }
     function isBlob(value) {
-      return (
-        hasBlob &&
-        typeof value === "object" &&
-        typeof value.arrayBuffer === "function" &&
-        typeof value.type === "string" &&
-        typeof value.stream === "function" &&
-        (value[Symbol.toStringTag] === "Blob" ||
-          value[Symbol.toStringTag] === "File")
-      );
+      return hasBlob && typeof value === "object" && typeof value.arrayBuffer === "function" && typeof value.type === "string" && typeof value.stream === "function" && (value[Symbol.toStringTag] === "Blob" || value[Symbol.toStringTag] === "File");
     }
     module2.exports = {
       isBlob,
       isValidStatusCode,
       isValidUTF8: _isValidUTF8,
-      tokenChars,
+      tokenChars
     };
     if (isUtf8) {
-      module2.exports.isValidUTF8 = function (buf) {
+      module2.exports.isValidUTF8 = function(buf) {
         return buf.length < 24 ? _isValidUTF8(buf) : isUtf8(buf);
       };
     } else if (!process.env.WS_NO_UTF_8_VALIDATE) {
       try {
         const isValidUTF8 = require("utf-8-validate");
-        module2.exports.isValidUTF8 = function (buf) {
+        module2.exports.isValidUTF8 = function(buf) {
           return buf.length < 32 ? _isValidUTF8(buf) : isValidUTF8(buf);
         };
-      } catch (e) {}
+      } catch (e) {
+      }
     }
-  },
+  }
 });
 
 // node_modules/ws/lib/receiver.js
@@ -3316,8 +3140,12 @@ var require_receiver = __commonJS({
     "use strict";
     var { Writable } = require("stream");
     var PerMessageDeflate = require_permessage_deflate();
-    var { BINARY_TYPES, EMPTY_BUFFER, kStatusCode, kWebSocket } =
-      require_constants();
+    var {
+      BINARY_TYPES,
+      EMPTY_BUFFER,
+      kStatusCode,
+      kWebSocket
+    } = require_constants();
     var { concat, toArrayBuffer, unmask } = require_buffer_util();
     var { isValidStatusCode, isValidUTF8 } = require_validation();
     var FastBuffer = Buffer[Symbol.species];
@@ -3347,10 +3175,7 @@ var require_receiver = __commonJS({
        */
       constructor(options = {}) {
         super();
-        this._allowSynchronousEvents =
-          options.allowSynchronousEvents !== void 0
-            ? options.allowSynchronousEvents
-            : true;
+        this._allowSynchronousEvents = options.allowSynchronousEvents !== void 0 ? options.allowSynchronousEvents : true;
         this._binaryType = options.binaryType || BINARY_TYPES[0];
         this._extensions = options.extensions || {};
         this._isServer = !!options.isServer;
@@ -3402,7 +3227,7 @@ var require_receiver = __commonJS({
           this._buffers[0] = new FastBuffer(
             buf.buffer,
             buf.byteOffset + n,
-            buf.length - n,
+            buf.length - n
           );
           return new FastBuffer(buf.buffer, buf.byteOffset, n);
         }
@@ -3417,7 +3242,7 @@ var require_receiver = __commonJS({
             this._buffers[0] = new FastBuffer(
               buf.buffer,
               buf.byteOffset + n,
-              buf.length - n,
+              buf.length - n
             );
           }
           n -= buf.length;
@@ -3475,7 +3300,7 @@ var require_receiver = __commonJS({
             "RSV2 and RSV3 must be clear",
             true,
             1002,
-            "WS_ERR_UNEXPECTED_RSV_2_3",
+            "WS_ERR_UNEXPECTED_RSV_2_3"
           );
           cb(error);
           return;
@@ -3487,7 +3312,7 @@ var require_receiver = __commonJS({
             "RSV1 must be clear",
             true,
             1002,
-            "WS_ERR_UNEXPECTED_RSV_1",
+            "WS_ERR_UNEXPECTED_RSV_1"
           );
           cb(error);
           return;
@@ -3502,7 +3327,7 @@ var require_receiver = __commonJS({
               "RSV1 must be clear",
               true,
               1002,
-              "WS_ERR_UNEXPECTED_RSV_1",
+              "WS_ERR_UNEXPECTED_RSV_1"
             );
             cb(error);
             return;
@@ -3513,7 +3338,7 @@ var require_receiver = __commonJS({
               "invalid opcode 0",
               true,
               1002,
-              "WS_ERR_INVALID_OPCODE",
+              "WS_ERR_INVALID_OPCODE"
             );
             cb(error);
             return;
@@ -3526,7 +3351,7 @@ var require_receiver = __commonJS({
               `invalid opcode ${this._opcode}`,
               true,
               1002,
-              "WS_ERR_INVALID_OPCODE",
+              "WS_ERR_INVALID_OPCODE"
             );
             cb(error);
             return;
@@ -3539,7 +3364,7 @@ var require_receiver = __commonJS({
               "FIN must be set",
               true,
               1002,
-              "WS_ERR_EXPECTED_FIN",
+              "WS_ERR_EXPECTED_FIN"
             );
             cb(error);
             return;
@@ -3550,21 +3375,18 @@ var require_receiver = __commonJS({
               "RSV1 must be clear",
               true,
               1002,
-              "WS_ERR_UNEXPECTED_RSV_1",
+              "WS_ERR_UNEXPECTED_RSV_1"
             );
             cb(error);
             return;
           }
-          if (
-            this._payloadLength > 125 ||
-            (this._opcode === 8 && this._payloadLength === 1)
-          ) {
+          if (this._payloadLength > 125 || this._opcode === 8 && this._payloadLength === 1) {
             const error = this.createError(
               RangeError,
               `invalid payload length ${this._payloadLength}`,
               true,
               1002,
-              "WS_ERR_INVALID_CONTROL_PAYLOAD_LENGTH",
+              "WS_ERR_INVALID_CONTROL_PAYLOAD_LENGTH"
             );
             cb(error);
             return;
@@ -3575,7 +3397,7 @@ var require_receiver = __commonJS({
             `invalid opcode ${this._opcode}`,
             true,
             1002,
-            "WS_ERR_INVALID_OPCODE",
+            "WS_ERR_INVALID_OPCODE"
           );
           cb(error);
           return;
@@ -3589,7 +3411,7 @@ var require_receiver = __commonJS({
               "MASK must be set",
               true,
               1002,
-              "WS_ERR_EXPECTED_MASK",
+              "WS_ERR_EXPECTED_MASK"
             );
             cb(error);
             return;
@@ -3600,14 +3422,13 @@ var require_receiver = __commonJS({
             "MASK must be clear",
             true,
             1002,
-            "WS_ERR_UNEXPECTED_MASK",
+            "WS_ERR_UNEXPECTED_MASK"
           );
           cb(error);
           return;
         }
         if (this._payloadLength === 126) this._state = GET_PAYLOAD_LENGTH_16;
-        else if (this._payloadLength === 127)
-          this._state = GET_PAYLOAD_LENGTH_64;
+        else if (this._payloadLength === 127) this._state = GET_PAYLOAD_LENGTH_64;
         else this.haveLength(cb);
       }
       /**
@@ -3643,7 +3464,7 @@ var require_receiver = __commonJS({
             "Unsupported WebSocket frame: payload length > 2^53 - 1",
             false,
             1009,
-            "WS_ERR_UNSUPPORTED_DATA_PAYLOAD_LENGTH",
+            "WS_ERR_UNSUPPORTED_DATA_PAYLOAD_LENGTH"
           );
           cb(error);
           return;
@@ -3660,16 +3481,13 @@ var require_receiver = __commonJS({
       haveLength(cb) {
         if (this._payloadLength && this._opcode < 8) {
           this._totalPayloadLength += this._payloadLength;
-          if (
-            this._totalPayloadLength > this._maxPayload &&
-            this._maxPayload > 0
-          ) {
+          if (this._totalPayloadLength > this._maxPayload && this._maxPayload > 0) {
             const error = this.createError(
               RangeError,
               "Max payload size exceeded",
               false,
               1009,
-              "WS_ERR_UNSUPPORTED_MESSAGE_LENGTH",
+              "WS_ERR_UNSUPPORTED_MESSAGE_LENGTH"
             );
             cb(error);
             return;
@@ -3705,11 +3523,7 @@ var require_receiver = __commonJS({
             return;
           }
           data = this.consume(this._payloadLength);
-          if (
-            this._masked &&
-            (this._mask[0] | this._mask[1] | this._mask[2] | this._mask[3]) !==
-              0
-          ) {
+          if (this._masked && (this._mask[0] | this._mask[1] | this._mask[2] | this._mask[3]) !== 0) {
             unmask(data, this._mask);
           }
         }
@@ -3736,22 +3550,18 @@ var require_receiver = __commonJS({
        * @private
        */
       decompress(data, cb) {
-        const perMessageDeflate =
-          this._extensions[PerMessageDeflate.extensionName];
+        const perMessageDeflate = this._extensions[PerMessageDeflate.extensionName];
         perMessageDeflate.decompress(data, this._fin, (err, buf) => {
           if (err) return cb(err);
           if (buf.length) {
             this._messageLength += buf.length;
-            if (
-              this._messageLength > this._maxPayload &&
-              this._maxPayload > 0
-            ) {
+            if (this._messageLength > this._maxPayload && this._maxPayload > 0) {
               const error = this.createError(
                 RangeError,
                 "Max payload size exceeded",
                 false,
                 1009,
-                "WS_ERR_UNSUPPORTED_MESSAGE_LENGTH",
+                "WS_ERR_UNSUPPORTED_MESSAGE_LENGTH"
               );
               cb(error);
               return;
@@ -3809,7 +3619,7 @@ var require_receiver = __commonJS({
               "invalid UTF-8 sequence",
               true,
               1007,
-              "WS_ERR_INVALID_UTF8",
+              "WS_ERR_INVALID_UTF8"
             );
             cb(error);
             return;
@@ -3848,7 +3658,7 @@ var require_receiver = __commonJS({
                 `invalid status code ${code}`,
                 true,
                 1002,
-                "WS_ERR_INVALID_CLOSE_CODE",
+                "WS_ERR_INVALID_CLOSE_CODE"
               );
               cb(error);
               return;
@@ -3856,7 +3666,7 @@ var require_receiver = __commonJS({
             const buf = new FastBuffer(
               data.buffer,
               data.byteOffset + 2,
-              data.length - 2,
+              data.length - 2
             );
             if (!this._skipUTF8Validation && !isValidUTF8(buf)) {
               const error = this.createError(
@@ -3864,7 +3674,7 @@ var require_receiver = __commonJS({
                 "invalid UTF-8 sequence",
                 true,
                 1007,
-                "WS_ERR_INVALID_UTF8",
+                "WS_ERR_INVALID_UTF8"
               );
               cb(error);
               return;
@@ -3904,7 +3714,7 @@ var require_receiver = __commonJS({
         this._loop = false;
         this._errored = true;
         const err = new ErrorCtor(
-          prefix ? `Invalid WebSocket frame: ${message}` : message,
+          prefix ? `Invalid WebSocket frame: ${message}` : message
         );
         Error.captureStackTrace(err, this.createError);
         err.code = errorCode;
@@ -3913,7 +3723,7 @@ var require_receiver = __commonJS({
       }
     };
     module2.exports = Receiver;
-  },
+  }
 });
 
 // node_modules/ws/lib/sender.js
@@ -4006,10 +3816,7 @@ var require_sender = __commonJS({
         }
         let dataLength;
         if (typeof data === "string") {
-          if (
-            (!options.mask || skipMasking) &&
-            options[kByteLength] !== void 0
-          ) {
+          if ((!options.mask || skipMasking) && options[kByteLength] !== void 0) {
             dataLength = options[kByteLength];
           } else {
             data = Buffer.from(data);
@@ -4065,18 +3872,14 @@ var require_sender = __commonJS({
         if (code === void 0) {
           buf = EMPTY_BUFFER;
         } else if (typeof code !== "number" || !isValidStatusCode(code)) {
-          throw new TypeError(
-            "First argument must be a valid error code number",
-          );
+          throw new TypeError("First argument must be a valid error code number");
         } else if (data === void 0 || !data.length) {
           buf = Buffer.allocUnsafe(2);
           buf.writeUInt16BE(code, 0);
         } else {
           const length = Buffer.byteLength(data);
           if (length > 123) {
-            throw new RangeError(
-              "The message must not be greater than 123 bytes",
-            );
+            throw new RangeError("The message must not be greater than 123 bytes");
           }
           buf = Buffer.allocUnsafe(2 + length);
           buf.writeUInt16BE(code, 0);
@@ -4094,7 +3897,7 @@ var require_sender = __commonJS({
           maskBuffer: this._maskBuffer,
           opcode: 8,
           readOnly: false,
-          rsv1: false,
+          rsv1: false
         };
         if (this._state !== DEFAULT) {
           this.enqueue([this.dispatch, buf, false, options, cb]);
@@ -4125,9 +3928,7 @@ var require_sender = __commonJS({
           readOnly = toBuffer.readOnly;
         }
         if (byteLength > 125) {
-          throw new RangeError(
-            "The data size must not be greater than 125 bytes",
-          );
+          throw new RangeError("The data size must not be greater than 125 bytes");
         }
         const options = {
           [kByteLength]: byteLength,
@@ -4137,7 +3938,7 @@ var require_sender = __commonJS({
           maskBuffer: this._maskBuffer,
           opcode: 9,
           readOnly,
-          rsv1: false,
+          rsv1: false
         };
         if (isBlob(data)) {
           if (this._state !== DEFAULT) {
@@ -4174,9 +3975,7 @@ var require_sender = __commonJS({
           readOnly = toBuffer.readOnly;
         }
         if (byteLength > 125) {
-          throw new RangeError(
-            "The data size must not be greater than 125 bytes",
-          );
+          throw new RangeError("The data size must not be greater than 125 bytes");
         }
         const options = {
           [kByteLength]: byteLength,
@@ -4186,7 +3985,7 @@ var require_sender = __commonJS({
           maskBuffer: this._maskBuffer,
           opcode: 10,
           readOnly,
-          rsv1: false,
+          rsv1: false
         };
         if (isBlob(data)) {
           if (this._state !== DEFAULT) {
@@ -4217,8 +4016,7 @@ var require_sender = __commonJS({
        * @public
        */
       send(data, options, cb) {
-        const perMessageDeflate =
-          this._extensions[PerMessageDeflate.extensionName];
+        const perMessageDeflate = this._extensions[PerMessageDeflate.extensionName];
         let opcode = options.binary ? 2 : 1;
         let rsv1 = options.compress;
         let byteLength;
@@ -4236,15 +4034,7 @@ var require_sender = __commonJS({
         }
         if (this._firstFragment) {
           this._firstFragment = false;
-          if (
-            rsv1 &&
-            perMessageDeflate &&
-            perMessageDeflate.params[
-              perMessageDeflate._isServer
-                ? "server_no_context_takeover"
-                : "client_no_context_takeover"
-            ]
-          ) {
+          if (rsv1 && perMessageDeflate && perMessageDeflate.params[perMessageDeflate._isServer ? "server_no_context_takeover" : "client_no_context_takeover"]) {
             rsv1 = byteLength >= perMessageDeflate._threshold;
           }
           this._compress = rsv1;
@@ -4261,7 +4051,7 @@ var require_sender = __commonJS({
           maskBuffer: this._maskBuffer,
           opcode,
           readOnly,
-          rsv1,
+          rsv1
         };
         if (isBlob(data)) {
           if (this._state !== DEFAULT) {
@@ -4301,29 +4091,26 @@ var require_sender = __commonJS({
       getBlobData(blob, compress, options, cb) {
         this._bufferedBytes += options[kByteLength];
         this._state = GET_BLOB_DATA;
-        blob
-          .arrayBuffer()
-          .then((arrayBuffer) => {
-            if (this._socket.destroyed) {
-              const err = new Error(
-                "The socket was closed while the blob was being read",
-              );
-              process.nextTick(callCallbacks, this, err, cb);
-              return;
-            }
-            this._bufferedBytes -= options[kByteLength];
-            const data = toBuffer(arrayBuffer);
-            if (!compress) {
-              this._state = DEFAULT;
-              this.sendFrame(_Sender.frame(data, options), cb);
-              this.dequeue();
-            } else {
-              this.dispatch(data, compress, options, cb);
-            }
-          })
-          .catch((err) => {
-            process.nextTick(onError, this, err, cb);
-          });
+        blob.arrayBuffer().then((arrayBuffer) => {
+          if (this._socket.destroyed) {
+            const err = new Error(
+              "The socket was closed while the blob was being read"
+            );
+            process.nextTick(callCallbacks, this, err, cb);
+            return;
+          }
+          this._bufferedBytes -= options[kByteLength];
+          const data = toBuffer(arrayBuffer);
+          if (!compress) {
+            this._state = DEFAULT;
+            this.sendFrame(_Sender.frame(data, options), cb);
+            this.dequeue();
+          } else {
+            this.dispatch(data, compress, options, cb);
+          }
+        }).catch((err) => {
+          process.nextTick(onError, this, err, cb);
+        });
       }
       /**
        * Dispatches a message.
@@ -4353,14 +4140,13 @@ var require_sender = __commonJS({
           this.sendFrame(_Sender.frame(data, options), cb);
           return;
         }
-        const perMessageDeflate =
-          this._extensions[PerMessageDeflate.extensionName];
+        const perMessageDeflate = this._extensions[PerMessageDeflate.extensionName];
         this._bufferedBytes += options[kByteLength];
         this._state = DEFLATING;
         perMessageDeflate.compress(data, options.fin, (_, buf) => {
           if (this._socket.destroyed) {
             const err = new Error(
-              "The socket was closed while data was being compressed",
+              "The socket was closed while data was being compressed"
             );
             callCallbacks(this, err, cb);
             return;
@@ -4425,7 +4211,7 @@ var require_sender = __commonJS({
       callCallbacks(sender, err, cb);
       sender.onerror(err);
     }
-  },
+  }
 });
 
 // node_modules/ws/lib/event-target.js
@@ -4485,8 +4271,7 @@ var require_event_target = __commonJS({
         super(type2);
         this[kCode] = options.code === void 0 ? 0 : options.code;
         this[kReason] = options.reason === void 0 ? "" : options.reason;
-        this[kWasClean] =
-          options.wasClean === void 0 ? false : options.wasClean;
+        this[kWasClean] = options.wasClean === void 0 ? false : options.wasClean;
       }
       /**
        * @type {Number}
@@ -4509,9 +4294,7 @@ var require_event_target = __commonJS({
     };
     Object.defineProperty(CloseEvent.prototype, "code", { enumerable: true });
     Object.defineProperty(CloseEvent.prototype, "reason", { enumerable: true });
-    Object.defineProperty(CloseEvent.prototype, "wasClean", {
-      enumerable: true,
-    });
+    Object.defineProperty(CloseEvent.prototype, "wasClean", { enumerable: true });
     var ErrorEvent = class extends Event {
       /**
        * Create a new `ErrorEvent`.
@@ -4541,9 +4324,7 @@ var require_event_target = __commonJS({
       }
     };
     Object.defineProperty(ErrorEvent.prototype, "error", { enumerable: true });
-    Object.defineProperty(ErrorEvent.prototype, "message", {
-      enumerable: true,
-    });
+    Object.defineProperty(ErrorEvent.prototype, "message", { enumerable: true });
     var MessageEvent = class extends Event {
       /**
        * Create a new `MessageEvent`.
@@ -4580,11 +4361,7 @@ var require_event_target = __commonJS({
        */
       addEventListener(type2, handler, options = {}) {
         for (const listener of this.listeners(type2)) {
-          if (
-            !options[kForOnEventAttribute] &&
-            listener[kListener] === handler &&
-            !listener[kForOnEventAttribute]
-          ) {
+          if (!options[kForOnEventAttribute] && listener[kListener] === handler && !listener[kForOnEventAttribute]) {
             return;
           }
         }
@@ -4592,7 +4369,7 @@ var require_event_target = __commonJS({
         if (type2 === "message") {
           wrapper = function onMessage(data, isBinary) {
             const event = new MessageEvent("message", {
-              data: isBinary ? data : data.toString(),
+              data: isBinary ? data : data.toString()
             });
             event[kTarget] = this;
             callListener(handler, this, event);
@@ -4602,7 +4379,7 @@ var require_event_target = __commonJS({
             const event = new CloseEvent("close", {
               code,
               reason: message.toString(),
-              wasClean: this._closeFrameReceived && this._closeFrameSent,
+              wasClean: this._closeFrameReceived && this._closeFrameSent
             });
             event[kTarget] = this;
             callListener(handler, this, event);
@@ -4611,7 +4388,7 @@ var require_event_target = __commonJS({
           wrapper = function onError(error) {
             const event = new ErrorEvent("error", {
               error,
-              message: error.message,
+              message: error.message
             });
             event[kTarget] = this;
             callListener(handler, this, event);
@@ -4642,22 +4419,19 @@ var require_event_target = __commonJS({
        */
       removeEventListener(type2, handler) {
         for (const listener of this.listeners(type2)) {
-          if (
-            listener[kListener] === handler &&
-            !listener[kForOnEventAttribute]
-          ) {
+          if (listener[kListener] === handler && !listener[kForOnEventAttribute]) {
             this.removeListener(type2, listener);
             break;
           }
         }
-      },
+      }
     };
     module2.exports = {
       CloseEvent,
       ErrorEvent,
       Event,
       EventTarget,
-      MessageEvent,
+      MessageEvent
     };
     function callListener(listener, thisArg, event) {
       if (typeof listener === "object" && listener.handleEvent) {
@@ -4666,7 +4440,7 @@ var require_event_target = __commonJS({
         listener.call(thisArg, event);
       }
     }
-  },
+  }
 });
 
 // node_modules/ws/lib/extension.js
@@ -4804,30 +4578,22 @@ var require_extension = __commonJS({
       return offers;
     }
     function format(extensions) {
-      return Object.keys(extensions)
-        .map((extension) => {
-          let configurations = extensions[extension];
-          if (!Array.isArray(configurations)) configurations = [configurations];
-          return configurations
-            .map((params) => {
-              return [extension]
-                .concat(
-                  Object.keys(params).map((k) => {
-                    let values = params[k];
-                    if (!Array.isArray(values)) values = [values];
-                    return values
-                      .map((v) => (v === true ? k : `${k}=${v}`))
-                      .join("; ");
-                  }),
-                )
-                .join("; ");
+      return Object.keys(extensions).map((extension) => {
+        let configurations = extensions[extension];
+        if (!Array.isArray(configurations)) configurations = [configurations];
+        return configurations.map((params) => {
+          return [extension].concat(
+            Object.keys(params).map((k) => {
+              let values = params[k];
+              if (!Array.isArray(values)) values = [values];
+              return values.map((v) => v === true ? k : `${k}=${v}`).join("; ");
             })
-            .join(", ");
-        })
-        .join(", ");
+          ).join("; ");
+        }).join(", ");
+      }).join(", ");
     }
     module2.exports = { format, parse };
-  },
+  }
 });
 
 // node_modules/ws/lib/websocket.js
@@ -4854,13 +4620,10 @@ var require_websocket = __commonJS({
       kListener,
       kStatusCode,
       kWebSocket,
-      NOOP,
+      NOOP
     } = require_constants();
     var {
-      EventTarget: {
-        addEventListener: addEventListener2,
-        removeEventListener: removeEventListener2,
-      },
+      EventTarget: { addEventListener: addEventListener2, removeEventListener: removeEventListener2 }
     } = require_event_target();
     var { format, parse } = require_extension();
     var { toBuffer } = require_buffer_util();
@@ -5015,13 +4778,9 @@ var require_websocket = __commonJS({
           extensions: this._extensions,
           isServer: this._isServer,
           maxPayload: options.maxPayload,
-          skipUTF8Validation: options.skipUTF8Validation,
+          skipUTF8Validation: options.skipUTF8Validation
         });
-        const sender = new Sender(
-          socket,
-          this._extensions,
-          options.generateMask,
-        );
+        const sender = new Sender(socket, this._extensions, options.generateMask);
         this._receiver = receiver;
         this._sender = sender;
         this._socket = socket;
@@ -5086,17 +4845,12 @@ var require_websocket = __commonJS({
       close(code, data) {
         if (this.readyState === _WebSocket.CLOSED) return;
         if (this.readyState === _WebSocket.CONNECTING) {
-          const msg =
-            "WebSocket was closed before the connection was established";
+          const msg = "WebSocket was closed before the connection was established";
           abortHandshake(this, this._req, msg);
           return;
         }
         if (this.readyState === _WebSocket.CLOSING) {
-          if (
-            this._closeFrameSent &&
-            (this._closeFrameReceived ||
-              this._receiver._writableState.errorEmitted)
-          ) {
+          if (this._closeFrameSent && (this._closeFrameReceived || this._receiver._writableState.errorEmitted)) {
             this._socket.end();
           }
           return;
@@ -5105,10 +4859,7 @@ var require_websocket = __commonJS({
         this._sender.close(code, data, !this._isServer, (err) => {
           if (err) return;
           this._closeFrameSent = true;
-          if (
-            this._closeFrameReceived ||
-            this._receiver._writableState.errorEmitted
-          ) {
+          if (this._closeFrameReceived || this._receiver._writableState.errorEmitted) {
             this._socket.end();
           }
         });
@@ -5120,10 +4871,7 @@ var require_websocket = __commonJS({
        * @public
        */
       pause() {
-        if (
-          this.readyState === _WebSocket.CONNECTING ||
-          this.readyState === _WebSocket.CLOSED
-        ) {
+        if (this.readyState === _WebSocket.CONNECTING || this.readyState === _WebSocket.CLOSED) {
           return;
         }
         this._paused = true;
@@ -5189,10 +4937,7 @@ var require_websocket = __commonJS({
        * @public
        */
       resume() {
-        if (
-          this.readyState === _WebSocket.CONNECTING ||
-          this.readyState === _WebSocket.CLOSED
-        ) {
+        if (this.readyState === _WebSocket.CONNECTING || this.readyState === _WebSocket.CLOSED) {
           return;
         }
         this._paused = false;
@@ -5231,7 +4976,7 @@ var require_websocket = __commonJS({
           mask: !this._isServer,
           compress: true,
           fin: true,
-          ...options,
+          ...options
         };
         if (!this._extensions[PerMessageDeflate.extensionName]) {
           opts.compress = false;
@@ -5246,8 +4991,7 @@ var require_websocket = __commonJS({
       terminate() {
         if (this.readyState === _WebSocket.CLOSED) return;
         if (this.readyState === _WebSocket.CONNECTING) {
-          const msg =
-            "WebSocket was closed before the connection was established";
+          const msg = "WebSocket was closed before the connection was established";
           abortHandshake(this, this._req, msg);
           return;
         }
@@ -5259,35 +5003,35 @@ var require_websocket = __commonJS({
     };
     Object.defineProperty(WebSocket, "CONNECTING", {
       enumerable: true,
-      value: readyStates.indexOf("CONNECTING"),
+      value: readyStates.indexOf("CONNECTING")
     });
     Object.defineProperty(WebSocket.prototype, "CONNECTING", {
       enumerable: true,
-      value: readyStates.indexOf("CONNECTING"),
+      value: readyStates.indexOf("CONNECTING")
     });
     Object.defineProperty(WebSocket, "OPEN", {
       enumerable: true,
-      value: readyStates.indexOf("OPEN"),
+      value: readyStates.indexOf("OPEN")
     });
     Object.defineProperty(WebSocket.prototype, "OPEN", {
       enumerable: true,
-      value: readyStates.indexOf("OPEN"),
+      value: readyStates.indexOf("OPEN")
     });
     Object.defineProperty(WebSocket, "CLOSING", {
       enumerable: true,
-      value: readyStates.indexOf("CLOSING"),
+      value: readyStates.indexOf("CLOSING")
     });
     Object.defineProperty(WebSocket.prototype, "CLOSING", {
       enumerable: true,
-      value: readyStates.indexOf("CLOSING"),
+      value: readyStates.indexOf("CLOSING")
     });
     Object.defineProperty(WebSocket, "CLOSED", {
       enumerable: true,
-      value: readyStates.indexOf("CLOSED"),
+      value: readyStates.indexOf("CLOSED")
     });
     Object.defineProperty(WebSocket.prototype, "CLOSED", {
       enumerable: true,
-      value: readyStates.indexOf("CLOSED"),
+      value: readyStates.indexOf("CLOSED")
     });
     [
       "binaryType",
@@ -5296,11 +5040,9 @@ var require_websocket = __commonJS({
       "isPaused",
       "protocol",
       "readyState",
-      "url",
+      "url"
     ].forEach((property) => {
-      Object.defineProperty(WebSocket.prototype, property, {
-        enumerable: true,
-      });
+      Object.defineProperty(WebSocket.prototype, property, { enumerable: true });
     });
     ["open", "error", "close", "message"].forEach((method) => {
       Object.defineProperty(WebSocket.prototype, `on${method}`, {
@@ -5320,9 +5062,9 @@ var require_websocket = __commonJS({
           }
           if (typeof handler !== "function") return;
           this.addEventListener(method, handler, {
-            [kForOnEventAttribute]: true,
+            [kForOnEventAttribute]: true
           });
-        },
+        }
       });
     });
     WebSocket.prototype.addEventListener = addEventListener2;
@@ -5346,12 +5088,12 @@ var require_websocket = __commonJS({
         method: "GET",
         host: void 0,
         path: void 0,
-        port: void 0,
+        port: void 0
       };
       websocket._autoPong = opts.autoPong;
       if (!protocolVersions.includes(opts.protocolVersion)) {
         throw new RangeError(
-          `Unsupported protocol version: ${opts.protocolVersion} (supported versions: ${protocolVersions.join(", ")})`,
+          `Unsupported protocol version: ${opts.protocolVersion} (supported versions: ${protocolVersions.join(", ")})`
         );
       }
       let parsedUrl;
@@ -5394,19 +5136,16 @@ var require_websocket = __commonJS({
       const request = isSecure ? https.request : http.request;
       const protocolSet = /* @__PURE__ */ new Set();
       let perMessageDeflate;
-      opts.createConnection =
-        opts.createConnection || (isSecure ? tlsConnect : netConnect);
+      opts.createConnection = opts.createConnection || (isSecure ? tlsConnect : netConnect);
       opts.defaultPort = opts.defaultPort || defaultPort;
       opts.port = parsedUrl.port || defaultPort;
-      opts.host = parsedUrl.hostname.startsWith("[")
-        ? parsedUrl.hostname.slice(1, -1)
-        : parsedUrl.hostname;
+      opts.host = parsedUrl.hostname.startsWith("[") ? parsedUrl.hostname.slice(1, -1) : parsedUrl.hostname;
       opts.headers = {
         ...opts.headers,
         "Sec-WebSocket-Version": opts.protocolVersion,
         "Sec-WebSocket-Key": key,
         Connection: "Upgrade",
-        Upgrade: "websocket",
+        Upgrade: "websocket"
       };
       opts.path = parsedUrl.pathname + parsedUrl.search;
       opts.timeout = opts.handshakeTimeout;
@@ -5414,21 +5153,17 @@ var require_websocket = __commonJS({
         perMessageDeflate = new PerMessageDeflate(
           opts.perMessageDeflate !== true ? opts.perMessageDeflate : {},
           false,
-          opts.maxPayload,
+          opts.maxPayload
         );
         opts.headers["Sec-WebSocket-Extensions"] = format({
-          [PerMessageDeflate.extensionName]: perMessageDeflate.offer(),
+          [PerMessageDeflate.extensionName]: perMessageDeflate.offer()
         });
       }
       if (protocols.length) {
         for (const protocol of protocols) {
-          if (
-            typeof protocol !== "string" ||
-            !subprotocolRegex.test(protocol) ||
-            protocolSet.has(protocol)
-          ) {
+          if (typeof protocol !== "string" || !subprotocolRegex.test(protocol) || protocolSet.has(protocol)) {
             throw new SyntaxError(
-              "An invalid or duplicated subprotocol was specified",
+              "An invalid or duplicated subprotocol was specified"
             );
           }
           protocolSet.add(protocol);
@@ -5455,9 +5190,7 @@ var require_websocket = __commonJS({
         if (websocket._redirects === 0) {
           websocket._originalIpc = isIpcUrl;
           websocket._originalSecure = isSecure;
-          websocket._originalHostOrSocketPath = isIpcUrl
-            ? opts.socketPath
-            : parsedUrl.host;
+          websocket._originalHostOrSocketPath = isIpcUrl ? opts.socketPath : parsedUrl.host;
           const headers = options && options.headers;
           options = { ...options, headers: {} };
           if (headers) {
@@ -5466,14 +5199,8 @@ var require_websocket = __commonJS({
             }
           }
         } else if (websocket.listenerCount("redirect") === 0) {
-          const isSameHost = isIpcUrl
-            ? websocket._originalIpc
-              ? opts.socketPath === websocket._originalHostOrSocketPath
-              : false
-            : websocket._originalIpc
-              ? false
-              : parsedUrl.host === websocket._originalHostOrSocketPath;
-          if (!isSameHost || (websocket._originalSecure && !isSecure)) {
+          const isSameHost = isIpcUrl ? websocket._originalIpc ? opts.socketPath === websocket._originalHostOrSocketPath : false : websocket._originalIpc ? false : parsedUrl.host === websocket._originalHostOrSocketPath;
+          if (!isSameHost || websocket._originalSecure && !isSecure) {
             delete opts.headers.authorization;
             delete opts.headers.cookie;
             if (!isSameHost) delete opts.headers.host;
@@ -5481,8 +5208,7 @@ var require_websocket = __commonJS({
           }
         }
         if (opts.auth && !options.headers.authorization) {
-          options.headers.authorization =
-            "Basic " + Buffer.from(opts.auth).toString("base64");
+          options.headers.authorization = "Basic " + Buffer.from(opts.auth).toString("base64");
         }
         req = websocket._req = request(opts);
         if (websocket._redirects) {
@@ -5504,12 +5230,7 @@ var require_websocket = __commonJS({
       req.on("response", (res) => {
         const location2 = res.headers.location;
         const statusCode = res.statusCode;
-        if (
-          location2 &&
-          opts.followRedirects &&
-          statusCode >= 300 &&
-          statusCode < 400
-        ) {
+        if (location2 && opts.followRedirects && statusCode >= 300 && statusCode < 400) {
           if (++websocket._redirects > opts.maxRedirects) {
             abortHandshake(websocket, req, "Maximum redirects exceeded");
             return;
@@ -5528,7 +5249,7 @@ var require_websocket = __commonJS({
           abortHandshake(
             websocket,
             req,
-            `Unexpected server response: ${res.statusCode}`,
+            `Unexpected server response: ${res.statusCode}`
           );
         }
       });
@@ -5541,15 +5262,9 @@ var require_websocket = __commonJS({
           abortHandshake(websocket, socket, "Invalid Upgrade header");
           return;
         }
-        const digest = createHash("sha1")
-          .update(key + GUID)
-          .digest("base64");
+        const digest = createHash("sha1").update(key + GUID).digest("base64");
         if (res.headers["sec-websocket-accept"] !== digest) {
-          abortHandshake(
-            websocket,
-            socket,
-            "Invalid Sec-WebSocket-Accept header",
-          );
+          abortHandshake(websocket, socket, "Invalid Sec-WebSocket-Accept header");
           return;
         }
         const serverProt = res.headers["sec-websocket-protocol"];
@@ -5571,8 +5286,7 @@ var require_websocket = __commonJS({
         const secWebSocketExtensions = res.headers["sec-websocket-extensions"];
         if (secWebSocketExtensions !== void 0) {
           if (!perMessageDeflate) {
-            const message =
-              "Server sent a Sec-WebSocket-Extensions header but no extension was requested";
+            const message = "Server sent a Sec-WebSocket-Extensions header but no extension was requested";
             abortHandshake(websocket, socket, message);
             return;
           }
@@ -5585,32 +5299,25 @@ var require_websocket = __commonJS({
             return;
           }
           const extensionNames = Object.keys(extensions);
-          if (
-            extensionNames.length !== 1 ||
-            extensionNames[0] !== PerMessageDeflate.extensionName
-          ) {
-            const message =
-              "Server indicated an extension that was not requested";
+          if (extensionNames.length !== 1 || extensionNames[0] !== PerMessageDeflate.extensionName) {
+            const message = "Server indicated an extension that was not requested";
             abortHandshake(websocket, socket, message);
             return;
           }
           try {
-            perMessageDeflate.accept(
-              extensions[PerMessageDeflate.extensionName],
-            );
+            perMessageDeflate.accept(extensions[PerMessageDeflate.extensionName]);
           } catch (err) {
             const message = "Invalid Sec-WebSocket-Extensions header";
             abortHandshake(websocket, socket, message);
             return;
           }
-          websocket._extensions[PerMessageDeflate.extensionName] =
-            perMessageDeflate;
+          websocket._extensions[PerMessageDeflate.extensionName] = perMessageDeflate;
         }
         websocket.setSocket(socket, head, {
           allowSynchronousEvents: opts.allowSynchronousEvents,
           generateMask: opts.generateMask,
           maxPayload: opts.maxPayload,
-          skipUTF8Validation: opts.skipUTF8Validation,
+          skipUTF8Validation: opts.skipUTF8Validation
         });
       });
       if (opts.finishRequest) {
@@ -5661,7 +5368,7 @@ var require_websocket = __commonJS({
       }
       if (cb) {
         const err = new Error(
-          `WebSocket is not open: readyState ${websocket.readyState} (${readyStates[websocket.readyState]})`,
+          `WebSocket is not open: readyState ${websocket.readyState} (${readyStates[websocket.readyState]})`
         );
         process.nextTick(cb, err);
       }
@@ -5726,7 +5433,7 @@ var require_websocket = __commonJS({
     function setCloseTimer(websocket) {
       websocket._closeTimer = setTimeout(
         websocket._socket.destroy.bind(websocket._socket),
-        closeTimeout,
+        closeTimeout
       );
     }
     function socketOnClose() {
@@ -5736,21 +5443,13 @@ var require_websocket = __commonJS({
       this.removeListener("end", socketOnEnd);
       websocket._readyState = WebSocket.CLOSING;
       let chunk;
-      if (
-        !this._readableState.endEmitted &&
-        !websocket._closeFrameReceived &&
-        !websocket._receiver._writableState.errorEmitted &&
-        (chunk = websocket._socket.read()) !== null
-      ) {
+      if (!this._readableState.endEmitted && !websocket._closeFrameReceived && !websocket._receiver._writableState.errorEmitted && (chunk = websocket._socket.read()) !== null) {
         websocket._receiver.write(chunk);
       }
       websocket._receiver.end();
       this[kWebSocket] = void 0;
       clearTimeout(websocket._closeTimer);
-      if (
-        websocket._receiver._writableState.finished ||
-        websocket._receiver._writableState.errorEmitted
-      ) {
+      if (websocket._receiver._writableState.finished || websocket._receiver._writableState.errorEmitted) {
         websocket.emitClose();
       } else {
         websocket._receiver.on("error", receiverOnFinish);
@@ -5777,7 +5476,7 @@ var require_websocket = __commonJS({
         this.destroy();
       }
     }
-  },
+  }
 });
 
 // node_modules/ws/lib/stream.js
@@ -5808,11 +5507,10 @@ var require_stream = __commonJS({
         autoDestroy: false,
         emitClose: false,
         objectMode: false,
-        writableObjectMode: false,
+        writableObjectMode: false
       });
       ws.on("message", function message(msg, isBinary) {
-        const data =
-          !isBinary && duplex._readableState.objectMode ? msg.toString() : msg;
+        const data = !isBinary && duplex._readableState.objectMode ? msg.toString() : msg;
         if (!duplex.push(data)) ws.pause();
       });
       ws.once("error", function error(err) {
@@ -5824,7 +5522,7 @@ var require_stream = __commonJS({
         if (duplex.destroyed) return;
         duplex.push(null);
       });
-      duplex._destroy = function (err, callback) {
+      duplex._destroy = function(err, callback) {
         if (ws.readyState === ws.CLOSED) {
           callback(err);
           process.nextTick(emitClose, duplex);
@@ -5841,7 +5539,7 @@ var require_stream = __commonJS({
         });
         if (terminateOnDestroy) ws.terminate();
       };
-      duplex._final = function (callback) {
+      duplex._final = function(callback) {
         if (ws.readyState === ws.CONNECTING) {
           ws.once("open", function open() {
             duplex._final(callback);
@@ -5859,10 +5557,10 @@ var require_stream = __commonJS({
           ws.close();
         }
       };
-      duplex._read = function () {
+      duplex._read = function() {
         if (ws.isPaused) ws.resume();
       };
-      duplex._write = function (chunk, encoding, callback) {
+      duplex._write = function(chunk, encoding, callback) {
         if (ws.readyState === ws.CONNECTING) {
           ws.once("open", function open() {
             duplex._write(chunk, encoding, callback);
@@ -5876,7 +5574,7 @@ var require_stream = __commonJS({
       return duplex;
     }
     module2.exports = createWebSocketStream;
-  },
+  }
 });
 
 // node_modules/ws/lib/subprotocol.js
@@ -5902,9 +5600,7 @@ var require_subprotocol = __commonJS({
           if (end === -1) end = i;
           const protocol2 = header.slice(start, end);
           if (protocols.has(protocol2)) {
-            throw new SyntaxError(
-              `The "${protocol2}" subprotocol is duplicated`,
-            );
+            throw new SyntaxError(`The "${protocol2}" subprotocol is duplicated`);
           }
           protocols.add(protocol2);
           start = end = -1;
@@ -5923,7 +5619,7 @@ var require_subprotocol = __commonJS({
       return protocols;
     }
     module2.exports = { parse };
-  },
+  }
 });
 
 // node_modules/ws/lib/websocket-server.js
@@ -5994,15 +5690,11 @@ var require_websocket_server = __commonJS({
           path: null,
           port: null,
           WebSocket,
-          ...options,
+          ...options
         };
-        if (
-          (options.port == null && !options.server && !options.noServer) ||
-          (options.port != null && (options.server || options.noServer)) ||
-          (options.server && options.noServer)
-        ) {
+        if (options.port == null && !options.server && !options.noServer || options.port != null && (options.server || options.noServer) || options.server && options.noServer) {
           throw new TypeError(
-            'One and only one of the "port", "server", or "noServer" options must be specified',
+            'One and only one of the "port", "server", or "noServer" options must be specified'
           );
         }
         if (options.port != null) {
@@ -6010,7 +5702,7 @@ var require_websocket_server = __commonJS({
             const body = http.STATUS_CODES[426];
             res.writeHead(426, {
               "Content-Length": body.length,
-              "Content-Type": "text/plain",
+              "Content-Type": "text/plain"
             });
             res.end(body);
           });
@@ -6018,7 +5710,7 @@ var require_websocket_server = __commonJS({
             options.port,
             options.host,
             options.backlog,
-            callback,
+            callback
           );
         } else if (options.server) {
           this._server = options.server;
@@ -6030,7 +5722,7 @@ var require_websocket_server = __commonJS({
             error: this.emit.bind(this, "error"),
             upgrade: (req, socket, head) => {
               this.handleUpgrade(req, socket, head, emitConnection);
-            },
+            }
           });
         }
         if (options.perMessageDeflate === true) options.perMessageDeflate = {};
@@ -6147,7 +5839,7 @@ var require_websocket_server = __commonJS({
         if (version !== 13 && version !== 8) {
           const message = "Missing or invalid Sec-WebSocket-Version header";
           abortHandshakeOrEmitwsClientError(this, req, socket, 400, message, {
-            "Sec-WebSocket-Version": "13, 8",
+            "Sec-WebSocket-Version": "13, 8"
           });
           return;
         }
@@ -6168,14 +5860,11 @@ var require_websocket_server = __commonJS({
         }
         const secWebSocketExtensions = req.headers["sec-websocket-extensions"];
         const extensions = {};
-        if (
-          this.options.perMessageDeflate &&
-          secWebSocketExtensions !== void 0
-        ) {
+        if (this.options.perMessageDeflate && secWebSocketExtensions !== void 0) {
           const perMessageDeflate = new PerMessageDeflate(
             this.options.perMessageDeflate,
             true,
-            this.options.maxPayload,
+            this.options.maxPayload
           );
           try {
             const offers = extension.parse(secWebSocketExtensions);
@@ -6184,43 +5873,35 @@ var require_websocket_server = __commonJS({
               extensions[PerMessageDeflate.extensionName] = perMessageDeflate;
             }
           } catch (err) {
-            const message =
-              "Invalid or unacceptable Sec-WebSocket-Extensions header";
+            const message = "Invalid or unacceptable Sec-WebSocket-Extensions header";
             abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
             return;
           }
         }
         if (this.options.verifyClient) {
           const info = {
-            origin:
-              req.headers[
-                `${version === 8 ? "sec-websocket-origin" : "origin"}`
-              ],
+            origin: req.headers[`${version === 8 ? "sec-websocket-origin" : "origin"}`],
             secure: !!(req.socket.authorized || req.socket.encrypted),
-            req,
+            req
           };
           if (this.options.verifyClient.length === 2) {
-            this.options.verifyClient(
-              info,
-              (verified, code, message, headers) => {
-                if (!verified) {
-                  return abortHandshake(socket, code || 401, message, headers);
-                }
-                this.completeUpgrade(
-                  extensions,
-                  key,
-                  protocols,
-                  req,
-                  socket,
-                  head,
-                  cb,
-                );
-              },
-            );
+            this.options.verifyClient(info, (verified, code, message, headers) => {
+              if (!verified) {
+                return abortHandshake(socket, code || 401, message, headers);
+              }
+              this.completeUpgrade(
+                extensions,
+                key,
+                protocols,
+                req,
+                socket,
+                head,
+                cb
+              );
+            });
             return;
           }
-          if (!this.options.verifyClient(info))
-            return abortHandshake(socket, 401);
+          if (!this.options.verifyClient(info)) return abortHandshake(socket, 401);
         }
         this.completeUpgrade(extensions, key, protocols, req, socket, head, cb);
       }
@@ -6241,24 +5922,20 @@ var require_websocket_server = __commonJS({
         if (!socket.readable || !socket.writable) return socket.destroy();
         if (socket[kWebSocket]) {
           throw new Error(
-            "server.handleUpgrade() was called more than once with the same socket, possibly due to a misconfiguration",
+            "server.handleUpgrade() was called more than once with the same socket, possibly due to a misconfiguration"
           );
         }
         if (this._state > RUNNING) return abortHandshake(socket, 503);
-        const digest = createHash("sha1")
-          .update(key + GUID)
-          .digest("base64");
+        const digest = createHash("sha1").update(key + GUID).digest("base64");
         const headers = [
           "HTTP/1.1 101 Switching Protocols",
           "Upgrade: websocket",
           "Connection: Upgrade",
-          `Sec-WebSocket-Accept: ${digest}`,
+          `Sec-WebSocket-Accept: ${digest}`
         ];
         const ws = new this.options.WebSocket(null, void 0, this.options);
         if (protocols.size) {
-          const protocol = this.options.handleProtocols
-            ? this.options.handleProtocols(protocols, req)
-            : protocols.values().next().value;
+          const protocol = this.options.handleProtocols ? this.options.handleProtocols(protocols, req) : protocols.values().next().value;
           if (protocol) {
             headers.push(`Sec-WebSocket-Protocol: ${protocol}`);
             ws._protocol = protocol;
@@ -6267,7 +5944,7 @@ var require_websocket_server = __commonJS({
         if (extensions[PerMessageDeflate.extensionName]) {
           const params = extensions[PerMessageDeflate.extensionName].params;
           const value = extension.format({
-            [PerMessageDeflate.extensionName]: [params],
+            [PerMessageDeflate.extensionName]: [params]
           });
           headers.push(`Sec-WebSocket-Extensions: ${value}`);
           ws._extensions = extensions;
@@ -6278,7 +5955,7 @@ var require_websocket_server = __commonJS({
         ws.setSocket(socket, head, {
           allowSynchronousEvents: this.options.allowSynchronousEvents,
           maxPayload: this.options.maxPayload,
-          skipUTF8Validation: this.options.skipUTF8Validation,
+          skipUTF8Validation: this.options.skipUTF8Validation
         });
         if (this.clients) {
           this.clients.add(ws);
@@ -6314,27 +5991,15 @@ var require_websocket_server = __commonJS({
         Connection: "close",
         "Content-Type": "text/html",
         "Content-Length": Buffer.byteLength(message),
-        ...headers,
+        ...headers
       };
       socket.once("finish", socket.destroy);
       socket.end(
         `HTTP/1.1 ${code} ${http.STATUS_CODES[code]}\r
-` +
-          Object.keys(headers)
-            .map((h) => `${h}: ${headers[h]}`)
-            .join("\r\n") +
-          "\r\n\r\n" +
-          message,
+` + Object.keys(headers).map((h) => `${h}: ${headers[h]}`).join("\r\n") + "\r\n\r\n" + message
       );
     }
-    function abortHandshakeOrEmitwsClientError(
-      server,
-      req,
-      socket,
-      code,
-      message,
-      headers,
-    ) {
+    function abortHandshakeOrEmitwsClientError(server, req, socket, code, message, headers) {
       if (server.listenerCount("wsClientError")) {
         const err = new Error(message);
         Error.captureStackTrace(err, abortHandshakeOrEmitwsClientError);
@@ -6343,7 +6008,7 @@ var require_websocket_server = __commonJS({
         abortHandshake(socket, code, message, headers);
       }
     }
-  },
+  }
 });
 
 // node_modules/ws/index.js
@@ -6358,18 +6023,16 @@ var require_ws = __commonJS({
     WebSocket.WebSocket = WebSocket;
     WebSocket.WebSocketServer = WebSocket.Server;
     module2.exports = WebSocket;
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/transports/websocket.js
 var require_websocket2 = __commonJS({
   "node_modules/engine.io-client/build/cjs/transports/websocket.js"(exports2) {
     "use strict";
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.WS = exports2.BaseWS = void 0;
     var transport_js_1 = require_transport();
@@ -6378,10 +6041,7 @@ var require_websocket2 = __commonJS({
     var globals_node_js_1 = require_globals_node();
     var debug_1 = __importDefault(require_src());
     var debug = (0, debug_1.default)("engine.io-client:websocket");
-    var isReactNative =
-      typeof navigator !== "undefined" &&
-      typeof navigator.product === "string" &&
-      navigator.product.toLowerCase() === "reactnative";
+    var isReactNative = typeof navigator !== "undefined" && typeof navigator.product === "string" && navigator.product.toLowerCase() === "reactnative";
     var BaseWS = class extends transport_js_1.Transport {
       get name() {
         return "websocket";
@@ -6389,26 +6049,7 @@ var require_websocket2 = __commonJS({
       doOpen() {
         const uri = this.uri();
         const protocols = this.opts.protocols;
-        const opts = isReactNative
-          ? {}
-          : (0, util_js_1.pick)(
-              this.opts,
-              "agent",
-              "perMessageDeflate",
-              "pfx",
-              "key",
-              "passphrase",
-              "cert",
-              "ca",
-              "ciphers",
-              "rejectUnauthorized",
-              "localAddress",
-              "protocolVersion",
-              "origin",
-              "maxPayload",
-              "family",
-              "checkServerIdentity",
-            );
+        const opts = isReactNative ? {} : (0, util_js_1.pick)(this.opts, "agent", "perMessageDeflate", "pfx", "key", "passphrase", "cert", "ca", "ciphers", "rejectUnauthorized", "localAddress", "protocolVersion", "origin", "maxPayload", "family", "checkServerIdentity");
         if (this.opts.extraHeaders) {
           opts.headers = this.opts.extraHeaders;
         }
@@ -6432,11 +6073,10 @@ var require_websocket2 = __commonJS({
           }
           this.onOpen();
         };
-        this.ws.onclose = (closeEvent) =>
-          this.onClose({
-            description: "websocket connection closed",
-            context: closeEvent,
-          });
+        this.ws.onclose = (closeEvent) => this.onClose({
+          description: "websocket connection closed",
+          context: closeEvent
+        });
         this.ws.onmessage = (ev) => this.onData(ev.data);
         this.ws.onerror = (e) => this.onError("websocket error", e);
       }
@@ -6445,28 +6085,25 @@ var require_websocket2 = __commonJS({
         for (let i = 0; i < packets.length; i++) {
           const packet = packets[i];
           const lastPacket = i === packets.length - 1;
-          (0, engine_io_parser_1.encodePacket)(
-            packet,
-            this.supportsBinary,
-            (data) => {
-              try {
-                this.doWrite(packet, data);
-              } catch (e) {
-                debug("websocket closed before onclose event");
-              }
-              if (lastPacket) {
-                (0, globals_node_js_1.nextTick)(() => {
-                  this.writable = true;
-                  this.emitReserved("drain");
-                }, this.setTimeoutFn);
-              }
-            },
-          );
+          (0, engine_io_parser_1.encodePacket)(packet, this.supportsBinary, (data) => {
+            try {
+              this.doWrite(packet, data);
+            } catch (e) {
+              debug("websocket closed before onclose event");
+            }
+            if (lastPacket) {
+              (0, globals_node_js_1.nextTick)(() => {
+                this.writable = true;
+                this.emitReserved("drain");
+              }, this.setTimeoutFn);
+            }
+          });
         }
       }
       doClose() {
         if (typeof this.ws !== "undefined") {
-          this.ws.onerror = () => {};
+          this.ws.onerror = () => {
+          };
           this.ws.close();
           this.ws = null;
         }
@@ -6489,78 +6126,50 @@ var require_websocket2 = __commonJS({
       }
     };
     exports2.BaseWS = BaseWS;
-    var WebSocketCtor =
-      globals_node_js_1.globalThisShim.WebSocket ||
-      globals_node_js_1.globalThisShim.MozWebSocket;
+    var WebSocketCtor = globals_node_js_1.globalThisShim.WebSocket || globals_node_js_1.globalThisShim.MozWebSocket;
     var WS = class extends BaseWS {
       createSocket(uri, protocols, opts) {
-        return !isReactNative
-          ? protocols
-            ? new WebSocketCtor(uri, protocols)
-            : new WebSocketCtor(uri)
-          : new WebSocketCtor(uri, protocols, opts);
+        return !isReactNative ? protocols ? new WebSocketCtor(uri, protocols) : new WebSocketCtor(uri) : new WebSocketCtor(uri, protocols, opts);
       }
       doWrite(_packet, data) {
         this.ws.send(data);
       }
     };
     exports2.WS = WS;
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/transports/websocket.node.js
 var require_websocket_node = __commonJS({
-  "node_modules/engine.io-client/build/cjs/transports/websocket.node.js"(
-    exports2,
-  ) {
+  "node_modules/engine.io-client/build/cjs/transports/websocket.node.js"(exports2) {
     "use strict";
-    var __createBinding =
-      (exports2 && exports2.__createBinding) ||
-      (Object.create
-        ? function (o, m, k, k2) {
-            if (k2 === void 0) k2 = k;
-            var desc = Object.getOwnPropertyDescriptor(m, k);
-            if (
-              !desc ||
-              ("get" in desc
-                ? !m.__esModule
-                : desc.writable || desc.configurable)
-            ) {
-              desc = {
-                enumerable: true,
-                get: function () {
-                  return m[k];
-                },
-              };
-            }
-            Object.defineProperty(o, k2, desc);
-          }
-        : function (o, m, k, k2) {
-            if (k2 === void 0) k2 = k;
-            o[k2] = m[k];
-          });
-    var __setModuleDefault =
-      (exports2 && exports2.__setModuleDefault) ||
-      (Object.create
-        ? function (o, v) {
-            Object.defineProperty(o, "default", { enumerable: true, value: v });
-          }
-        : function (o, v) {
-            o["default"] = v;
-          });
-    var __importStar =
-      (exports2 && exports2.__importStar) ||
-      function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) {
-          for (var k in mod)
-            if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
-              __createBinding(result, mod, k);
-        }
-        __setModuleDefault(result, mod);
-        return result;
-      };
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
+      if (k2 === void 0) k2 = k;
+      var desc = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+        desc = { enumerable: true, get: function() {
+          return m[k];
+        } };
+      }
+      Object.defineProperty(o, k2, desc);
+    }) : (function(o, m, k, k2) {
+      if (k2 === void 0) k2 = k;
+      o[k2] = m[k];
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
+      Object.defineProperty(o, "default", { enumerable: true, value: v });
+    }) : function(o, v) {
+      o["default"] = v;
+    });
+    var __importStar = exports2 && exports2.__importStar || function(mod) {
+      if (mod && mod.__esModule) return mod;
+      var result = {};
+      if (mod != null) {
+        for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+      }
+      __setModuleDefault(result, mod);
+      return result;
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.WS = void 0;
     var ws = __importStar(require_ws());
@@ -6568,14 +6177,9 @@ var require_websocket_node = __commonJS({
     var WS = class extends websocket_js_1.BaseWS {
       createSocket(uri, protocols, opts) {
         var _a;
-        if (
-          (_a = this.socket) === null || _a === void 0 ? void 0 : _a._cookieJar
-        ) {
+        if ((_a = this.socket) === null || _a === void 0 ? void 0 : _a._cookieJar) {
           opts.headers = opts.headers || {};
-          opts.headers.cookie =
-            typeof opts.headers.cookie === "string"
-              ? [opts.headers.cookie]
-              : opts.headers.cookie || [];
+          opts.headers.cookie = typeof opts.headers.cookie === "string" ? [opts.headers.cookie] : opts.headers.cookie || [];
           for (const [name, cookie] of this.socket._cookieJar.cookies) {
             opts.headers.cookie.push(`${name}=${cookie.value}`);
           }
@@ -6588,9 +6192,10 @@ var require_websocket_node = __commonJS({
           opts.compress = packet.options.compress;
         }
         if (this.opts.perMessageDeflate) {
-          const len =
+          const len = (
             // @ts-ignore
-            "string" === typeof data ? Buffer.byteLength(data) : data.length;
+            "string" === typeof data ? Buffer.byteLength(data) : data.length
+          );
           if (len < this.opts.perMessageDeflate.threshold) {
             opts.compress = false;
           }
@@ -6599,20 +6204,16 @@ var require_websocket_node = __commonJS({
       }
     };
     exports2.WS = WS;
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/transports/webtransport.js
 var require_webtransport = __commonJS({
-  "node_modules/engine.io-client/build/cjs/transports/webtransport.js"(
-    exports2,
-  ) {
+  "node_modules/engine.io-client/build/cjs/transports/webtransport.js"(exports2) {
     "use strict";
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.WT = void 0;
     var transport_js_1 = require_transport();
@@ -6626,51 +6227,36 @@ var require_webtransport = __commonJS({
       }
       doOpen() {
         try {
-          this._transport = new WebTransport(
-            this.createUri("https"),
-            this.opts.transportOptions[this.name],
-          );
+          this._transport = new WebTransport(this.createUri("https"), this.opts.transportOptions[this.name]);
         } catch (err) {
           return this.emitReserved("error", err);
         }
-        this._transport.closed
-          .then(() => {
-            debug("transport closed gracefully");
-            this.onClose();
-          })
-          .catch((err) => {
-            debug("transport closed due to %s", err);
-            this.onError("webtransport error", err);
-          });
+        this._transport.closed.then(() => {
+          debug("transport closed gracefully");
+          this.onClose();
+        }).catch((err) => {
+          debug("transport closed due to %s", err);
+          this.onError("webtransport error", err);
+        });
         this._transport.ready.then(() => {
           this._transport.createBidirectionalStream().then((stream) => {
-            const decoderStream = (0,
-            engine_io_parser_1.createPacketDecoderStream)(
-              Number.MAX_SAFE_INTEGER,
-              this.socket.binaryType,
-            );
-            const reader = stream.readable
-              .pipeThrough(decoderStream)
-              .getReader();
-            const encoderStream = (0,
-            engine_io_parser_1.createPacketEncoderStream)();
+            const decoderStream = (0, engine_io_parser_1.createPacketDecoderStream)(Number.MAX_SAFE_INTEGER, this.socket.binaryType);
+            const reader = stream.readable.pipeThrough(decoderStream).getReader();
+            const encoderStream = (0, engine_io_parser_1.createPacketEncoderStream)();
             encoderStream.readable.pipeTo(stream.writable);
             this._writer = encoderStream.writable.getWriter();
             const read = () => {
-              reader
-                .read()
-                .then(({ done, value }) => {
-                  if (done) {
-                    debug("session is closed");
-                    return;
-                  }
-                  debug("received chunk: %o", value);
-                  this.onPacket(value);
-                  read();
-                })
-                .catch((err) => {
-                  debug("an error occurred while reading: %s", err);
-                });
+              reader.read().then(({ done, value }) => {
+                if (done) {
+                  debug("session is closed");
+                  return;
+                }
+                debug("received chunk: %o", value);
+                this.onPacket(value);
+                read();
+              }).catch((err) => {
+                debug("an error occurred while reading: %s", err);
+              });
             };
             read();
             const packet = { type: "open" };
@@ -6702,7 +6288,7 @@ var require_webtransport = __commonJS({
       }
     };
     exports2.WT = WT;
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/transports/index.js
@@ -6717,9 +6303,9 @@ var require_transports = __commonJS({
     exports2.transports = {
       websocket: websocket_node_js_1.WS,
       webtransport: webtransport_js_1.WT,
-      polling: polling_xhr_node_js_1.XHR,
+      polling: polling_xhr_node_js_1.XHR
     };
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/contrib/parseuri.js
@@ -6728,8 +6314,7 @@ var require_parseuri = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.parse = parse;
-    var re =
-      /^(?:(?![^:@\/?#]+:[^:@\/]*@)(http|https|ws|wss):\/\/)?((?:(([^:@\/?#]*)(?::([^:@\/?#]*))?)?@)?((?:[a-f0-9]{0,4}:){2,7}[a-f0-9]{0,4}|[^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
+    var re = /^(?:(?![^:@\/?#]+:[^:@\/]*@)(http|https|ws|wss):\/\/)?((?:(([^:@\/?#]*)(?::([^:@\/?#]*))?)?@)?((?:[a-f0-9]{0,4}:){2,7}[a-f0-9]{0,4}|[^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
     var parts = [
       "source",
       "protocol",
@@ -6744,36 +6329,24 @@ var require_parseuri = __commonJS({
       "directory",
       "file",
       "query",
-      "anchor",
+      "anchor"
     ];
     function parse(str) {
       if (str.length > 8e3) {
         throw "URI too long";
       }
-      const src = str,
-        b = str.indexOf("["),
-        e = str.indexOf("]");
+      const src = str, b = str.indexOf("["), e = str.indexOf("]");
       if (b != -1 && e != -1) {
-        str =
-          str.substring(0, b) +
-          str.substring(b, e).replace(/:/g, ";") +
-          str.substring(e, str.length);
+        str = str.substring(0, b) + str.substring(b, e).replace(/:/g, ";") + str.substring(e, str.length);
       }
-      let m = re.exec(str || ""),
-        uri = {},
-        i = 14;
+      let m = re.exec(str || ""), uri = {}, i = 14;
       while (i--) {
         uri[parts[i]] = m[i] || "";
       }
       if (b != -1 && e != -1) {
         uri.source = src;
-        uri.host = uri.host
-          .substring(1, uri.host.length - 1)
-          .replace(/;/g, ":");
-        uri.authority = uri.authority
-          .replace("[", "")
-          .replace("]", "")
-          .replace(/;/g, ":");
+        uri.host = uri.host.substring(1, uri.host.length - 1).replace(/;/g, ":");
+        uri.authority = uri.authority.replace("[", "").replace("]", "").replace(/;/g, ":");
         uri.ipv6uri = true;
       }
       uri.pathNames = pathNames(uri, uri["path"]);
@@ -6781,8 +6354,7 @@ var require_parseuri = __commonJS({
       return uri;
     }
     function pathNames(obj, path) {
-      const regx = /\/{2,9}/g,
-        names = path.replace(regx, "/").split("/");
+      const regx = /\/{2,9}/g, names = path.replace(regx, "/").split("/");
       if (path.slice(0, 1) == "/" || path.length === 0) {
         names.splice(0, 1);
       }
@@ -6793,30 +6365,25 @@ var require_parseuri = __commonJS({
     }
     function queryKey(uri, query) {
       const data = {};
-      query.replace(/(?:^|&)([^&=]*)=?([^&]*)/g, function ($0, $1, $2) {
+      query.replace(/(?:^|&)([^&=]*)=?([^&]*)/g, function($0, $1, $2) {
         if ($1) {
           data[$1] = $2;
         }
       });
       return data;
     }
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/socket.js
 var require_socket = __commonJS({
   "node_modules/engine.io-client/build/cjs/socket.js"(exports2) {
     "use strict";
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.Socket =
-      exports2.SocketWithUpgrade =
-      exports2.SocketWithoutUpgrade =
-        void 0;
+    exports2.Socket = exports2.SocketWithUpgrade = exports2.SocketWithoutUpgrade = void 0;
     var index_js_1 = require_transports();
     var util_js_1 = require_util();
     var parseqs_js_1 = require_parseqs();
@@ -6826,26 +6393,15 @@ var require_socket = __commonJS({
     var globals_node_js_1 = require_globals_node();
     var debug_1 = __importDefault(require_src());
     var debug = (0, debug_1.default)("engine.io-client:socket");
-    var withEventListeners =
-      typeof addEventListener === "function" &&
-      typeof removeEventListener === "function";
+    var withEventListeners = typeof addEventListener === "function" && typeof removeEventListener === "function";
     var OFFLINE_EVENT_LISTENERS = [];
     if (withEventListeners) {
-      addEventListener(
-        "offline",
-        () => {
-          debug(
-            "closing %d connection(s) because the network was lost",
-            OFFLINE_EVENT_LISTENERS.length,
-          );
-          OFFLINE_EVENT_LISTENERS.forEach((listener) => listener());
-        },
-        false,
-      );
+      addEventListener("offline", () => {
+        debug("closing %d connection(s) because the network was lost", OFFLINE_EVENT_LISTENERS.length);
+        OFFLINE_EVENT_LISTENERS.forEach((listener) => listener());
+      }, false);
     }
-    var SocketWithoutUpgrade = class _SocketWithoutUpgrade
-      extends component_emitter_1.Emitter
-    {
+    var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends component_emitter_1.Emitter {
       /**
        * Socket constructor.
        *
@@ -6868,31 +6424,20 @@ var require_socket = __commonJS({
         if (uri) {
           const parsedUri = (0, parseuri_js_1.parse)(uri);
           opts.hostname = parsedUri.host;
-          opts.secure =
-            parsedUri.protocol === "https" || parsedUri.protocol === "wss";
+          opts.secure = parsedUri.protocol === "https" || parsedUri.protocol === "wss";
           opts.port = parsedUri.port;
-          if (parsedUri.query) opts.query = parsedUri.query;
+          if (parsedUri.query)
+            opts.query = parsedUri.query;
         } else if (opts.host) {
           opts.hostname = (0, parseuri_js_1.parse)(opts.host).host;
         }
         (0, util_js_1.installTimerFunctions)(this, opts);
-        this.secure =
-          null != opts.secure
-            ? opts.secure
-            : typeof location !== "undefined" && "https:" === location.protocol;
+        this.secure = null != opts.secure ? opts.secure : typeof location !== "undefined" && "https:" === location.protocol;
         if (opts.hostname && !opts.port) {
           opts.port = this.secure ? "443" : "80";
         }
-        this.hostname =
-          opts.hostname ||
-          (typeof location !== "undefined" ? location.hostname : "localhost");
-        this.port =
-          opts.port ||
-          (typeof location !== "undefined" && location.port
-            ? location.port
-            : this.secure
-              ? "443"
-              : "80");
+        this.hostname = opts.hostname || (typeof location !== "undefined" ? location.hostname : "localhost");
+        this.port = opts.port || (typeof location !== "undefined" && location.port ? location.port : this.secure ? "443" : "80");
         this.transports = [];
         this._transportsByName = {};
         opts.transports.forEach((t) => {
@@ -6900,27 +6445,22 @@ var require_socket = __commonJS({
           this.transports.push(transportName);
           this._transportsByName[transportName] = t;
         });
-        this.opts = Object.assign(
-          {
-            path: "/engine.io",
-            agent: false,
-            withCredentials: false,
-            upgrade: true,
-            timestampParam: "t",
-            rememberUpgrade: false,
-            addTrailingSlash: true,
-            rejectUnauthorized: true,
-            perMessageDeflate: {
-              threshold: 1024,
-            },
-            transportOptions: {},
-            closeOnBeforeunload: false,
+        this.opts = Object.assign({
+          path: "/engine.io",
+          agent: false,
+          withCredentials: false,
+          upgrade: true,
+          timestampParam: "t",
+          rememberUpgrade: false,
+          addTrailingSlash: true,
+          rejectUnauthorized: true,
+          perMessageDeflate: {
+            threshold: 1024
           },
-          opts,
-        );
-        this.opts.path =
-          this.opts.path.replace(/\/$/, "") +
-          (this.opts.addTrailingSlash ? "/" : "");
+          transportOptions: {},
+          closeOnBeforeunload: false
+        }, opts);
+        this.opts.path = this.opts.path.replace(/\/$/, "") + (this.opts.addTrailingSlash ? "/" : "");
         if (typeof this.opts.query === "string") {
           this.opts.query = (0, parseqs_js_1.decode)(this.opts.query);
         }
@@ -6932,17 +6472,13 @@ var require_socket = __commonJS({
                 this.transport.close();
               }
             };
-            addEventListener(
-              "beforeunload",
-              this._beforeunloadEventListener,
-              false,
-            );
+            addEventListener("beforeunload", this._beforeunloadEventListener, false);
           }
           if (this.hostname !== "localhost") {
             debug("adding listener for the 'offline' event");
             this._offlineEventListener = () => {
               this._onClose("transport close", {
-                description: "network connection lost",
+                description: "network connection lost"
               });
             };
             OFFLINE_EVENT_LISTENERS.push(this._offlineEventListener);
@@ -6965,19 +6501,15 @@ var require_socket = __commonJS({
         const query = Object.assign({}, this.opts.query);
         query.EIO = engine_io_parser_1.protocol;
         query.transport = name;
-        if (this.id) query.sid = this.id;
-        const opts = Object.assign(
-          {},
-          this.opts,
-          {
-            query,
-            socket: this,
-            hostname: this.hostname,
-            secure: this.secure,
-            port: this.port,
-          },
-          this.opts.transportOptions[name],
-        );
+        if (this.id)
+          query.sid = this.id;
+        const opts = Object.assign({}, this.opts, {
+          query,
+          socket: this,
+          hostname: this.hostname,
+          secure: this.secure,
+          port: this.port
+        }, this.opts.transportOptions[name]);
         debug("options: %j", opts);
         return new this._transportsByName[name](opts);
       }
@@ -6993,12 +6525,7 @@ var require_socket = __commonJS({
           }, 0);
           return;
         }
-        const transportName =
-          this.opts.rememberUpgrade &&
-          _SocketWithoutUpgrade.priorWebsocketSuccess &&
-          this.transports.indexOf("websocket") !== -1
-            ? "websocket"
-            : this.transports[0];
+        const transportName = this.opts.rememberUpgrade && _SocketWithoutUpgrade.priorWebsocketSuccess && this.transports.indexOf("websocket") !== -1 ? "websocket" : this.transports[0];
         this.readyState = "opening";
         const transport = this.createTransport(transportName);
         transport.open();
@@ -7016,11 +6543,7 @@ var require_socket = __commonJS({
           this.transport.removeAllListeners();
         }
         this.transport = transport;
-        transport
-          .on("drain", this._onDrain.bind(this))
-          .on("packet", this._onPacket.bind(this))
-          .on("error", this._onError.bind(this))
-          .on("close", (reason) => this._onClose("transport close", reason));
+        transport.on("drain", this._onDrain.bind(this)).on("packet", this._onPacket.bind(this)).on("error", this._onError.bind(this)).on("close", (reason) => this._onClose("transport close", reason));
       }
       /**
        * Called when connection is deemed open.
@@ -7030,8 +6553,7 @@ var require_socket = __commonJS({
       onOpen() {
         debug("socket open");
         this.readyState = "open";
-        _SocketWithoutUpgrade.priorWebsocketSuccess =
-          "websocket" === this.transport.name;
+        _SocketWithoutUpgrade.priorWebsocketSuccess = "websocket" === this.transport.name;
         this.emitReserved("open");
         this.flush();
       }
@@ -7041,16 +6563,8 @@ var require_socket = __commonJS({
        * @private
        */
       _onPacket(packet) {
-        if (
-          "opening" === this.readyState ||
-          "open" === this.readyState ||
-          "closing" === this.readyState
-        ) {
-          debug(
-            'socket receive: type "%s", data "%s"',
-            packet.type,
-            packet.data,
-          );
+        if ("opening" === this.readyState || "open" === this.readyState || "closing" === this.readyState) {
+          debug('socket receive: type "%s", data "%s"', packet.type, packet.data);
           this.emitReserved("packet", packet);
           this.emitReserved("heartbeat");
           switch (packet.type) {
@@ -7091,7 +6605,8 @@ var require_socket = __commonJS({
         this._pingTimeout = data.pingTimeout;
         this._maxPayload = data.maxPayload;
         this.onOpen();
-        if ("closed" === this.readyState) return;
+        if ("closed" === this.readyState)
+          return;
         this._resetPingTimeout();
       }
       /**
@@ -7130,12 +6645,7 @@ var require_socket = __commonJS({
        * @private
        */
       flush() {
-        if (
-          "closed" !== this.readyState &&
-          this.transport.writable &&
-          !this.upgrading &&
-          this.writeBuffer.length
-        ) {
+        if ("closed" !== this.readyState && this.transport.writable && !this.upgrading && this.writeBuffer.length) {
           const packets = this._getWritablePackets();
           debug("flushing %d packets in socket", packets.length);
           this.transport.send(packets);
@@ -7150,10 +6660,7 @@ var require_socket = __commonJS({
        * @private
        */
       _getWritablePackets() {
-        const shouldCheckPayloadSize =
-          this._maxPayload &&
-          this.transport.name === "polling" &&
-          this.writeBuffer.length > 1;
+        const shouldCheckPayloadSize = this._maxPayload && this.transport.name === "polling" && this.writeBuffer.length > 1;
         if (!shouldCheckPayloadSize) {
           return this.writeBuffer;
         }
@@ -7183,7 +6690,8 @@ var require_socket = __commonJS({
        */
       /* private */
       _hasPingExpired() {
-        if (!this._pingTimeoutTime) return true;
+        if (!this._pingTimeoutTime)
+          return true;
         const hasExpired = Date.now() > this._pingTimeoutTime;
         if (hasExpired) {
           debug("throttled timer detected, scheduling connection close");
@@ -7244,11 +6752,12 @@ var require_socket = __commonJS({
         const packet = {
           type: type2,
           data,
-          options,
+          options
         };
         this.emitReserved("packetCreate", packet);
         this.writeBuffer.push(packet);
-        if (fn) this.once("flush", fn);
+        if (fn)
+          this.once("flush", fn);
         this.flush();
       }
       /**
@@ -7295,11 +6804,7 @@ var require_socket = __commonJS({
       _onError(err) {
         debug("socket error %j", err);
         _SocketWithoutUpgrade.priorWebsocketSuccess = false;
-        if (
-          this.opts.tryAllTransports &&
-          this.transports.length > 1 &&
-          this.readyState === "opening"
-        ) {
+        if (this.opts.tryAllTransports && this.transports.length > 1 && this.readyState === "opening") {
           debug("trying next transport");
           this.transports.shift();
           return this._open();
@@ -7313,11 +6818,7 @@ var require_socket = __commonJS({
        * @private
        */
       _onClose(reason, description) {
-        if (
-          "opening" === this.readyState ||
-          "open" === this.readyState ||
-          "closing" === this.readyState
-        ) {
+        if ("opening" === this.readyState || "open" === this.readyState || "closing" === this.readyState) {
           debug('socket close with reason: "%s"', reason);
           this.clearTimeoutFn(this._pingTimeoutTimer);
           this.transport.removeAllListeners("close");
@@ -7325,16 +6826,10 @@ var require_socket = __commonJS({
           this.transport.removeAllListeners();
           if (withEventListeners) {
             if (this._beforeunloadEventListener) {
-              removeEventListener(
-                "beforeunload",
-                this._beforeunloadEventListener,
-                false,
-              );
+              removeEventListener("beforeunload", this._beforeunloadEventListener, false);
             }
             if (this._offlineEventListener) {
-              const i = OFFLINE_EVENT_LISTENERS.indexOf(
-                this._offlineEventListener,
-              );
+              const i = OFFLINE_EVENT_LISTENERS.indexOf(this._offlineEventListener);
               if (i !== -1) {
                 debug("removing listener for the 'offline' event");
                 OFFLINE_EVENT_LISTENERS.splice(i, 1);
@@ -7377,22 +6872,26 @@ var require_socket = __commonJS({
         let failed = false;
         SocketWithoutUpgrade.priorWebsocketSuccess = false;
         const onTransportOpen = () => {
-          if (failed) return;
+          if (failed)
+            return;
           debug('probe transport "%s" opened', name);
           transport.send([{ type: "ping", data: "probe" }]);
           transport.once("packet", (msg) => {
-            if (failed) return;
+            if (failed)
+              return;
             if ("pong" === msg.type && "probe" === msg.data) {
               debug('probe transport "%s" pong', name);
               this.upgrading = true;
               this.emitReserved("upgrading", transport);
-              if (!transport) return;
-              SocketWithoutUpgrade.priorWebsocketSuccess =
-                "websocket" === transport.name;
+              if (!transport)
+                return;
+              SocketWithoutUpgrade.priorWebsocketSuccess = "websocket" === transport.name;
               debug('pausing current transport "%s"', this.transport.name);
               this.transport.pause(() => {
-                if (failed) return;
-                if ("closed" === this.readyState) return;
+                if (failed)
+                  return;
+                if ("closed" === this.readyState)
+                  return;
                 debug("changing transport and sending upgrade packet");
                 cleanup();
                 this.setTransport(transport);
@@ -7411,7 +6910,8 @@ var require_socket = __commonJS({
           });
         };
         function freezeTransport() {
-          if (failed) return;
+          if (failed)
+            return;
           failed = true;
           cleanup();
           transport.close();
@@ -7448,10 +6948,7 @@ var require_socket = __commonJS({
         transport.once("close", onTransportClose);
         this.once("close", onclose);
         this.once("upgrading", onupgrade);
-        if (
-          this._upgrades.indexOf("webtransport") !== -1 &&
-          name !== "webtransport"
-        ) {
+        if (this._upgrades.indexOf("webtransport") !== -1 && name !== "webtransport") {
           this.setTimeoutFn(() => {
             if (!failed) {
               transport.open();
@@ -7484,56 +6981,43 @@ var require_socket = __commonJS({
     var Socket = class extends SocketWithUpgrade {
       constructor(uri, opts = {}) {
         const o = typeof uri === "object" ? uri : opts;
-        if (
-          !o.transports ||
-          (o.transports && typeof o.transports[0] === "string")
-        ) {
-          o.transports = (
-            o.transports || ["polling", "websocket", "webtransport"]
-          )
-            .map((transportName) => index_js_1.transports[transportName])
-            .filter((t) => !!t);
+        if (!o.transports || o.transports && typeof o.transports[0] === "string") {
+          o.transports = (o.transports || ["polling", "websocket", "webtransport"]).map((transportName) => index_js_1.transports[transportName]).filter((t) => !!t);
         }
         super(uri, o);
       }
     };
     exports2.Socket = Socket;
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/transports/polling-fetch.js
 var require_polling_fetch = __commonJS({
-  "node_modules/engine.io-client/build/cjs/transports/polling-fetch.js"(
-    exports2,
-  ) {
+  "node_modules/engine.io-client/build/cjs/transports/polling-fetch.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Fetch = void 0;
     var polling_js_1 = require_polling();
     var Fetch = class extends polling_js_1.Polling {
       doPoll() {
-        this._fetch()
-          .then((res) => {
-            if (!res.ok) {
-              return this.onError("fetch read error", res.status, res);
-            }
-            res.text().then((data) => this.onData(data));
-          })
-          .catch((err) => {
-            this.onError("fetch read error", err);
-          });
+        this._fetch().then((res) => {
+          if (!res.ok) {
+            return this.onError("fetch read error", res.status, res);
+          }
+          res.text().then((data) => this.onData(data));
+        }).catch((err) => {
+          this.onError("fetch read error", err);
+        });
       }
       doWrite(data, callback) {
-        this._fetch(data)
-          .then((res) => {
-            if (!res.ok) {
-              return this.onError("fetch write error", res.status, res);
-            }
-            callback();
-          })
-          .catch((err) => {
-            this.onError("fetch write error", err);
-          });
+        this._fetch(data).then((res) => {
+          if (!res.ok) {
+            return this.onError("fetch write error", res.status, res);
+          }
+          callback();
+        }).catch((err) => {
+          this.onError("fetch write error", err);
+        });
       }
       _fetch(data) {
         var _a;
@@ -7542,25 +7026,21 @@ var require_polling_fetch = __commonJS({
         if (isPost) {
           headers.set("content-type", "text/plain;charset=UTF-8");
         }
-        (_a = this.socket._cookieJar) === null || _a === void 0
-          ? void 0
-          : _a.appendCookies(headers);
+        (_a = this.socket._cookieJar) === null || _a === void 0 ? void 0 : _a.appendCookies(headers);
         return fetch(this.uri(), {
           method: isPost ? "POST" : "GET",
           body: isPost ? data : null,
           headers,
-          credentials: this.opts.withCredentials ? "include" : "omit",
+          credentials: this.opts.withCredentials ? "include" : "omit"
         }).then((res) => {
           var _a2;
-          (_a2 = this.socket._cookieJar) === null || _a2 === void 0
-            ? void 0
-            : _a2.parseCookies(res.headers.getSetCookie());
+          (_a2 = this.socket._cookieJar) === null || _a2 === void 0 ? void 0 : _a2.parseCookies(res.headers.getSetCookie());
           return res;
         });
       }
     };
     exports2.Fetch = Fetch;
-  },
+  }
 });
 
 // node_modules/engine.io-client/build/cjs/index.js
@@ -7568,139 +7048,76 @@ var require_cjs3 = __commonJS({
   "node_modules/engine.io-client/build/cjs/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.WebTransport =
-      exports2.WebSocket =
-      exports2.NodeWebSocket =
-      exports2.XHR =
-      exports2.NodeXHR =
-      exports2.Fetch =
-      exports2.nextTick =
-      exports2.parse =
-      exports2.installTimerFunctions =
-      exports2.transports =
-      exports2.TransportError =
-      exports2.Transport =
-      exports2.protocol =
-      exports2.SocketWithUpgrade =
-      exports2.SocketWithoutUpgrade =
-      exports2.Socket =
-        void 0;
+    exports2.WebTransport = exports2.WebSocket = exports2.NodeWebSocket = exports2.XHR = exports2.NodeXHR = exports2.Fetch = exports2.nextTick = exports2.parse = exports2.installTimerFunctions = exports2.transports = exports2.TransportError = exports2.Transport = exports2.protocol = exports2.SocketWithUpgrade = exports2.SocketWithoutUpgrade = exports2.Socket = void 0;
     var socket_js_1 = require_socket();
-    Object.defineProperty(exports2, "Socket", {
-      enumerable: true,
-      get: function () {
-        return socket_js_1.Socket;
-      },
-    });
+    Object.defineProperty(exports2, "Socket", { enumerable: true, get: function() {
+      return socket_js_1.Socket;
+    } });
     var socket_js_2 = require_socket();
-    Object.defineProperty(exports2, "SocketWithoutUpgrade", {
-      enumerable: true,
-      get: function () {
-        return socket_js_2.SocketWithoutUpgrade;
-      },
-    });
-    Object.defineProperty(exports2, "SocketWithUpgrade", {
-      enumerable: true,
-      get: function () {
-        return socket_js_2.SocketWithUpgrade;
-      },
-    });
+    Object.defineProperty(exports2, "SocketWithoutUpgrade", { enumerable: true, get: function() {
+      return socket_js_2.SocketWithoutUpgrade;
+    } });
+    Object.defineProperty(exports2, "SocketWithUpgrade", { enumerable: true, get: function() {
+      return socket_js_2.SocketWithUpgrade;
+    } });
     exports2.protocol = socket_js_1.Socket.protocol;
     var transport_js_1 = require_transport();
-    Object.defineProperty(exports2, "Transport", {
-      enumerable: true,
-      get: function () {
-        return transport_js_1.Transport;
-      },
-    });
-    Object.defineProperty(exports2, "TransportError", {
-      enumerable: true,
-      get: function () {
-        return transport_js_1.TransportError;
-      },
-    });
+    Object.defineProperty(exports2, "Transport", { enumerable: true, get: function() {
+      return transport_js_1.Transport;
+    } });
+    Object.defineProperty(exports2, "TransportError", { enumerable: true, get: function() {
+      return transport_js_1.TransportError;
+    } });
     var index_js_1 = require_transports();
-    Object.defineProperty(exports2, "transports", {
-      enumerable: true,
-      get: function () {
-        return index_js_1.transports;
-      },
-    });
+    Object.defineProperty(exports2, "transports", { enumerable: true, get: function() {
+      return index_js_1.transports;
+    } });
     var util_js_1 = require_util();
-    Object.defineProperty(exports2, "installTimerFunctions", {
-      enumerable: true,
-      get: function () {
-        return util_js_1.installTimerFunctions;
-      },
-    });
+    Object.defineProperty(exports2, "installTimerFunctions", { enumerable: true, get: function() {
+      return util_js_1.installTimerFunctions;
+    } });
     var parseuri_js_1 = require_parseuri();
-    Object.defineProperty(exports2, "parse", {
-      enumerable: true,
-      get: function () {
-        return parseuri_js_1.parse;
-      },
-    });
+    Object.defineProperty(exports2, "parse", { enumerable: true, get: function() {
+      return parseuri_js_1.parse;
+    } });
     var globals_node_js_1 = require_globals_node();
-    Object.defineProperty(exports2, "nextTick", {
-      enumerable: true,
-      get: function () {
-        return globals_node_js_1.nextTick;
-      },
-    });
+    Object.defineProperty(exports2, "nextTick", { enumerable: true, get: function() {
+      return globals_node_js_1.nextTick;
+    } });
     var polling_fetch_js_1 = require_polling_fetch();
-    Object.defineProperty(exports2, "Fetch", {
-      enumerable: true,
-      get: function () {
-        return polling_fetch_js_1.Fetch;
-      },
-    });
+    Object.defineProperty(exports2, "Fetch", { enumerable: true, get: function() {
+      return polling_fetch_js_1.Fetch;
+    } });
     var polling_xhr_node_js_1 = require_polling_xhr_node();
-    Object.defineProperty(exports2, "NodeXHR", {
-      enumerable: true,
-      get: function () {
-        return polling_xhr_node_js_1.XHR;
-      },
-    });
+    Object.defineProperty(exports2, "NodeXHR", { enumerable: true, get: function() {
+      return polling_xhr_node_js_1.XHR;
+    } });
     var polling_xhr_js_1 = require_polling_xhr();
-    Object.defineProperty(exports2, "XHR", {
-      enumerable: true,
-      get: function () {
-        return polling_xhr_js_1.XHR;
-      },
-    });
+    Object.defineProperty(exports2, "XHR", { enumerable: true, get: function() {
+      return polling_xhr_js_1.XHR;
+    } });
     var websocket_node_js_1 = require_websocket_node();
-    Object.defineProperty(exports2, "NodeWebSocket", {
-      enumerable: true,
-      get: function () {
-        return websocket_node_js_1.WS;
-      },
-    });
+    Object.defineProperty(exports2, "NodeWebSocket", { enumerable: true, get: function() {
+      return websocket_node_js_1.WS;
+    } });
     var websocket_js_1 = require_websocket2();
-    Object.defineProperty(exports2, "WebSocket", {
-      enumerable: true,
-      get: function () {
-        return websocket_js_1.WS;
-      },
-    });
+    Object.defineProperty(exports2, "WebSocket", { enumerable: true, get: function() {
+      return websocket_js_1.WS;
+    } });
     var webtransport_js_1 = require_webtransport();
-    Object.defineProperty(exports2, "WebTransport", {
-      enumerable: true,
-      get: function () {
-        return webtransport_js_1.WT;
-      },
-    });
-  },
+    Object.defineProperty(exports2, "WebTransport", { enumerable: true, get: function() {
+      return webtransport_js_1.WT;
+    } });
+  }
 });
 
 // node_modules/socket.io-client/build/cjs/url.js
 var require_url = __commonJS({
   "node_modules/socket.io-client/build/cjs/url.js"(exports2) {
     "use strict";
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.url = url;
     var engine_io_client_1 = require_cjs3();
@@ -7708,8 +7125,9 @@ var require_url = __commonJS({
     var debug = (0, debug_1.default)("socket.io-client:url");
     function url(uri, path = "", loc) {
       let obj = uri;
-      loc = loc || (typeof location !== "undefined" && location);
-      if (null == uri) uri = loc.protocol + "//" + loc.host;
+      loc = loc || typeof location !== "undefined" && location;
+      if (null == uri)
+        uri = loc.protocol + "//" + loc.host;
       if (typeof uri === "string") {
         if ("/" === uri.charAt(0)) {
           if ("/" === uri.charAt(1)) {
@@ -7740,14 +7158,10 @@ var require_url = __commonJS({
       const ipv6 = obj.host.indexOf(":") !== -1;
       const host = ipv6 ? "[" + obj.host + "]" : obj.host;
       obj.id = obj.protocol + "://" + host + ":" + obj.port + path;
-      obj.href =
-        obj.protocol +
-        "://" +
-        host +
-        (loc && loc.port === obj.port ? "" : ":" + obj.port);
+      obj.href = obj.protocol + "://" + host + (loc && loc.port === obj.port ? "" : ":" + obj.port);
       return obj;
     }
-  },
+  }
 });
 
 // node_modules/socket.io-parser/build/cjs/is-binary.js
@@ -7759,26 +7173,13 @@ var require_is_binary = __commonJS({
     exports2.hasBinary = hasBinary;
     var withNativeArrayBuffer = typeof ArrayBuffer === "function";
     var isView = (obj) => {
-      return typeof ArrayBuffer.isView === "function"
-        ? ArrayBuffer.isView(obj)
-        : obj.buffer instanceof ArrayBuffer;
+      return typeof ArrayBuffer.isView === "function" ? ArrayBuffer.isView(obj) : obj.buffer instanceof ArrayBuffer;
     };
     var toString = Object.prototype.toString;
-    var withNativeBlob =
-      typeof Blob === "function" ||
-      (typeof Blob !== "undefined" &&
-        toString.call(Blob) === "[object BlobConstructor]");
-    var withNativeFile =
-      typeof File === "function" ||
-      (typeof File !== "undefined" &&
-        toString.call(File) === "[object FileConstructor]");
+    var withNativeBlob = typeof Blob === "function" || typeof Blob !== "undefined" && toString.call(Blob) === "[object BlobConstructor]";
+    var withNativeFile = typeof File === "function" || typeof File !== "undefined" && toString.call(File) === "[object FileConstructor]";
     function isBinary(obj) {
-      return (
-        (withNativeArrayBuffer &&
-          (obj instanceof ArrayBuffer || isView(obj))) ||
-        (withNativeBlob && obj instanceof Blob) ||
-        (withNativeFile && obj instanceof File)
-      );
+      return withNativeArrayBuffer && (obj instanceof ArrayBuffer || isView(obj)) || withNativeBlob && obj instanceof Blob || withNativeFile && obj instanceof File;
     }
     function hasBinary(obj, toJSON) {
       if (!obj || typeof obj !== "object") {
@@ -7795,24 +7196,17 @@ var require_is_binary = __commonJS({
       if (isBinary(obj)) {
         return true;
       }
-      if (
-        obj.toJSON &&
-        typeof obj.toJSON === "function" &&
-        arguments.length === 1
-      ) {
+      if (obj.toJSON && typeof obj.toJSON === "function" && arguments.length === 1) {
         return hasBinary(obj.toJSON(), true);
       }
       for (const key in obj) {
-        if (
-          Object.prototype.hasOwnProperty.call(obj, key) &&
-          hasBinary(obj[key])
-        ) {
+        if (Object.prototype.hasOwnProperty.call(obj, key) && hasBinary(obj[key])) {
           return true;
         }
       }
       return false;
     }
-  },
+  }
 });
 
 // node_modules/socket.io-parser/build/cjs/binary.js
@@ -7832,7 +7226,8 @@ var require_binary = __commonJS({
       return { packet: pack, buffers };
     }
     function _deconstructPacket(data, buffers) {
-      if (!data) return data;
+      if (!data)
+        return data;
       if ((0, is_binary_js_1.isBinary)(data)) {
         const placeholder = { _placeholder: true, num: buffers.length };
         buffers.push(data);
@@ -7860,12 +7255,10 @@ var require_binary = __commonJS({
       return packet;
     }
     function _reconstructPacket(data, buffers) {
-      if (!data) return data;
+      if (!data)
+        return data;
       if (data && data._placeholder === true) {
-        const isIndexValid =
-          typeof data.num === "number" &&
-          data.num >= 0 &&
-          data.num < buffers.length;
+        const isIndexValid = typeof data.num === "number" && data.num >= 0 && data.num < buffers.length;
         if (isIndexValid) {
           return buffers[data.num];
         } else {
@@ -7884,7 +7277,7 @@ var require_binary = __commonJS({
       }
       return data;
     }
-  },
+  }
 });
 
 // node_modules/socket.io-parser/build/cjs/index.js
@@ -7892,11 +7285,7 @@ var require_cjs4 = __commonJS({
   "node_modules/socket.io-parser/build/cjs/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.Decoder =
-      exports2.Encoder =
-      exports2.PacketType =
-      exports2.protocol =
-        void 0;
+    exports2.Decoder = exports2.Encoder = exports2.PacketType = exports2.protocol = void 0;
     exports2.isPacketValid = isPacketValid;
     var component_emitter_1 = require_cjs2();
     var binary_js_1 = require_binary();
@@ -7914,19 +7303,19 @@ var require_cjs4 = __commonJS({
       // used on the server side
       "newListener",
       // used by the Node.js EventEmitter
-      "removeListener",
+      "removeListener"
       // used by the Node.js EventEmitter
     ];
     exports2.protocol = 5;
     var PacketType;
-    (function (PacketType2) {
-      PacketType2[(PacketType2["CONNECT"] = 0)] = "CONNECT";
-      PacketType2[(PacketType2["DISCONNECT"] = 1)] = "DISCONNECT";
-      PacketType2[(PacketType2["EVENT"] = 2)] = "EVENT";
-      PacketType2[(PacketType2["ACK"] = 3)] = "ACK";
-      PacketType2[(PacketType2["CONNECT_ERROR"] = 4)] = "CONNECT_ERROR";
-      PacketType2[(PacketType2["BINARY_EVENT"] = 5)] = "BINARY_EVENT";
-      PacketType2[(PacketType2["BINARY_ACK"] = 6)] = "BINARY_ACK";
+    (function(PacketType2) {
+      PacketType2[PacketType2["CONNECT"] = 0] = "CONNECT";
+      PacketType2[PacketType2["DISCONNECT"] = 1] = "DISCONNECT";
+      PacketType2[PacketType2["EVENT"] = 2] = "EVENT";
+      PacketType2[PacketType2["ACK"] = 3] = "ACK";
+      PacketType2[PacketType2["CONNECT_ERROR"] = 4] = "CONNECT_ERROR";
+      PacketType2[PacketType2["BINARY_EVENT"] = 5] = "BINARY_EVENT";
+      PacketType2[PacketType2["BINARY_ACK"] = 6] = "BINARY_ACK";
     })(PacketType || (exports2.PacketType = PacketType = {}));
     var Encoder = class {
       /**
@@ -7948,13 +7337,10 @@ var require_cjs4 = __commonJS({
         if (obj.type === PacketType.EVENT || obj.type === PacketType.ACK) {
           if ((0, is_binary_js_1.hasBinary)(obj)) {
             return this.encodeAsBinary({
-              type:
-                obj.type === PacketType.EVENT
-                  ? PacketType.BINARY_EVENT
-                  : PacketType.BINARY_ACK,
+              type: obj.type === PacketType.EVENT ? PacketType.BINARY_EVENT : PacketType.BINARY_ACK,
               nsp: obj.nsp,
               data: obj.data,
-              id: obj.id,
+              id: obj.id
             });
           }
         }
@@ -7965,10 +7351,7 @@ var require_cjs4 = __commonJS({
        */
       encodeAsString(obj) {
         let str = "" + obj.type;
-        if (
-          obj.type === PacketType.BINARY_EVENT ||
-          obj.type === PacketType.BINARY_ACK
-        ) {
+        if (obj.type === PacketType.BINARY_EVENT || obj.type === PacketType.BINARY_ACK) {
           str += obj.attachments + "-";
         }
         if (obj.nsp && "/" !== obj.nsp) {
@@ -8052,17 +7435,15 @@ var require_cjs4 = __commonJS({
       decodeString(str) {
         let i = 0;
         const p = {
-          type: Number(str.charAt(0)),
+          type: Number(str.charAt(0))
         };
         if (PacketType[p.type] === void 0) {
           throw new Error("unknown packet type " + p.type);
         }
-        if (
-          p.type === PacketType.BINARY_EVENT ||
-          p.type === PacketType.BINARY_ACK
-        ) {
+        if (p.type === PacketType.BINARY_EVENT || p.type === PacketType.BINARY_ACK) {
           const start = i + 1;
-          while (str.charAt(++i) !== "-" && i != str.length) {}
+          while (str.charAt(++i) !== "-" && i != str.length) {
+          }
           const buf = str.substring(start, i);
           if (buf != Number(buf) || str.charAt(i) !== "-") {
             throw new Error("Illegal attachments");
@@ -8073,8 +7454,10 @@ var require_cjs4 = __commonJS({
           const start = i + 1;
           while (++i) {
             const c = str.charAt(i);
-            if ("," === c) break;
-            if (i === str.length) break;
+            if ("," === c)
+              break;
+            if (i === str.length)
+              break;
           }
           p.nsp = str.substring(start, i);
         } else {
@@ -8089,7 +7472,8 @@ var require_cjs4 = __commonJS({
               --i;
               break;
             }
-            if (i === str.length) break;
+            if (i === str.length)
+              break;
           }
           p.id = Number(str.substring(start, i + 1));
         }
@@ -8121,12 +7505,7 @@ var require_cjs4 = __commonJS({
             return typeof payload === "string" || isObject(payload);
           case PacketType.EVENT:
           case PacketType.BINARY_EVENT:
-            return (
-              Array.isArray(payload) &&
-              (typeof payload[0] === "number" ||
-                (typeof payload[0] === "string" &&
-                  RESERVED_EVENTS.indexOf(payload[0]) === -1))
-            );
+            return Array.isArray(payload) && (typeof payload[0] === "number" || typeof payload[0] === "string" && RESERVED_EVENTS.indexOf(payload[0]) === -1);
           case PacketType.ACK:
           case PacketType.BINARY_ACK:
             return Array.isArray(payload);
@@ -8160,10 +7539,7 @@ var require_cjs4 = __commonJS({
       takeBinaryData(binData) {
         this.buffers.push(binData);
         if (this.buffers.length === this.reconPack.attachments) {
-          const packet = (0, binary_js_1.reconstructPacket)(
-            this.reconPack,
-            this.buffers,
-          );
+          const packet = (0, binary_js_1.reconstructPacket)(this.reconPack, this.buffers);
           this.finishedReconstruction();
           return packet;
         }
@@ -8180,15 +7556,9 @@ var require_cjs4 = __commonJS({
     function isNamespaceValid(nsp) {
       return typeof nsp === "string";
     }
-    var isInteger =
-      Number.isInteger ||
-      function (value) {
-        return (
-          typeof value === "number" &&
-          isFinite(value) &&
-          Math.floor(value) === value
-        );
-      };
+    var isInteger = Number.isInteger || function(value) {
+      return typeof value === "number" && isFinite(value) && Math.floor(value) === value;
+    };
     function isAckIdValid(id) {
       return id === void 0 || isInteger(id);
     }
@@ -8202,12 +7572,7 @@ var require_cjs4 = __commonJS({
         case PacketType.DISCONNECT:
           return payload === void 0;
         case PacketType.EVENT:
-          return (
-            Array.isArray(payload) &&
-            (typeof payload[0] === "number" ||
-              (typeof payload[0] === "string" &&
-                RESERVED_EVENTS.indexOf(payload[0]) === -1))
-          );
+          return Array.isArray(payload) && (typeof payload[0] === "number" || typeof payload[0] === "string" && RESERVED_EVENTS.indexOf(payload[0]) === -1);
         case PacketType.ACK:
           return Array.isArray(payload);
         case PacketType.CONNECT_ERROR:
@@ -8217,13 +7582,9 @@ var require_cjs4 = __commonJS({
       }
     }
     function isPacketValid(packet) {
-      return (
-        isNamespaceValid(packet.nsp) &&
-        isAckIdValid(packet.id) &&
-        isDataValid(packet.type, packet.data)
-      );
+      return isNamespaceValid(packet.nsp) && isAckIdValid(packet.id) && isDataValid(packet.type, packet.data);
     }
-  },
+  }
 });
 
 // node_modules/socket.io-client/build/cjs/on.js
@@ -8238,18 +7599,16 @@ var require_on = __commonJS({
         obj.off(ev, fn);
       };
     }
-  },
+  }
 });
 
 // node_modules/socket.io-client/build/cjs/socket.js
 var require_socket2 = __commonJS({
   "node_modules/socket.io-client/build/cjs/socket.js"(exports2) {
     "use strict";
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Socket = void 0;
     var socket_io_parser_1 = require_cjs4();
@@ -8264,7 +7623,7 @@ var require_socket2 = __commonJS({
       disconnecting: 1,
       // EventEmitter reserved events: https://nodejs.org/api/events.html#events_event_newlistener
       newListener: 1,
-      removeListener: 1,
+      removeListener: 1
     });
     var Socket = class extends component_emitter_1.Emitter {
       /**
@@ -8287,7 +7646,8 @@ var require_socket2 = __commonJS({
           this.auth = opts.auth;
         }
         this._opts = Object.assign({}, opts);
-        if (this.io._autoConnect) this.open();
+        if (this.io._autoConnect)
+          this.open();
       }
       /**
        * Whether the socket is currently disconnected
@@ -8312,13 +7672,14 @@ var require_socket2 = __commonJS({
        * @private
        */
       subEvents() {
-        if (this.subs) return;
+        if (this.subs)
+          return;
         const io = this.io;
         this.subs = [
           (0, on_js_1.on)(io, "open", this.onopen.bind(this)),
           (0, on_js_1.on)(io, "packet", this.onpacket.bind(this)),
           (0, on_js_1.on)(io, "error", this.onerror.bind(this)),
-          (0, on_js_1.on)(io, "close", this.onclose.bind(this)),
+          (0, on_js_1.on)(io, "close", this.onclose.bind(this))
         ];
       }
       /**
@@ -8352,10 +7713,13 @@ var require_socket2 = __commonJS({
        * socket.connect();
        */
       connect() {
-        if (this.connected) return this;
+        if (this.connected)
+          return this;
         this.subEvents();
-        if (!this.io["_reconnecting"]) this.io.open();
-        if ("open" === this.io._readyState) this.onopen();
+        if (!this.io["_reconnecting"])
+          this.io.open();
+        if ("open" === this.io._readyState)
+          this.onopen();
         return this;
       }
       /**
@@ -8407,17 +7771,13 @@ var require_socket2 = __commonJS({
           throw new Error('"' + ev.toString() + '" is a reserved event name');
         }
         args.unshift(ev);
-        if (
-          this._opts.retries &&
-          !this.flags.fromQueue &&
-          !this.flags.volatile
-        ) {
+        if (this._opts.retries && !this.flags.fromQueue && !this.flags.volatile) {
           this._addToQueue(args);
           return this;
         }
         const packet = {
           type: socket_io_parser_1.PacketType.EVENT,
-          data: args,
+          data: args
         };
         packet.options = {};
         packet.options.compress = this.flags.compress !== false;
@@ -8428,18 +7788,8 @@ var require_socket2 = __commonJS({
           this._registerAckCallback(id, ack);
           packet.id = id;
         }
-        const isTransportWritable =
-          (_b =
-            (_a = this.io.engine) === null || _a === void 0
-              ? void 0
-              : _a.transport) === null || _b === void 0
-            ? void 0
-            : _b.writable;
-        const isConnected =
-          this.connected &&
-          !((_c = this.io.engine) === null || _c === void 0
-            ? void 0
-            : _c._hasPingExpired());
+        const isTransportWritable = (_b = (_a = this.io.engine) === null || _a === void 0 ? void 0 : _a.transport) === null || _b === void 0 ? void 0 : _b.writable;
+        const isConnected = this.connected && !((_c = this.io.engine) === null || _c === void 0 ? void 0 : _c._hasPingExpired());
         const discardPacket = this.flags.volatile && !isTransportWritable;
         if (discardPacket) {
           debug("discard packet as the transport is not currently writable");
@@ -8457,10 +7807,7 @@ var require_socket2 = __commonJS({
        */
       _registerAckCallback(id, ack) {
         var _a;
-        const timeout =
-          (_a = this.flags.timeout) !== null && _a !== void 0
-            ? _a
-            : this._opts.ackTimeout;
+        const timeout = (_a = this.flags.timeout) !== null && _a !== void 0 ? _a : this._opts.ackTimeout;
         if (timeout === void 0) {
           this.acks[id] = ack;
           return;
@@ -8524,7 +7871,7 @@ var require_socket2 = __commonJS({
           tryCount: 0,
           pending: false,
           args,
-          flags: Object.assign({ fromQueue: true }, this.flags),
+          flags: Object.assign({ fromQueue: true }, this.flags)
         };
         args.push((err, ...responseArgs) => {
           if (packet !== this._queue[0]) {
@@ -8533,11 +7880,7 @@ var require_socket2 = __commonJS({
           const hasError = err !== null;
           if (hasError) {
             if (packet.tryCount > this._opts.retries) {
-              debug(
-                "packet [%d] is discarded after %d tries",
-                packet.id,
-                packet.tryCount,
-              );
+              debug("packet [%d] is discarded after %d tries", packet.id, packet.tryCount);
               this._queue.shift();
               if (ack) {
                 ack(err);
@@ -8569,10 +7912,7 @@ var require_socket2 = __commonJS({
         }
         const packet = this._queue[0];
         if (packet.pending && !force) {
-          debug(
-            "packet [%d] has already been sent and is waiting for an ack",
-            packet.id,
-          );
+          debug("packet [%d] has already been sent and is waiting for an ack", packet.id);
           return;
         }
         packet.pending = true;
@@ -8615,9 +7955,7 @@ var require_socket2 = __commonJS({
       _sendConnectPacket(data) {
         this.packet({
           type: socket_io_parser_1.PacketType.CONNECT,
-          data: this._pid
-            ? Object.assign({ pid: this._pid, offset: this._lastOffset }, data)
-            : data,
+          data: this._pid ? Object.assign({ pid: this._pid, offset: this._lastOffset }, data) : data
         });
       }
       /**
@@ -8653,9 +7991,7 @@ var require_socket2 = __commonJS({
        */
       _clearAcks() {
         Object.keys(this.acks).forEach((id) => {
-          const isBuffered = this.sendBuffer.some(
-            (packet) => String(packet.id) === id,
-          );
+          const isBuffered = this.sendBuffer.some((packet) => String(packet.id) === id);
           if (!isBuffered) {
             const ack = this.acks[id];
             delete this.acks[id];
@@ -8673,18 +8009,14 @@ var require_socket2 = __commonJS({
        */
       onpacket(packet) {
         const sameNamespace = packet.nsp === this.nsp;
-        if (!sameNamespace) return;
+        if (!sameNamespace)
+          return;
         switch (packet.type) {
           case socket_io_parser_1.PacketType.CONNECT:
             if (packet.data && packet.data.sid) {
               this.onconnect(packet.data.sid, packet.data.pid);
             } else {
-              this.emitReserved(
-                "connect_error",
-                new Error(
-                  "It seems you are trying to reach a Socket.IO server in v2.x with a v3.x client, but they are not compatible (more information here: https://socket.io/docs/v3/migrating-from-2-x-to-3-0/)",
-                ),
-              );
+              this.emitReserved("connect_error", new Error("It seems you are trying to reach a Socket.IO server in v2.x with a v3.x client, but they are not compatible (more information here: https://socket.io/docs/v3/migrating-from-2-x-to-3-0/)"));
             }
             break;
           case socket_io_parser_1.PacketType.EVENT:
@@ -8733,11 +8065,7 @@ var require_socket2 = __commonJS({
           }
         }
         super.emit.apply(this, args);
-        if (
-          this._pid &&
-          args.length &&
-          typeof args[args.length - 1] === "string"
-        ) {
+        if (this._pid && args.length && typeof args[args.length - 1] === "string") {
           this._lastOffset = args[args.length - 1];
         }
       }
@@ -8749,14 +8077,15 @@ var require_socket2 = __commonJS({
       ack(id) {
         const self = this;
         let sent = false;
-        return function (...args) {
-          if (sent) return;
+        return function(...args) {
+          if (sent)
+            return;
           sent = true;
           debug("sending ack %j", args);
           self.packet({
             type: socket_io_parser_1.PacketType.ACK,
             id,
-            data: args,
+            data: args
           });
         };
       }
@@ -9079,7 +8408,7 @@ var require_socket2 = __commonJS({
       }
     };
     exports2.Socket = Socket;
-  },
+  }
 });
 
 // node_modules/socket.io-client/build/cjs/contrib/backo2.js
@@ -9096,7 +8425,7 @@ var require_backo2 = __commonJS({
       this.jitter = opts.jitter > 0 && opts.jitter <= 1 ? opts.jitter : 0;
       this.attempts = 0;
     }
-    Backoff.prototype.duration = function () {
+    Backoff.prototype.duration = function() {
       var ms = this.ms * Math.pow(this.factor, this.attempts++);
       if (this.jitter) {
         var rand = Math.random();
@@ -9105,77 +8434,55 @@ var require_backo2 = __commonJS({
       }
       return Math.min(ms, this.max) | 0;
     };
-    Backoff.prototype.reset = function () {
+    Backoff.prototype.reset = function() {
       this.attempts = 0;
     };
-    Backoff.prototype.setMin = function (min) {
+    Backoff.prototype.setMin = function(min) {
       this.ms = min;
     };
-    Backoff.prototype.setMax = function (max) {
+    Backoff.prototype.setMax = function(max) {
       this.max = max;
     };
-    Backoff.prototype.setJitter = function (jitter) {
+    Backoff.prototype.setJitter = function(jitter) {
       this.jitter = jitter;
     };
-  },
+  }
 });
 
 // node_modules/socket.io-client/build/cjs/manager.js
 var require_manager = __commonJS({
   "node_modules/socket.io-client/build/cjs/manager.js"(exports2) {
     "use strict";
-    var __createBinding =
-      (exports2 && exports2.__createBinding) ||
-      (Object.create
-        ? function (o, m, k, k2) {
-            if (k2 === void 0) k2 = k;
-            var desc = Object.getOwnPropertyDescriptor(m, k);
-            if (
-              !desc ||
-              ("get" in desc
-                ? !m.__esModule
-                : desc.writable || desc.configurable)
-            ) {
-              desc = {
-                enumerable: true,
-                get: function () {
-                  return m[k];
-                },
-              };
-            }
-            Object.defineProperty(o, k2, desc);
-          }
-        : function (o, m, k, k2) {
-            if (k2 === void 0) k2 = k;
-            o[k2] = m[k];
-          });
-    var __setModuleDefault =
-      (exports2 && exports2.__setModuleDefault) ||
-      (Object.create
-        ? function (o, v) {
-            Object.defineProperty(o, "default", { enumerable: true, value: v });
-          }
-        : function (o, v) {
-            o["default"] = v;
-          });
-    var __importStar =
-      (exports2 && exports2.__importStar) ||
-      function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) {
-          for (var k in mod)
-            if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
-              __createBinding(result, mod, k);
-        }
-        __setModuleDefault(result, mod);
-        return result;
-      };
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
+      if (k2 === void 0) k2 = k;
+      var desc = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+        desc = { enumerable: true, get: function() {
+          return m[k];
+        } };
+      }
+      Object.defineProperty(o, k2, desc);
+    }) : (function(o, m, k, k2) {
+      if (k2 === void 0) k2 = k;
+      o[k2] = m[k];
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
+      Object.defineProperty(o, "default", { enumerable: true, value: v });
+    }) : function(o, v) {
+      o["default"] = v;
+    });
+    var __importStar = exports2 && exports2.__importStar || function(mod) {
+      if (mod && mod.__esModule) return mod;
+      var result = {};
+      if (mod != null) {
+        for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+      }
+      __setModuleDefault(result, mod);
+      return result;
+    };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Manager = void 0;
     var engine_io_client_1 = require_cjs3();
@@ -9204,13 +8511,11 @@ var require_manager = __commonJS({
         this.reconnectionAttempts(opts.reconnectionAttempts || Infinity);
         this.reconnectionDelay(opts.reconnectionDelay || 1e3);
         this.reconnectionDelayMax(opts.reconnectionDelayMax || 5e3);
-        this.randomizationFactor(
-          (_a = opts.randomizationFactor) !== null && _a !== void 0 ? _a : 0.5,
-        );
+        this.randomizationFactor((_a = opts.randomizationFactor) !== null && _a !== void 0 ? _a : 0.5);
         this.backoff = new backo2_js_1.Backoff({
           min: this.reconnectionDelay(),
           max: this.reconnectionDelayMax(),
-          jitter: this.randomizationFactor(),
+          jitter: this.randomizationFactor()
         });
         this.timeout(null == opts.timeout ? 2e4 : opts.timeout);
         this._readyState = "closed";
@@ -9219,10 +8524,12 @@ var require_manager = __commonJS({
         this.encoder = new _parser.Encoder();
         this.decoder = new _parser.Decoder();
         this._autoConnect = opts.autoConnect !== false;
-        if (this._autoConnect) this.open();
+        if (this._autoConnect)
+          this.open();
       }
       reconnection(v) {
-        if (!arguments.length) return this._reconnection;
+        if (!arguments.length)
+          return this._reconnection;
         this._reconnection = !!v;
         if (!v) {
           this.skipReconnect = true;
@@ -9230,35 +8537,38 @@ var require_manager = __commonJS({
         return this;
       }
       reconnectionAttempts(v) {
-        if (v === void 0) return this._reconnectionAttempts;
+        if (v === void 0)
+          return this._reconnectionAttempts;
         this._reconnectionAttempts = v;
         return this;
       }
       reconnectionDelay(v) {
         var _a;
-        if (v === void 0) return this._reconnectionDelay;
+        if (v === void 0)
+          return this._reconnectionDelay;
         this._reconnectionDelay = v;
         (_a = this.backoff) === null || _a === void 0 ? void 0 : _a.setMin(v);
         return this;
       }
       randomizationFactor(v) {
         var _a;
-        if (v === void 0) return this._randomizationFactor;
+        if (v === void 0)
+          return this._randomizationFactor;
         this._randomizationFactor = v;
-        (_a = this.backoff) === null || _a === void 0
-          ? void 0
-          : _a.setJitter(v);
+        (_a = this.backoff) === null || _a === void 0 ? void 0 : _a.setJitter(v);
         return this;
       }
       reconnectionDelayMax(v) {
         var _a;
-        if (v === void 0) return this._reconnectionDelayMax;
+        if (v === void 0)
+          return this._reconnectionDelayMax;
         this._reconnectionDelayMax = v;
         (_a = this.backoff) === null || _a === void 0 ? void 0 : _a.setMax(v);
         return this;
       }
       timeout(v) {
-        if (!arguments.length) return this._timeout;
+        if (!arguments.length)
+          return this._timeout;
         this._timeout = v;
         return this;
       }
@@ -9269,11 +8579,7 @@ var require_manager = __commonJS({
        * @private
        */
       maybeReconnectOnOpen() {
-        if (
-          !this._reconnecting &&
-          this._reconnection &&
-          this.backoff.attempts === 0
-        ) {
+        if (!this._reconnecting && this._reconnection && this.backoff.attempts === 0) {
           this.reconnect();
         }
       }
@@ -9286,14 +8592,15 @@ var require_manager = __commonJS({
        */
       open(fn) {
         debug("readyState %s", this._readyState);
-        if (~this._readyState.indexOf("open")) return this;
+        if (~this._readyState.indexOf("open"))
+          return this;
         debug("opening %s", this.uri);
         this.engine = new engine_io_client_1.Socket(this.uri, this.opts);
         const socket = this.engine;
         const self = this;
         this._readyState = "opening";
         this.skipReconnect = false;
-        const openSubDestroy = (0, on_js_1.on)(socket, "open", function () {
+        const openSubDestroy = (0, on_js_1.on)(socket, "open", function() {
           self.onopen();
           fn && fn();
         });
@@ -9355,7 +8662,7 @@ var require_manager = __commonJS({
           (0, on_js_1.on)(socket, "error", this.onerror.bind(this)),
           (0, on_js_1.on)(socket, "close", this.onclose.bind(this)),
           // @ts-ignore
-          (0, on_js_1.on)(this.decoder, "decoded", this.ondecoded.bind(this)),
+          (0, on_js_1.on)(this.decoder, "decoded", this.ondecoded.bind(this))
         );
       }
       /**
@@ -9500,7 +8807,8 @@ var require_manager = __commonJS({
        * @private
        */
       reconnect() {
-        if (this._reconnecting || this.skipReconnect) return this;
+        if (this._reconnecting || this.skipReconnect)
+          return this;
         const self = this;
         if (this.backoff.attempts >= this._reconnectionAttempts) {
           debug("reconnect failed");
@@ -9512,10 +8820,12 @@ var require_manager = __commonJS({
           debug("will wait %dms before reconnect attempt", delay);
           this._reconnecting = true;
           const timer = this.setTimeoutFn(() => {
-            if (self.skipReconnect) return;
+            if (self.skipReconnect)
+              return;
             debug("attempting reconnect");
             this.emitReserved("reconnect_attempt", self.backoff.attempts);
-            if (self.skipReconnect) return;
+            if (self.skipReconnect)
+              return;
             self.open((err) => {
               if (err) {
                 debug("reconnect attempt error");
@@ -9549,47 +8859,30 @@ var require_manager = __commonJS({
       }
     };
     exports2.Manager = Manager;
-  },
+  }
 });
 
 // node_modules/socket.io-client/build/cjs/index.js
 var require_cjs5 = __commonJS({
   "node_modules/socket.io-client/build/cjs/index.js"(exports2, module2) {
     "use strict";
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.WebTransport =
-      exports2.WebSocket =
-      exports2.NodeWebSocket =
-      exports2.XHR =
-      exports2.NodeXHR =
-      exports2.Fetch =
-      exports2.Socket =
-      exports2.Manager =
-      exports2.protocol =
-        void 0;
+    exports2.WebTransport = exports2.WebSocket = exports2.NodeWebSocket = exports2.XHR = exports2.NodeXHR = exports2.Fetch = exports2.Socket = exports2.Manager = exports2.protocol = void 0;
     exports2.io = lookup;
     exports2.connect = lookup;
     exports2.default = lookup;
     var url_js_1 = require_url();
     var manager_js_1 = require_manager();
-    Object.defineProperty(exports2, "Manager", {
-      enumerable: true,
-      get: function () {
-        return manager_js_1.Manager;
-      },
-    });
+    Object.defineProperty(exports2, "Manager", { enumerable: true, get: function() {
+      return manager_js_1.Manager;
+    } });
     var socket_js_1 = require_socket2();
-    Object.defineProperty(exports2, "Socket", {
-      enumerable: true,
-      get: function () {
-        return socket_js_1.Socket;
-      },
-    });
+    Object.defineProperty(exports2, "Socket", { enumerable: true, get: function() {
+      return socket_js_1.Socket;
+    } });
     var debug_1 = __importDefault(require_src());
     var debug = (0, debug_1.default)("socket.io-client");
     var cache = {};
@@ -9604,11 +8897,7 @@ var require_cjs5 = __commonJS({
       const id = parsed.id;
       const path = parsed.path;
       const sameNamespace = cache[id] && path in cache[id]["nsps"];
-      const newConnection =
-        opts.forceNew ||
-        opts["force new connection"] ||
-        false === opts.multiplex ||
-        sameNamespace;
+      const newConnection = opts.forceNew || opts["force new connection"] || false === opts.multiplex || sameNamespace;
       let io;
       if (newConnection) {
         debug("ignoring socket cache for %s", source);
@@ -9629,54 +8918,33 @@ var require_cjs5 = __commonJS({
       Manager: manager_js_1.Manager,
       Socket: socket_js_1.Socket,
       io: lookup,
-      connect: lookup,
+      connect: lookup
     });
     var socket_io_parser_1 = require_cjs4();
-    Object.defineProperty(exports2, "protocol", {
-      enumerable: true,
-      get: function () {
-        return socket_io_parser_1.protocol;
-      },
-    });
+    Object.defineProperty(exports2, "protocol", { enumerable: true, get: function() {
+      return socket_io_parser_1.protocol;
+    } });
     var engine_io_client_1 = require_cjs3();
-    Object.defineProperty(exports2, "Fetch", {
-      enumerable: true,
-      get: function () {
-        return engine_io_client_1.Fetch;
-      },
-    });
-    Object.defineProperty(exports2, "NodeXHR", {
-      enumerable: true,
-      get: function () {
-        return engine_io_client_1.NodeXHR;
-      },
-    });
-    Object.defineProperty(exports2, "XHR", {
-      enumerable: true,
-      get: function () {
-        return engine_io_client_1.XHR;
-      },
-    });
-    Object.defineProperty(exports2, "NodeWebSocket", {
-      enumerable: true,
-      get: function () {
-        return engine_io_client_1.NodeWebSocket;
-      },
-    });
-    Object.defineProperty(exports2, "WebSocket", {
-      enumerable: true,
-      get: function () {
-        return engine_io_client_1.WebSocket;
-      },
-    });
-    Object.defineProperty(exports2, "WebTransport", {
-      enumerable: true,
-      get: function () {
-        return engine_io_client_1.WebTransport;
-      },
-    });
+    Object.defineProperty(exports2, "Fetch", { enumerable: true, get: function() {
+      return engine_io_client_1.Fetch;
+    } });
+    Object.defineProperty(exports2, "NodeXHR", { enumerable: true, get: function() {
+      return engine_io_client_1.NodeXHR;
+    } });
+    Object.defineProperty(exports2, "XHR", { enumerable: true, get: function() {
+      return engine_io_client_1.XHR;
+    } });
+    Object.defineProperty(exports2, "NodeWebSocket", { enumerable: true, get: function() {
+      return engine_io_client_1.NodeWebSocket;
+    } });
+    Object.defineProperty(exports2, "WebSocket", { enumerable: true, get: function() {
+      return engine_io_client_1.WebSocket;
+    } });
+    Object.defineProperty(exports2, "WebTransport", { enumerable: true, get: function() {
+      return engine_io_client_1.WebTransport;
+    } });
     module2.exports = lookup;
-  },
+  }
 });
 
 // js/mouses_view.js
@@ -9720,7 +8988,7 @@ var require_mouses_view = __commonJS({
         // púrpura
         "#2ECC71",
         // verde oscuro
-        "#1ABC9C",
+        "#1ABC9C"
         // turquesa
       ];
       const foregroundColors = [
@@ -9740,7 +9008,7 @@ var require_mouses_view = __commonJS({
         // para #8E44AD
         "#000000",
         // para #2ECC71
-        "#000000",
+        "#000000"
         // para #1ABC9C
       ];
       const i = Math.floor(Math.random() * colors.length);
@@ -9763,7 +9031,7 @@ var require_mouses_view = __commonJS({
         y: 0,
         targetX: 0,
         targetY: 0,
-        element: el,
+        element: el
       };
     }
     function removeCursor(id) {
@@ -9797,9 +9065,9 @@ var require_mouses_view = __commonJS({
       updateMousePosition,
       addCursor,
       removeCursor,
-      removeAllCursors,
+      removeAllCursors
     };
-  },
+  }
 });
 
 // js/mouses_net.js
@@ -9830,7 +9098,7 @@ var require_mouses_net = __commonJS({
             const dataToSend = {
               x: (event.clientX - rect.left) / scale - diagramX,
               y: (event.clientY - rect.top) / scale - diagramY,
-              diagram,
+              diagram
             };
             if (lastMPsent.x == dataToSend.x && lastMPsent.y == dataToSend.y)
               return;
@@ -9852,9 +9120,9 @@ var require_mouses_net = __commonJS({
     }
     module2.exports = {
       addMouseMovementSharing,
-      removeMouseMovementSharing,
+      removeMouseMovementSharing
     };
-  },
+  }
 });
 
 // node_modules/flatted/cjs/index.js
@@ -9868,10 +9136,8 @@ var require_cjs6 = __commonJS({
     var ignore = {};
     var object = "object";
     var noop = (_, value) => value;
-    var primitives = (value) =>
-      value instanceof Primitive ? Primitive(value) : value;
-    var Primitives = (_, value) =>
-      typeof value === primitive ? new Primitive(value) : value;
+    var primitives = (value) => value instanceof Primitive ? Primitive(value) : value;
+    var Primitives = (_, value) => typeof value === primitive ? new Primitive(value) : value;
     var resolver = (input, lazy, parsed, $) => (output) => {
       for (let ke = keys(output), { length } = ke, y = 0; y < length; y++) {
         const k = ke[y];
@@ -9882,8 +9148,10 @@ var require_cjs6 = __commonJS({
             parsed.add(tmp);
             output[k] = ignore;
             lazy.push({ o: output, k, r: tmp });
-          } else output[k] = $.call(output, k, tmp);
-        } else if (output[k] !== ignore) output[k] = $.call(output, k, value);
+          } else
+            output[k] = $.call(output, k, tmp);
+        } else if (output[k] !== ignore)
+          output[k] = $.call(output, k, value);
       }
       return output;
     };
@@ -9910,10 +9178,7 @@ var require_cjs6 = __commonJS({
     };
     exports2.parse = parse;
     var stringify = (value, replacer, space) => {
-      const $ =
-        replacer && typeof replacer === object
-          ? (k, v) => (k === "" || -1 < replacer.indexOf(k) ? v : void 0)
-          : replacer || noop;
+      const $ = replacer && typeof replacer === object ? (k, v) => k === "" || -1 < replacer.indexOf(k) ? v : void 0 : replacer || noop;
       const known = /* @__PURE__ */ new Map();
       const input = [];
       const output = [];
@@ -9944,7 +9209,7 @@ var require_cjs6 = __commonJS({
     exports2.toJSON = toJSON;
     var fromJSON = (value) => parse($stringify(value));
     exports2.fromJSON = fromJSON;
-  },
+  }
 });
 
 // js/client.js
@@ -9967,7 +9232,7 @@ var require_client = __commonJS({
           transports: ["websocket"],
           reconnectionAttempts: 3,
           timeout: 5e3,
-          auth: { username: name },
+          auth: { username: name }
         });
         socket.on("user-joined", (data) => {
           if (!users[data.id]) users[data.id] = data.name;
@@ -9989,7 +9254,7 @@ var require_client = __commonJS({
             const str = flatted.stringify(cleanObject);
             socket.emit("host-delivers-document", {
               to: data.requesterId,
-              json: str,
+              json: str
             });
           } catch (err) {
             app.toast.error("Error al enviar el proyecto al invitado.");
@@ -10085,7 +9350,7 @@ var require_client = __commonJS({
         if (views.length > 0) {
           socket.emit(
             "lock-element",
-            views.map((v) => v._id),
+            views.map((v) => v._id)
           );
         } else {
           socket.emit("unlock-elements");
@@ -10093,9 +9358,12 @@ var require_client = __commonJS({
       });
     }
     function removeChangesHook() {
-      app.repository.on("operationExecuted", () => {});
-      app.commands.on("afterExecute", () => {});
-      app.selections.on("selectionChanged", () => {});
+      app.repository.on("operationExecuted", () => {
+      });
+      app.commands.on("afterExecute", () => {
+      });
+      app.selections.on("selectionChanged", () => {
+      });
     }
     function highlightElement(viewId, color) {
       const view = app.repository.get(viewId);
@@ -10106,7 +9374,7 @@ var require_client = __commonJS({
           left: view.left,
           top: view.top,
           width: view.width,
-          height: view.height,
+          height: view.height
         };
         const hl = document.createElement("div");
         hl.className = "element-lock-highlight";
@@ -10156,11 +9424,16 @@ var require_client = __commonJS({
         id: socket.id,
         x,
         y,
-        diagram,
+        diagram
       });
     }
     function getConnectedAddress() {
       return address;
+    }
+    function requestDocument() {
+      if (!(socket && socket.connected)) return;
+      fachada2.showLoadingOverlay();
+      socket.emit("request-doc");
     }
     function disconnect() {
       if (socket) {
@@ -10179,8 +9452,9 @@ var require_client = __commonJS({
       sendMousePosition,
       disconnect,
       getConnectedAddress,
+      requestDocument
     };
-  },
+  }
 });
 
 // node_modules/negotiator/lib/charset.js
@@ -10219,18 +9493,14 @@ var require_charset = __commonJS({
       return {
         charset,
         q,
-        i,
+        i
       };
     }
     function getCharsetPriority(charset, accepted, index) {
       var priority = { o: -1, q: 0, s: 0 };
       for (var i = 0; i < accepted.length; i++) {
         var spec = specify(charset, accepted[i], index);
-        if (
-          spec &&
-          (priority.s - spec.s || priority.q - spec.q || priority.o - spec.o) <
-            0
-        ) {
+        if (spec && (priority.s - spec.s || priority.q - spec.q || priority.o - spec.o) < 0) {
           priority = spec;
         }
       }
@@ -10247,7 +9517,7 @@ var require_charset = __commonJS({
         i: index,
         o: spec.i,
         q: spec.q,
-        s,
+        s
       };
     }
     function preferredCharsets(accept, provided) {
@@ -10258,12 +9528,9 @@ var require_charset = __commonJS({
       var priorities = provided.map(function getPriority(type2, index) {
         return getCharsetPriority(type2, accepts, index);
       });
-      return priorities
-        .filter(isQuality)
-        .sort(compareSpecs)
-        .map(function getCharset(priority) {
-          return provided[priorities.indexOf(priority)];
-        });
+      return priorities.filter(isQuality).sort(compareSpecs).map(function getCharset(priority) {
+        return provided[priorities.indexOf(priority)];
+      });
     }
     function compareSpecs(a, b) {
       return b.q - a.q || b.s - a.s || a.o - b.o || a.i - b.i || 0;
@@ -10274,7 +9541,7 @@ var require_charset = __commonJS({
     function isQuality(spec) {
       return spec.q > 0;
     }
-  },
+  }
 });
 
 // node_modules/negotiator/lib/encoding.js
@@ -10300,7 +9567,7 @@ var require_encoding = __commonJS({
         accepts[j++] = {
           encoding: "identity",
           q: minQuality,
-          i,
+          i
         };
       }
       accepts.length = j;
@@ -10324,18 +9591,14 @@ var require_encoding = __commonJS({
       return {
         encoding,
         q,
-        i,
+        i
       };
     }
     function getEncodingPriority(encoding, accepted, index) {
       var priority = { o: -1, q: 0, s: 0 };
       for (var i = 0; i < accepted.length; i++) {
         var spec = specify(encoding, accepted[i], index);
-        if (
-          spec &&
-          (priority.s - spec.s || priority.q - spec.q || priority.o - spec.o) <
-            0
-        ) {
+        if (spec && (priority.s - spec.s || priority.q - spec.q || priority.o - spec.o) < 0) {
           priority = spec;
         }
       }
@@ -10352,26 +9615,20 @@ var require_encoding = __commonJS({
         i: index,
         o: spec.i,
         q: spec.q,
-        s,
+        s
       };
     }
     function preferredEncodings(accept, provided) {
       var accepts = parseAcceptEncoding(accept || "");
       if (!provided) {
-        return accepts
-          .filter(isQuality)
-          .sort(compareSpecs)
-          .map(getFullEncoding);
+        return accepts.filter(isQuality).sort(compareSpecs).map(getFullEncoding);
       }
       var priorities = provided.map(function getPriority(type2, index) {
         return getEncodingPriority(type2, accepts, index);
       });
-      return priorities
-        .filter(isQuality)
-        .sort(compareSpecs)
-        .map(function getEncoding(priority) {
-          return provided[priorities.indexOf(priority)];
-        });
+      return priorities.filter(isQuality).sort(compareSpecs).map(function getEncoding(priority) {
+        return provided[priorities.indexOf(priority)];
+      });
     }
     function compareSpecs(a, b) {
       return b.q - a.q || b.s - a.s || a.o - b.o || a.i - b.i || 0;
@@ -10382,7 +9639,7 @@ var require_encoding = __commonJS({
     function isQuality(spec) {
       return spec.q > 0;
     }
-  },
+  }
 });
 
 // node_modules/negotiator/lib/language.js
@@ -10423,18 +9680,14 @@ var require_language = __commonJS({
         suffix,
         q,
         i,
-        full,
+        full
       };
     }
     function getLanguagePriority(language, accepted, index) {
       var priority = { o: -1, q: 0, s: 0 };
       for (var i = 0; i < accepted.length; i++) {
         var spec = specify(language, accepted[i], index);
-        if (
-          spec &&
-          (priority.s - spec.s || priority.q - spec.q || priority.o - spec.o) <
-            0
-        ) {
+        if (spec && (priority.s - spec.s || priority.q - spec.q || priority.o - spec.o) < 0) {
           priority = spec;
         }
       }
@@ -10457,26 +9710,20 @@ var require_language = __commonJS({
         i: index,
         o: spec.i,
         q: spec.q,
-        s,
+        s
       };
     }
     function preferredLanguages(accept, provided) {
       var accepts = parseAcceptLanguage(accept === void 0 ? "*" : accept || "");
       if (!provided) {
-        return accepts
-          .filter(isQuality)
-          .sort(compareSpecs)
-          .map(getFullLanguage);
+        return accepts.filter(isQuality).sort(compareSpecs).map(getFullLanguage);
       }
       var priorities = provided.map(function getPriority(type2, index) {
         return getLanguagePriority(type2, accepts, index);
       });
-      return priorities
-        .filter(isQuality)
-        .sort(compareSpecs)
-        .map(function getLanguage(priority) {
-          return provided[priorities.indexOf(priority)];
-        });
+      return priorities.filter(isQuality).sort(compareSpecs).map(function getLanguage(priority) {
+        return provided[priorities.indexOf(priority)];
+      });
     }
     function compareSpecs(a, b) {
       return b.q - a.q || b.s - a.s || a.o - b.o || a.i - b.i || 0;
@@ -10487,7 +9734,7 @@ var require_language = __commonJS({
     function isQuality(spec) {
       return spec.q > 0;
     }
-  },
+  }
 });
 
 // node_modules/negotiator/lib/mediaType.js
@@ -10521,10 +9768,7 @@ var require_mediaType = __commonJS({
           var pair = kvps[j];
           var key = pair[0].toLowerCase();
           var val = pair[1];
-          var value =
-            val && val[0] === '"' && val[val.length - 1] === '"'
-              ? val.substr(1, val.length - 2)
-              : val;
+          var value = val && val[0] === '"' && val[val.length - 1] === '"' ? val.substr(1, val.length - 2) : val;
           if (key === "q") {
             q = parseFloat(value);
             break;
@@ -10537,18 +9781,14 @@ var require_mediaType = __commonJS({
         subtype,
         params,
         q,
-        i,
+        i
       };
     }
     function getMediaTypePriority(type2, accepted, index) {
       var priority = { o: -1, q: 0, s: 0 };
       for (var i = 0; i < accepted.length; i++) {
         var spec = specify(type2, accepted[i], index);
-        if (
-          spec &&
-          (priority.s - spec.s || priority.q - spec.q || priority.o - spec.o) <
-            0
-        ) {
+        if (spec && (priority.s - spec.s || priority.q - spec.q || priority.o - spec.o) < 0) {
           priority = spec;
         }
       }
@@ -10572,15 +9812,9 @@ var require_mediaType = __commonJS({
       }
       var keys = Object.keys(spec.params);
       if (keys.length > 0) {
-        if (
-          keys.every(function (k) {
-            return (
-              spec.params[k] == "*" ||
-              (spec.params[k] || "").toLowerCase() ==
-                (p.params[k] || "").toLowerCase()
-            );
-          })
-        ) {
+        if (keys.every(function(k) {
+          return spec.params[k] == "*" || (spec.params[k] || "").toLowerCase() == (p.params[k] || "").toLowerCase();
+        })) {
           s |= 1;
         } else {
           return null;
@@ -10590,7 +9824,7 @@ var require_mediaType = __commonJS({
         i: index,
         o: spec.i,
         q: spec.q,
-        s,
+        s
       };
     }
     function preferredMediaTypes(accept, provided) {
@@ -10601,12 +9835,9 @@ var require_mediaType = __commonJS({
       var priorities = provided.map(function getPriority(type2, index) {
         return getMediaTypePriority(type2, accepts, index);
       });
-      return priorities
-        .filter(isQuality)
-        .sort(compareSpecs)
-        .map(function getType(priority) {
-          return provided[priorities.indexOf(priority)];
-        });
+      return priorities.filter(isQuality).sort(compareSpecs).map(function getType(priority) {
+        return provided[priorities.indexOf(priority)];
+      });
     }
     function compareSpecs(a, b) {
       return b.q - a.q || b.s - a.s || a.o - b.o || a.i - b.i || 0;
@@ -10665,7 +9896,7 @@ var require_mediaType = __commonJS({
       }
       return parameters;
     }
-  },
+  }
 });
 
 // node_modules/negotiator/index.js
@@ -10689,30 +9920,21 @@ var require_negotiator = __commonJS({
       return set && set[0];
     };
     Negotiator.prototype.charsets = function charsets(available) {
-      return preferredCharsets(
-        this.request.headers["accept-charset"],
-        available,
-      );
+      return preferredCharsets(this.request.headers["accept-charset"], available);
     };
     Negotiator.prototype.encoding = function encoding(available) {
       var set = this.encodings(available);
       return set && set[0];
     };
     Negotiator.prototype.encodings = function encodings(available) {
-      return preferredEncodings(
-        this.request.headers["accept-encoding"],
-        available,
-      );
+      return preferredEncodings(this.request.headers["accept-encoding"], available);
     };
     Negotiator.prototype.language = function language(available) {
       var set = this.languages(available);
       return set && set[0];
     };
     Negotiator.prototype.languages = function languages(available) {
-      return preferredLanguages(
-        this.request.headers["accept-language"],
-        available,
-      );
+      return preferredLanguages(this.request.headers["accept-language"], available);
     };
     Negotiator.prototype.mediaType = function mediaType(available) {
       var set = this.mediaTypes(available);
@@ -10729,7 +9951,7 @@ var require_negotiator = __commonJS({
     Negotiator.prototype.preferredLanguages = Negotiator.prototype.languages;
     Negotiator.prototype.preferredMediaType = Negotiator.prototype.mediaType;
     Negotiator.prototype.preferredMediaTypes = Negotiator.prototype.mediaTypes;
-  },
+  }
 });
 
 // node_modules/mime-db/db.json
@@ -10737,8620 +9959,8531 @@ var require_db = __commonJS({
   "node_modules/mime-db/db.json"(exports2, module2) {
     module2.exports = {
       "application/1d-interleaved-parityfec": {
-        source: "iana",
+        source: "iana"
       },
       "application/3gpdash-qoe-report+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/3gpp-ims+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/3gpphal+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/3gpphalforms+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/a2l": {
-        source: "iana",
+        source: "iana"
       },
       "application/ace+cbor": {
-        source: "iana",
+        source: "iana"
       },
       "application/activemessage": {
-        source: "iana",
+        source: "iana"
       },
       "application/activity+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/alto-costmap+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/alto-costmapfilter+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/alto-directory+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/alto-endpointcost+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/alto-endpointcostparams+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/alto-endpointprop+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/alto-endpointpropparams+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/alto-error+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/alto-networkmap+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/alto-networkmapfilter+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/alto-updatestreamcontrol+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/alto-updatestreamparams+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/aml": {
-        source: "iana",
+        source: "iana"
       },
       "application/andrew-inset": {
         source: "iana",
-        extensions: ["ez"],
+        extensions: ["ez"]
       },
       "application/applefile": {
-        source: "iana",
+        source: "iana"
       },
       "application/applixware": {
         source: "apache",
-        extensions: ["aw"],
+        extensions: ["aw"]
       },
       "application/at+jwt": {
-        source: "iana",
+        source: "iana"
       },
       "application/atf": {
-        source: "iana",
+        source: "iana"
       },
       "application/atfx": {
-        source: "iana",
+        source: "iana"
       },
       "application/atom+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["atom"],
+        extensions: ["atom"]
       },
       "application/atomcat+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["atomcat"],
+        extensions: ["atomcat"]
       },
       "application/atomdeleted+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["atomdeleted"],
+        extensions: ["atomdeleted"]
       },
       "application/atomicmail": {
-        source: "iana",
+        source: "iana"
       },
       "application/atomsvc+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["atomsvc"],
+        extensions: ["atomsvc"]
       },
       "application/atsc-dwd+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["dwd"],
+        extensions: ["dwd"]
       },
       "application/atsc-dynamic-event-message": {
-        source: "iana",
+        source: "iana"
       },
       "application/atsc-held+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["held"],
+        extensions: ["held"]
       },
       "application/atsc-rdt+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/atsc-rsat+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["rsat"],
+        extensions: ["rsat"]
       },
       "application/atxml": {
-        source: "iana",
+        source: "iana"
       },
       "application/auth-policy+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/bacnet-xdd+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/batch-smtp": {
-        source: "iana",
+        source: "iana"
       },
       "application/bdoc": {
         compressible: false,
-        extensions: ["bdoc"],
+        extensions: ["bdoc"]
       },
       "application/beep+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/calendar+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/calendar+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xcs"],
+        extensions: ["xcs"]
       },
       "application/call-completion": {
-        source: "iana",
+        source: "iana"
       },
       "application/cals-1840": {
-        source: "iana",
+        source: "iana"
       },
       "application/captive+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/cbor": {
-        source: "iana",
+        source: "iana"
       },
       "application/cbor-seq": {
-        source: "iana",
+        source: "iana"
       },
       "application/cccex": {
-        source: "iana",
+        source: "iana"
       },
       "application/ccmp+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/ccxml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["ccxml"],
+        extensions: ["ccxml"]
       },
       "application/cdfx+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["cdfx"],
+        extensions: ["cdfx"]
       },
       "application/cdmi-capability": {
         source: "iana",
-        extensions: ["cdmia"],
+        extensions: ["cdmia"]
       },
       "application/cdmi-container": {
         source: "iana",
-        extensions: ["cdmic"],
+        extensions: ["cdmic"]
       },
       "application/cdmi-domain": {
         source: "iana",
-        extensions: ["cdmid"],
+        extensions: ["cdmid"]
       },
       "application/cdmi-object": {
         source: "iana",
-        extensions: ["cdmio"],
+        extensions: ["cdmio"]
       },
       "application/cdmi-queue": {
         source: "iana",
-        extensions: ["cdmiq"],
+        extensions: ["cdmiq"]
       },
       "application/cdni": {
-        source: "iana",
+        source: "iana"
       },
       "application/cea": {
-        source: "iana",
+        source: "iana"
       },
       "application/cea-2018+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/cellml+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/cfw": {
-        source: "iana",
+        source: "iana"
       },
       "application/city+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/clr": {
-        source: "iana",
+        source: "iana"
       },
       "application/clue+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/clue_info+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/cms": {
-        source: "iana",
+        source: "iana"
       },
       "application/cnrp+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/coap-group+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/coap-payload": {
-        source: "iana",
+        source: "iana"
       },
       "application/commonground": {
-        source: "iana",
+        source: "iana"
       },
       "application/conference-info+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/cose": {
-        source: "iana",
+        source: "iana"
       },
       "application/cose-key": {
-        source: "iana",
+        source: "iana"
       },
       "application/cose-key-set": {
-        source: "iana",
+        source: "iana"
       },
       "application/cpl+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["cpl"],
+        extensions: ["cpl"]
       },
       "application/csrattrs": {
-        source: "iana",
+        source: "iana"
       },
       "application/csta+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/cstadata+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/csvm+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/cu-seeme": {
         source: "apache",
-        extensions: ["cu"],
+        extensions: ["cu"]
       },
       "application/cwt": {
-        source: "iana",
+        source: "iana"
       },
       "application/cybercash": {
-        source: "iana",
+        source: "iana"
       },
       "application/dart": {
-        compressible: true,
+        compressible: true
       },
       "application/dash+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["mpd"],
+        extensions: ["mpd"]
       },
       "application/dash-patch+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["mpp"],
+        extensions: ["mpp"]
       },
       "application/dashdelta": {
-        source: "iana",
+        source: "iana"
       },
       "application/davmount+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["davmount"],
+        extensions: ["davmount"]
       },
       "application/dca-rft": {
-        source: "iana",
+        source: "iana"
       },
       "application/dcd": {
-        source: "iana",
+        source: "iana"
       },
       "application/dec-dx": {
-        source: "iana",
+        source: "iana"
       },
       "application/dialog-info+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/dicom": {
-        source: "iana",
+        source: "iana"
       },
       "application/dicom+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/dicom+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/dii": {
-        source: "iana",
+        source: "iana"
       },
       "application/dit": {
-        source: "iana",
+        source: "iana"
       },
       "application/dns": {
-        source: "iana",
+        source: "iana"
       },
       "application/dns+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/dns-message": {
-        source: "iana",
+        source: "iana"
       },
       "application/docbook+xml": {
         source: "apache",
         compressible: true,
-        extensions: ["dbk"],
+        extensions: ["dbk"]
       },
       "application/dots+cbor": {
-        source: "iana",
+        source: "iana"
       },
       "application/dskpp+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/dssc+der": {
         source: "iana",
-        extensions: ["dssc"],
+        extensions: ["dssc"]
       },
       "application/dssc+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xdssc"],
+        extensions: ["xdssc"]
       },
       "application/dvcs": {
-        source: "iana",
+        source: "iana"
       },
       "application/ecmascript": {
         source: "iana",
         compressible: true,
-        extensions: ["es", "ecma"],
+        extensions: ["es", "ecma"]
       },
       "application/edi-consent": {
-        source: "iana",
+        source: "iana"
       },
       "application/edi-x12": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/edifact": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/efi": {
-        source: "iana",
+        source: "iana"
       },
       "application/elm+json": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/elm+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/emergencycalldata.cap+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/emergencycalldata.comment+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/emergencycalldata.control+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/emergencycalldata.deviceinfo+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/emergencycalldata.ecall.msd": {
-        source: "iana",
+        source: "iana"
       },
       "application/emergencycalldata.providerinfo+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/emergencycalldata.serviceinfo+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/emergencycalldata.subscriberinfo+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/emergencycalldata.veds+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/emma+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["emma"],
+        extensions: ["emma"]
       },
       "application/emotionml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["emotionml"],
+        extensions: ["emotionml"]
       },
       "application/encaprtp": {
-        source: "iana",
+        source: "iana"
       },
       "application/epp+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/epub+zip": {
         source: "iana",
         compressible: false,
-        extensions: ["epub"],
+        extensions: ["epub"]
       },
       "application/eshop": {
-        source: "iana",
+        source: "iana"
       },
       "application/exi": {
         source: "iana",
-        extensions: ["exi"],
+        extensions: ["exi"]
       },
       "application/expect-ct-report+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/express": {
         source: "iana",
-        extensions: ["exp"],
+        extensions: ["exp"]
       },
       "application/fastinfoset": {
-        source: "iana",
+        source: "iana"
       },
       "application/fastsoap": {
-        source: "iana",
+        source: "iana"
       },
       "application/fdt+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["fdt"],
+        extensions: ["fdt"]
       },
       "application/fhir+json": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/fhir+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/fido.trusted-apps+json": {
-        compressible: true,
+        compressible: true
       },
       "application/fits": {
-        source: "iana",
+        source: "iana"
       },
       "application/flexfec": {
-        source: "iana",
+        source: "iana"
       },
       "application/font-sfnt": {
-        source: "iana",
+        source: "iana"
       },
       "application/font-tdpfr": {
         source: "iana",
-        extensions: ["pfr"],
+        extensions: ["pfr"]
       },
       "application/font-woff": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/framework-attributes+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/geo+json": {
         source: "iana",
         compressible: true,
-        extensions: ["geojson"],
+        extensions: ["geojson"]
       },
       "application/geo+json-seq": {
-        source: "iana",
+        source: "iana"
       },
       "application/geopackage+sqlite3": {
-        source: "iana",
+        source: "iana"
       },
       "application/geoxacml+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/gltf-buffer": {
-        source: "iana",
+        source: "iana"
       },
       "application/gml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["gml"],
+        extensions: ["gml"]
       },
       "application/gpx+xml": {
         source: "apache",
         compressible: true,
-        extensions: ["gpx"],
+        extensions: ["gpx"]
       },
       "application/gxf": {
         source: "apache",
-        extensions: ["gxf"],
+        extensions: ["gxf"]
       },
       "application/gzip": {
         source: "iana",
         compressible: false,
-        extensions: ["gz"],
+        extensions: ["gz"]
       },
       "application/h224": {
-        source: "iana",
+        source: "iana"
       },
       "application/held+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/hjson": {
-        extensions: ["hjson"],
+        extensions: ["hjson"]
       },
       "application/http": {
-        source: "iana",
+        source: "iana"
       },
       "application/hyperstudio": {
         source: "iana",
-        extensions: ["stk"],
+        extensions: ["stk"]
       },
       "application/ibe-key-request+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/ibe-pkg-reply+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/ibe-pp-data": {
-        source: "iana",
+        source: "iana"
       },
       "application/iges": {
-        source: "iana",
+        source: "iana"
       },
       "application/im-iscomposing+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/index": {
-        source: "iana",
+        source: "iana"
       },
       "application/index.cmd": {
-        source: "iana",
+        source: "iana"
       },
       "application/index.obj": {
-        source: "iana",
+        source: "iana"
       },
       "application/index.response": {
-        source: "iana",
+        source: "iana"
       },
       "application/index.vnd": {
-        source: "iana",
+        source: "iana"
       },
       "application/inkml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["ink", "inkml"],
+        extensions: ["ink", "inkml"]
       },
       "application/iotp": {
-        source: "iana",
+        source: "iana"
       },
       "application/ipfix": {
         source: "iana",
-        extensions: ["ipfix"],
+        extensions: ["ipfix"]
       },
       "application/ipp": {
-        source: "iana",
+        source: "iana"
       },
       "application/isup": {
-        source: "iana",
+        source: "iana"
       },
       "application/its+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["its"],
+        extensions: ["its"]
       },
       "application/java-archive": {
         source: "apache",
         compressible: false,
-        extensions: ["jar", "war", "ear"],
+        extensions: ["jar", "war", "ear"]
       },
       "application/java-serialized-object": {
         source: "apache",
         compressible: false,
-        extensions: ["ser"],
+        extensions: ["ser"]
       },
       "application/java-vm": {
         source: "apache",
         compressible: false,
-        extensions: ["class"],
+        extensions: ["class"]
       },
       "application/javascript": {
         source: "iana",
         charset: "UTF-8",
         compressible: true,
-        extensions: ["js", "mjs"],
+        extensions: ["js", "mjs"]
       },
       "application/jf2feed+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/jose": {
-        source: "iana",
+        source: "iana"
       },
       "application/jose+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/jrd+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/jscalendar+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/json": {
         source: "iana",
         charset: "UTF-8",
         compressible: true,
-        extensions: ["json", "map"],
+        extensions: ["json", "map"]
       },
       "application/json-patch+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/json-seq": {
-        source: "iana",
+        source: "iana"
       },
       "application/json5": {
-        extensions: ["json5"],
+        extensions: ["json5"]
       },
       "application/jsonml+json": {
         source: "apache",
         compressible: true,
-        extensions: ["jsonml"],
+        extensions: ["jsonml"]
       },
       "application/jwk+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/jwk-set+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/jwt": {
-        source: "iana",
+        source: "iana"
       },
       "application/kpml-request+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/kpml-response+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/ld+json": {
         source: "iana",
         compressible: true,
-        extensions: ["jsonld"],
+        extensions: ["jsonld"]
       },
       "application/lgr+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["lgr"],
+        extensions: ["lgr"]
       },
       "application/link-format": {
-        source: "iana",
+        source: "iana"
       },
       "application/load-control+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/lost+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["lostxml"],
+        extensions: ["lostxml"]
       },
       "application/lostsync+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/lpf+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/lxf": {
-        source: "iana",
+        source: "iana"
       },
       "application/mac-binhex40": {
         source: "iana",
-        extensions: ["hqx"],
+        extensions: ["hqx"]
       },
       "application/mac-compactpro": {
         source: "apache",
-        extensions: ["cpt"],
+        extensions: ["cpt"]
       },
       "application/macwriteii": {
-        source: "iana",
+        source: "iana"
       },
       "application/mads+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["mads"],
+        extensions: ["mads"]
       },
       "application/manifest+json": {
         source: "iana",
         charset: "UTF-8",
         compressible: true,
-        extensions: ["webmanifest"],
+        extensions: ["webmanifest"]
       },
       "application/marc": {
         source: "iana",
-        extensions: ["mrc"],
+        extensions: ["mrc"]
       },
       "application/marcxml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["mrcx"],
+        extensions: ["mrcx"]
       },
       "application/mathematica": {
         source: "iana",
-        extensions: ["ma", "nb", "mb"],
+        extensions: ["ma", "nb", "mb"]
       },
       "application/mathml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["mathml"],
+        extensions: ["mathml"]
       },
       "application/mathml-content+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/mathml-presentation+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/mbms-associated-procedure-description+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/mbms-deregister+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/mbms-envelope+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/mbms-msk+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/mbms-msk-response+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/mbms-protection-description+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/mbms-reception-report+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/mbms-register+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/mbms-register-response+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/mbms-schedule+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/mbms-user-service-description+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/mbox": {
         source: "iana",
-        extensions: ["mbox"],
+        extensions: ["mbox"]
       },
       "application/media-policy-dataset+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["mpf"],
+        extensions: ["mpf"]
       },
       "application/media_control+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/mediaservercontrol+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["mscml"],
+        extensions: ["mscml"]
       },
       "application/merge-patch+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/metalink+xml": {
         source: "apache",
         compressible: true,
-        extensions: ["metalink"],
+        extensions: ["metalink"]
       },
       "application/metalink4+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["meta4"],
+        extensions: ["meta4"]
       },
       "application/mets+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["mets"],
+        extensions: ["mets"]
       },
       "application/mf4": {
-        source: "iana",
+        source: "iana"
       },
       "application/mikey": {
-        source: "iana",
+        source: "iana"
       },
       "application/mipc": {
-        source: "iana",
+        source: "iana"
       },
       "application/missing-blocks+cbor-seq": {
-        source: "iana",
+        source: "iana"
       },
       "application/mmt-aei+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["maei"],
+        extensions: ["maei"]
       },
       "application/mmt-usd+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["musd"],
+        extensions: ["musd"]
       },
       "application/mods+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["mods"],
+        extensions: ["mods"]
       },
       "application/moss-keys": {
-        source: "iana",
+        source: "iana"
       },
       "application/moss-signature": {
-        source: "iana",
+        source: "iana"
       },
       "application/mosskey-data": {
-        source: "iana",
+        source: "iana"
       },
       "application/mosskey-request": {
-        source: "iana",
+        source: "iana"
       },
       "application/mp21": {
         source: "iana",
-        extensions: ["m21", "mp21"],
+        extensions: ["m21", "mp21"]
       },
       "application/mp4": {
         source: "iana",
-        extensions: ["mp4s", "m4p"],
+        extensions: ["mp4s", "m4p"]
       },
       "application/mpeg4-generic": {
-        source: "iana",
+        source: "iana"
       },
       "application/mpeg4-iod": {
-        source: "iana",
+        source: "iana"
       },
       "application/mpeg4-iod-xmt": {
-        source: "iana",
+        source: "iana"
       },
       "application/mrb-consumer+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/mrb-publish+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/msc-ivr+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/msc-mixer+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/msword": {
         source: "iana",
         compressible: false,
-        extensions: ["doc", "dot"],
+        extensions: ["doc", "dot"]
       },
       "application/mud+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/multipart-core": {
-        source: "iana",
+        source: "iana"
       },
       "application/mxf": {
         source: "iana",
-        extensions: ["mxf"],
+        extensions: ["mxf"]
       },
       "application/n-quads": {
         source: "iana",
-        extensions: ["nq"],
+        extensions: ["nq"]
       },
       "application/n-triples": {
         source: "iana",
-        extensions: ["nt"],
+        extensions: ["nt"]
       },
       "application/nasdata": {
-        source: "iana",
+        source: "iana"
       },
       "application/news-checkgroups": {
         source: "iana",
-        charset: "US-ASCII",
+        charset: "US-ASCII"
       },
       "application/news-groupinfo": {
         source: "iana",
-        charset: "US-ASCII",
+        charset: "US-ASCII"
       },
       "application/news-transmission": {
-        source: "iana",
+        source: "iana"
       },
       "application/nlsml+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/node": {
         source: "iana",
-        extensions: ["cjs"],
+        extensions: ["cjs"]
       },
       "application/nss": {
-        source: "iana",
+        source: "iana"
       },
       "application/oauth-authz-req+jwt": {
-        source: "iana",
+        source: "iana"
       },
       "application/oblivious-dns-message": {
-        source: "iana",
+        source: "iana"
       },
       "application/ocsp-request": {
-        source: "iana",
+        source: "iana"
       },
       "application/ocsp-response": {
-        source: "iana",
+        source: "iana"
       },
       "application/octet-stream": {
         source: "iana",
         compressible: false,
-        extensions: [
-          "bin",
-          "dms",
-          "lrf",
-          "mar",
-          "so",
-          "dist",
-          "distz",
-          "pkg",
-          "bpk",
-          "dump",
-          "elc",
-          "deploy",
-          "exe",
-          "dll",
-          "deb",
-          "dmg",
-          "iso",
-          "img",
-          "msi",
-          "msp",
-          "msm",
-          "buffer",
-        ],
+        extensions: ["bin", "dms", "lrf", "mar", "so", "dist", "distz", "pkg", "bpk", "dump", "elc", "deploy", "exe", "dll", "deb", "dmg", "iso", "img", "msi", "msp", "msm", "buffer"]
       },
       "application/oda": {
         source: "iana",
-        extensions: ["oda"],
+        extensions: ["oda"]
       },
       "application/odm+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/odx": {
-        source: "iana",
+        source: "iana"
       },
       "application/oebps-package+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["opf"],
+        extensions: ["opf"]
       },
       "application/ogg": {
         source: "iana",
         compressible: false,
-        extensions: ["ogx"],
+        extensions: ["ogx"]
       },
       "application/omdoc+xml": {
         source: "apache",
         compressible: true,
-        extensions: ["omdoc"],
+        extensions: ["omdoc"]
       },
       "application/onenote": {
         source: "apache",
-        extensions: ["onetoc", "onetoc2", "onetmp", "onepkg"],
+        extensions: ["onetoc", "onetoc2", "onetmp", "onepkg"]
       },
       "application/opc-nodeset+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/oscore": {
-        source: "iana",
+        source: "iana"
       },
       "application/oxps": {
         source: "iana",
-        extensions: ["oxps"],
+        extensions: ["oxps"]
       },
       "application/p21": {
-        source: "iana",
+        source: "iana"
       },
       "application/p21+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/p2p-overlay+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["relo"],
+        extensions: ["relo"]
       },
       "application/parityfec": {
-        source: "iana",
+        source: "iana"
       },
       "application/passport": {
-        source: "iana",
+        source: "iana"
       },
       "application/patch-ops-error+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xer"],
+        extensions: ["xer"]
       },
       "application/pdf": {
         source: "iana",
         compressible: false,
-        extensions: ["pdf"],
+        extensions: ["pdf"]
       },
       "application/pdx": {
-        source: "iana",
+        source: "iana"
       },
       "application/pem-certificate-chain": {
-        source: "iana",
+        source: "iana"
       },
       "application/pgp-encrypted": {
         source: "iana",
         compressible: false,
-        extensions: ["pgp"],
+        extensions: ["pgp"]
       },
       "application/pgp-keys": {
         source: "iana",
-        extensions: ["asc"],
+        extensions: ["asc"]
       },
       "application/pgp-signature": {
         source: "iana",
-        extensions: ["asc", "sig"],
+        extensions: ["asc", "sig"]
       },
       "application/pics-rules": {
         source: "apache",
-        extensions: ["prf"],
+        extensions: ["prf"]
       },
       "application/pidf+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/pidf-diff+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/pkcs10": {
         source: "iana",
-        extensions: ["p10"],
+        extensions: ["p10"]
       },
       "application/pkcs12": {
-        source: "iana",
+        source: "iana"
       },
       "application/pkcs7-mime": {
         source: "iana",
-        extensions: ["p7m", "p7c"],
+        extensions: ["p7m", "p7c"]
       },
       "application/pkcs7-signature": {
         source: "iana",
-        extensions: ["p7s"],
+        extensions: ["p7s"]
       },
       "application/pkcs8": {
         source: "iana",
-        extensions: ["p8"],
+        extensions: ["p8"]
       },
       "application/pkcs8-encrypted": {
-        source: "iana",
+        source: "iana"
       },
       "application/pkix-attr-cert": {
         source: "iana",
-        extensions: ["ac"],
+        extensions: ["ac"]
       },
       "application/pkix-cert": {
         source: "iana",
-        extensions: ["cer"],
+        extensions: ["cer"]
       },
       "application/pkix-crl": {
         source: "iana",
-        extensions: ["crl"],
+        extensions: ["crl"]
       },
       "application/pkix-pkipath": {
         source: "iana",
-        extensions: ["pkipath"],
+        extensions: ["pkipath"]
       },
       "application/pkixcmp": {
         source: "iana",
-        extensions: ["pki"],
+        extensions: ["pki"]
       },
       "application/pls+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["pls"],
+        extensions: ["pls"]
       },
       "application/poc-settings+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/postscript": {
         source: "iana",
         compressible: true,
-        extensions: ["ai", "eps", "ps"],
+        extensions: ["ai", "eps", "ps"]
       },
       "application/ppsp-tracker+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/problem+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/problem+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/provenance+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["provx"],
+        extensions: ["provx"]
       },
       "application/prs.alvestrand.titrax-sheet": {
-        source: "iana",
+        source: "iana"
       },
       "application/prs.cww": {
         source: "iana",
-        extensions: ["cww"],
+        extensions: ["cww"]
       },
       "application/prs.cyn": {
         source: "iana",
-        charset: "7-BIT",
+        charset: "7-BIT"
       },
       "application/prs.hpub+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/prs.nprend": {
-        source: "iana",
+        source: "iana"
       },
       "application/prs.plucker": {
-        source: "iana",
+        source: "iana"
       },
       "application/prs.rdf-xml-crypt": {
-        source: "iana",
+        source: "iana"
       },
       "application/prs.xsf+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/pskc+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["pskcxml"],
+        extensions: ["pskcxml"]
       },
       "application/pvd+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/qsig": {
-        source: "iana",
+        source: "iana"
       },
       "application/raml+yaml": {
         compressible: true,
-        extensions: ["raml"],
+        extensions: ["raml"]
       },
       "application/raptorfec": {
-        source: "iana",
+        source: "iana"
       },
       "application/rdap+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/rdf+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["rdf", "owl"],
+        extensions: ["rdf", "owl"]
       },
       "application/reginfo+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["rif"],
+        extensions: ["rif"]
       },
       "application/relax-ng-compact-syntax": {
         source: "iana",
-        extensions: ["rnc"],
+        extensions: ["rnc"]
       },
       "application/remote-printing": {
-        source: "iana",
+        source: "iana"
       },
       "application/reputon+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/resource-lists+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["rl"],
+        extensions: ["rl"]
       },
       "application/resource-lists-diff+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["rld"],
+        extensions: ["rld"]
       },
       "application/rfc+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/riscos": {
-        source: "iana",
+        source: "iana"
       },
       "application/rlmi+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/rls-services+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["rs"],
+        extensions: ["rs"]
       },
       "application/route-apd+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["rapd"],
+        extensions: ["rapd"]
       },
       "application/route-s-tsid+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["sls"],
+        extensions: ["sls"]
       },
       "application/route-usd+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["rusd"],
+        extensions: ["rusd"]
       },
       "application/rpki-ghostbusters": {
         source: "iana",
-        extensions: ["gbr"],
+        extensions: ["gbr"]
       },
       "application/rpki-manifest": {
         source: "iana",
-        extensions: ["mft"],
+        extensions: ["mft"]
       },
       "application/rpki-publication": {
-        source: "iana",
+        source: "iana"
       },
       "application/rpki-roa": {
         source: "iana",
-        extensions: ["roa"],
+        extensions: ["roa"]
       },
       "application/rpki-updown": {
-        source: "iana",
+        source: "iana"
       },
       "application/rsd+xml": {
         source: "apache",
         compressible: true,
-        extensions: ["rsd"],
+        extensions: ["rsd"]
       },
       "application/rss+xml": {
         source: "apache",
         compressible: true,
-        extensions: ["rss"],
+        extensions: ["rss"]
       },
       "application/rtf": {
         source: "iana",
         compressible: true,
-        extensions: ["rtf"],
+        extensions: ["rtf"]
       },
       "application/rtploopback": {
-        source: "iana",
+        source: "iana"
       },
       "application/rtx": {
-        source: "iana",
+        source: "iana"
       },
       "application/samlassertion+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/samlmetadata+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/sarif+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/sarif-external-properties+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/sbe": {
-        source: "iana",
+        source: "iana"
       },
       "application/sbml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["sbml"],
+        extensions: ["sbml"]
       },
       "application/scaip+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/scim+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/scvp-cv-request": {
         source: "iana",
-        extensions: ["scq"],
+        extensions: ["scq"]
       },
       "application/scvp-cv-response": {
         source: "iana",
-        extensions: ["scs"],
+        extensions: ["scs"]
       },
       "application/scvp-vp-request": {
         source: "iana",
-        extensions: ["spq"],
+        extensions: ["spq"]
       },
       "application/scvp-vp-response": {
         source: "iana",
-        extensions: ["spp"],
+        extensions: ["spp"]
       },
       "application/sdp": {
         source: "iana",
-        extensions: ["sdp"],
+        extensions: ["sdp"]
       },
       "application/secevent+jwt": {
-        source: "iana",
+        source: "iana"
       },
       "application/senml+cbor": {
-        source: "iana",
+        source: "iana"
       },
       "application/senml+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/senml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["senmlx"],
+        extensions: ["senmlx"]
       },
       "application/senml-etch+cbor": {
-        source: "iana",
+        source: "iana"
       },
       "application/senml-etch+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/senml-exi": {
-        source: "iana",
+        source: "iana"
       },
       "application/sensml+cbor": {
-        source: "iana",
+        source: "iana"
       },
       "application/sensml+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/sensml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["sensmlx"],
+        extensions: ["sensmlx"]
       },
       "application/sensml-exi": {
-        source: "iana",
+        source: "iana"
       },
       "application/sep+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/sep-exi": {
-        source: "iana",
+        source: "iana"
       },
       "application/session-info": {
-        source: "iana",
+        source: "iana"
       },
       "application/set-payment": {
-        source: "iana",
+        source: "iana"
       },
       "application/set-payment-initiation": {
         source: "iana",
-        extensions: ["setpay"],
+        extensions: ["setpay"]
       },
       "application/set-registration": {
-        source: "iana",
+        source: "iana"
       },
       "application/set-registration-initiation": {
         source: "iana",
-        extensions: ["setreg"],
+        extensions: ["setreg"]
       },
       "application/sgml": {
-        source: "iana",
+        source: "iana"
       },
       "application/sgml-open-catalog": {
-        source: "iana",
+        source: "iana"
       },
       "application/shf+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["shf"],
+        extensions: ["shf"]
       },
       "application/sieve": {
         source: "iana",
-        extensions: ["siv", "sieve"],
+        extensions: ["siv", "sieve"]
       },
       "application/simple-filter+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/simple-message-summary": {
-        source: "iana",
+        source: "iana"
       },
       "application/simplesymbolcontainer": {
-        source: "iana",
+        source: "iana"
       },
       "application/sipc": {
-        source: "iana",
+        source: "iana"
       },
       "application/slate": {
-        source: "iana",
+        source: "iana"
       },
       "application/smil": {
-        source: "iana",
+        source: "iana"
       },
       "application/smil+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["smi", "smil"],
+        extensions: ["smi", "smil"]
       },
       "application/smpte336m": {
-        source: "iana",
+        source: "iana"
       },
       "application/soap+fastinfoset": {
-        source: "iana",
+        source: "iana"
       },
       "application/soap+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/sparql-query": {
         source: "iana",
-        extensions: ["rq"],
+        extensions: ["rq"]
       },
       "application/sparql-results+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["srx"],
+        extensions: ["srx"]
       },
       "application/spdx+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/spirits-event+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/sql": {
-        source: "iana",
+        source: "iana"
       },
       "application/srgs": {
         source: "iana",
-        extensions: ["gram"],
+        extensions: ["gram"]
       },
       "application/srgs+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["grxml"],
+        extensions: ["grxml"]
       },
       "application/sru+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["sru"],
+        extensions: ["sru"]
       },
       "application/ssdl+xml": {
         source: "apache",
         compressible: true,
-        extensions: ["ssdl"],
+        extensions: ["ssdl"]
       },
       "application/ssml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["ssml"],
+        extensions: ["ssml"]
       },
       "application/stix+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/swid+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["swidtag"],
+        extensions: ["swidtag"]
       },
       "application/tamp-apex-update": {
-        source: "iana",
+        source: "iana"
       },
       "application/tamp-apex-update-confirm": {
-        source: "iana",
+        source: "iana"
       },
       "application/tamp-community-update": {
-        source: "iana",
+        source: "iana"
       },
       "application/tamp-community-update-confirm": {
-        source: "iana",
+        source: "iana"
       },
       "application/tamp-error": {
-        source: "iana",
+        source: "iana"
       },
       "application/tamp-sequence-adjust": {
-        source: "iana",
+        source: "iana"
       },
       "application/tamp-sequence-adjust-confirm": {
-        source: "iana",
+        source: "iana"
       },
       "application/tamp-status-query": {
-        source: "iana",
+        source: "iana"
       },
       "application/tamp-status-response": {
-        source: "iana",
+        source: "iana"
       },
       "application/tamp-update": {
-        source: "iana",
+        source: "iana"
       },
       "application/tamp-update-confirm": {
-        source: "iana",
+        source: "iana"
       },
       "application/tar": {
-        compressible: true,
+        compressible: true
       },
       "application/taxii+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/td+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/tei+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["tei", "teicorpus"],
+        extensions: ["tei", "teicorpus"]
       },
       "application/tetra_isi": {
-        source: "iana",
+        source: "iana"
       },
       "application/thraud+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["tfi"],
+        extensions: ["tfi"]
       },
       "application/timestamp-query": {
-        source: "iana",
+        source: "iana"
       },
       "application/timestamp-reply": {
-        source: "iana",
+        source: "iana"
       },
       "application/timestamped-data": {
         source: "iana",
-        extensions: ["tsd"],
+        extensions: ["tsd"]
       },
       "application/tlsrpt+gzip": {
-        source: "iana",
+        source: "iana"
       },
       "application/tlsrpt+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/tnauthlist": {
-        source: "iana",
+        source: "iana"
       },
       "application/token-introspection+jwt": {
-        source: "iana",
+        source: "iana"
       },
       "application/toml": {
         compressible: true,
-        extensions: ["toml"],
+        extensions: ["toml"]
       },
       "application/trickle-ice-sdpfrag": {
-        source: "iana",
+        source: "iana"
       },
       "application/trig": {
         source: "iana",
-        extensions: ["trig"],
+        extensions: ["trig"]
       },
       "application/ttml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["ttml"],
+        extensions: ["ttml"]
       },
       "application/tve-trigger": {
-        source: "iana",
+        source: "iana"
       },
       "application/tzif": {
-        source: "iana",
+        source: "iana"
       },
       "application/tzif-leap": {
-        source: "iana",
+        source: "iana"
       },
       "application/ubjson": {
         compressible: false,
-        extensions: ["ubj"],
+        extensions: ["ubj"]
       },
       "application/ulpfec": {
-        source: "iana",
+        source: "iana"
       },
       "application/urc-grpsheet+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/urc-ressheet+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["rsheet"],
+        extensions: ["rsheet"]
       },
       "application/urc-targetdesc+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["td"],
+        extensions: ["td"]
       },
       "application/urc-uisocketdesc+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vcard+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vcard+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vemmi": {
-        source: "iana",
+        source: "iana"
       },
       "application/vividence.scriptfile": {
-        source: "apache",
+        source: "apache"
       },
       "application/vnd.1000minds.decision-model+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["1km"],
+        extensions: ["1km"]
       },
       "application/vnd.3gpp-prose+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp-prose-pc3ch+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp-v2x-local-service-information": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.3gpp.5gnas": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.3gpp.access-transfer-events+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.bsf+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.gmop+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.gtpc": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.3gpp.interworking-data": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.3gpp.lpp": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.3gpp.mc-signalling-ear": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.3gpp.mcdata-affiliation-command+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcdata-info+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcdata-payload": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.3gpp.mcdata-service-config+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcdata-signalling": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.3gpp.mcdata-ue-config+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcdata-user-profile+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcptt-affiliation-command+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcptt-floor-request+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcptt-info+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcptt-location-info+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcptt-mbms-usage-info+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcptt-service-config+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcptt-signed+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcptt-ue-config+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcptt-ue-init-config+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcptt-user-profile+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcvideo-affiliation-command+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcvideo-affiliation-info+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcvideo-info+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcvideo-location-info+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcvideo-mbms-usage-info+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcvideo-service-config+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcvideo-transmission-request+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcvideo-ue-config+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mcvideo-user-profile+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.mid-call+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.ngap": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.3gpp.pfcp": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.3gpp.pic-bw-large": {
         source: "iana",
-        extensions: ["plb"],
+        extensions: ["plb"]
       },
       "application/vnd.3gpp.pic-bw-small": {
         source: "iana",
-        extensions: ["psb"],
+        extensions: ["psb"]
       },
       "application/vnd.3gpp.pic-bw-var": {
         source: "iana",
-        extensions: ["pvb"],
+        extensions: ["pvb"]
       },
       "application/vnd.3gpp.s1ap": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.3gpp.sms": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.3gpp.sms+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.srvcc-ext+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.srvcc-info+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.state-and-event-info+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp.ussd+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp2.bcmcsinfo+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.3gpp2.sms": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.3gpp2.tcap": {
         source: "iana",
-        extensions: ["tcap"],
+        extensions: ["tcap"]
       },
       "application/vnd.3lightssoftware.imagescal": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.3m.post-it-notes": {
         source: "iana",
-        extensions: ["pwn"],
+        extensions: ["pwn"]
       },
       "application/vnd.accpac.simply.aso": {
         source: "iana",
-        extensions: ["aso"],
+        extensions: ["aso"]
       },
       "application/vnd.accpac.simply.imp": {
         source: "iana",
-        extensions: ["imp"],
+        extensions: ["imp"]
       },
       "application/vnd.acucobol": {
         source: "iana",
-        extensions: ["acu"],
+        extensions: ["acu"]
       },
       "application/vnd.acucorp": {
         source: "iana",
-        extensions: ["atc", "acutc"],
+        extensions: ["atc", "acutc"]
       },
       "application/vnd.adobe.air-application-installer-package+zip": {
         source: "apache",
         compressible: false,
-        extensions: ["air"],
+        extensions: ["air"]
       },
       "application/vnd.adobe.flash.movie": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.adobe.formscentral.fcdt": {
         source: "iana",
-        extensions: ["fcdt"],
+        extensions: ["fcdt"]
       },
       "application/vnd.adobe.fxp": {
         source: "iana",
-        extensions: ["fxp", "fxpl"],
+        extensions: ["fxp", "fxpl"]
       },
       "application/vnd.adobe.partial-upload": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.adobe.xdp+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xdp"],
+        extensions: ["xdp"]
       },
       "application/vnd.adobe.xfdf": {
         source: "iana",
-        extensions: ["xfdf"],
+        extensions: ["xfdf"]
       },
       "application/vnd.aether.imp": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.afpc.afplinedata": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.afpc.afplinedata-pagedef": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.afpc.cmoca-cmresource": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.afpc.foca-charset": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.afpc.foca-codedfont": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.afpc.foca-codepage": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.afpc.modca": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.afpc.modca-cmtable": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.afpc.modca-formdef": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.afpc.modca-mediummap": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.afpc.modca-objectcontainer": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.afpc.modca-overlay": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.afpc.modca-pagesegment": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.age": {
         source: "iana",
-        extensions: ["age"],
+        extensions: ["age"]
       },
       "application/vnd.ah-barcode": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ahead.space": {
         source: "iana",
-        extensions: ["ahead"],
+        extensions: ["ahead"]
       },
       "application/vnd.airzip.filesecure.azf": {
         source: "iana",
-        extensions: ["azf"],
+        extensions: ["azf"]
       },
       "application/vnd.airzip.filesecure.azs": {
         source: "iana",
-        extensions: ["azs"],
+        extensions: ["azs"]
       },
       "application/vnd.amadeus+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.amazon.ebook": {
         source: "apache",
-        extensions: ["azw"],
+        extensions: ["azw"]
       },
       "application/vnd.amazon.mobi8-ebook": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.americandynamics.acc": {
         source: "iana",
-        extensions: ["acc"],
+        extensions: ["acc"]
       },
       "application/vnd.amiga.ami": {
         source: "iana",
-        extensions: ["ami"],
+        extensions: ["ami"]
       },
       "application/vnd.amundsen.maze+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.android.ota": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.android.package-archive": {
         source: "apache",
         compressible: false,
-        extensions: ["apk"],
+        extensions: ["apk"]
       },
       "application/vnd.anki": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.anser-web-certificate-issue-initiation": {
         source: "iana",
-        extensions: ["cii"],
+        extensions: ["cii"]
       },
       "application/vnd.anser-web-funds-transfer-initiation": {
         source: "apache",
-        extensions: ["fti"],
+        extensions: ["fti"]
       },
       "application/vnd.antix.game-component": {
         source: "iana",
-        extensions: ["atx"],
+        extensions: ["atx"]
       },
       "application/vnd.apache.arrow.file": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.apache.arrow.stream": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.apache.thrift.binary": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.apache.thrift.compact": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.apache.thrift.json": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.api+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.aplextor.warrp+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.apothekende.reservation+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.apple.installer+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["mpkg"],
+        extensions: ["mpkg"]
       },
       "application/vnd.apple.keynote": {
         source: "iana",
-        extensions: ["key"],
+        extensions: ["key"]
       },
       "application/vnd.apple.mpegurl": {
         source: "iana",
-        extensions: ["m3u8"],
+        extensions: ["m3u8"]
       },
       "application/vnd.apple.numbers": {
         source: "iana",
-        extensions: ["numbers"],
+        extensions: ["numbers"]
       },
       "application/vnd.apple.pages": {
         source: "iana",
-        extensions: ["pages"],
+        extensions: ["pages"]
       },
       "application/vnd.apple.pkpass": {
         compressible: false,
-        extensions: ["pkpass"],
+        extensions: ["pkpass"]
       },
       "application/vnd.arastra.swi": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.aristanetworks.swi": {
         source: "iana",
-        extensions: ["swi"],
+        extensions: ["swi"]
       },
       "application/vnd.artisan+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.artsquare": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.astraea-software.iota": {
         source: "iana",
-        extensions: ["iota"],
+        extensions: ["iota"]
       },
       "application/vnd.audiograph": {
         source: "iana",
-        extensions: ["aep"],
+        extensions: ["aep"]
       },
       "application/vnd.autopackage": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.avalon+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.avistar+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.balsamiq.bmml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["bmml"],
+        extensions: ["bmml"]
       },
       "application/vnd.balsamiq.bmpr": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.banana-accounting": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.bbf.usp.error": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.bbf.usp.msg": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.bbf.usp.msg+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.bekitzur-stech+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.bint.med-content": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.biopax.rdf+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.blink-idb-value-wrapper": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.blueice.multipass": {
         source: "iana",
-        extensions: ["mpm"],
+        extensions: ["mpm"]
       },
       "application/vnd.bluetooth.ep.oob": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.bluetooth.le.oob": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.bmi": {
         source: "iana",
-        extensions: ["bmi"],
+        extensions: ["bmi"]
       },
       "application/vnd.bpf": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.bpf3": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.businessobjects": {
         source: "iana",
-        extensions: ["rep"],
+        extensions: ["rep"]
       },
       "application/vnd.byu.uapi+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.cab-jscript": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.canon-cpdl": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.canon-lips": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.capasystems-pg+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.cendio.thinlinc.clientconf": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.century-systems.tcp_stream": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.chemdraw+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["cdxml"],
+        extensions: ["cdxml"]
       },
       "application/vnd.chess-pgn": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.chipnuts.karaoke-mmd": {
         source: "iana",
-        extensions: ["mmd"],
+        extensions: ["mmd"]
       },
       "application/vnd.ciedi": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.cinderella": {
         source: "iana",
-        extensions: ["cdy"],
+        extensions: ["cdy"]
       },
       "application/vnd.cirpack.isdn-ext": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.citationstyles.style+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["csl"],
+        extensions: ["csl"]
       },
       "application/vnd.claymore": {
         source: "iana",
-        extensions: ["cla"],
+        extensions: ["cla"]
       },
       "application/vnd.cloanto.rp9": {
         source: "iana",
-        extensions: ["rp9"],
+        extensions: ["rp9"]
       },
       "application/vnd.clonk.c4group": {
         source: "iana",
-        extensions: ["c4g", "c4d", "c4f", "c4p", "c4u"],
+        extensions: ["c4g", "c4d", "c4f", "c4p", "c4u"]
       },
       "application/vnd.cluetrust.cartomobile-config": {
         source: "iana",
-        extensions: ["c11amc"],
+        extensions: ["c11amc"]
       },
       "application/vnd.cluetrust.cartomobile-config-pkg": {
         source: "iana",
-        extensions: ["c11amz"],
+        extensions: ["c11amz"]
       },
       "application/vnd.coffeescript": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.collabio.xodocuments.document": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.collabio.xodocuments.document-template": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.collabio.xodocuments.presentation": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.collabio.xodocuments.presentation-template": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.collabio.xodocuments.spreadsheet": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.collabio.xodocuments.spreadsheet-template": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.collection+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.collection.doc+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.collection.next+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.comicbook+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/vnd.comicbook-rar": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.commerce-battelle": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.commonspace": {
         source: "iana",
-        extensions: ["csp"],
+        extensions: ["csp"]
       },
       "application/vnd.contact.cmsg": {
         source: "iana",
-        extensions: ["cdbcmsg"],
+        extensions: ["cdbcmsg"]
       },
       "application/vnd.coreos.ignition+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.cosmocaller": {
         source: "iana",
-        extensions: ["cmc"],
+        extensions: ["cmc"]
       },
       "application/vnd.crick.clicker": {
         source: "iana",
-        extensions: ["clkx"],
+        extensions: ["clkx"]
       },
       "application/vnd.crick.clicker.keyboard": {
         source: "iana",
-        extensions: ["clkk"],
+        extensions: ["clkk"]
       },
       "application/vnd.crick.clicker.palette": {
         source: "iana",
-        extensions: ["clkp"],
+        extensions: ["clkp"]
       },
       "application/vnd.crick.clicker.template": {
         source: "iana",
-        extensions: ["clkt"],
+        extensions: ["clkt"]
       },
       "application/vnd.crick.clicker.wordbank": {
         source: "iana",
-        extensions: ["clkw"],
+        extensions: ["clkw"]
       },
       "application/vnd.criticaltools.wbs+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["wbs"],
+        extensions: ["wbs"]
       },
       "application/vnd.cryptii.pipe+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.crypto-shade-file": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.cryptomator.encrypted": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.cryptomator.vault": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ctc-posml": {
         source: "iana",
-        extensions: ["pml"],
+        extensions: ["pml"]
       },
       "application/vnd.ctct.ws+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.cups-pdf": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.cups-postscript": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.cups-ppd": {
         source: "iana",
-        extensions: ["ppd"],
+        extensions: ["ppd"]
       },
       "application/vnd.cups-raster": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.cups-raw": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.curl": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.curl.car": {
         source: "apache",
-        extensions: ["car"],
+        extensions: ["car"]
       },
       "application/vnd.curl.pcurl": {
         source: "apache",
-        extensions: ["pcurl"],
+        extensions: ["pcurl"]
       },
       "application/vnd.cyan.dean.root+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.cybank": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.cyclonedx+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.cyclonedx+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.d2l.coursepackage1p0+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/vnd.d3m-dataset": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.d3m-problem": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dart": {
         source: "iana",
         compressible: true,
-        extensions: ["dart"],
+        extensions: ["dart"]
       },
       "application/vnd.data-vision.rdz": {
         source: "iana",
-        extensions: ["rdz"],
+        extensions: ["rdz"]
       },
       "application/vnd.datapackage+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.dataresource+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.dbf": {
         source: "iana",
-        extensions: ["dbf"],
+        extensions: ["dbf"]
       },
       "application/vnd.debian.binary-package": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dece.data": {
         source: "iana",
-        extensions: ["uvf", "uvvf", "uvd", "uvvd"],
+        extensions: ["uvf", "uvvf", "uvd", "uvvd"]
       },
       "application/vnd.dece.ttml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["uvt", "uvvt"],
+        extensions: ["uvt", "uvvt"]
       },
       "application/vnd.dece.unspecified": {
         source: "iana",
-        extensions: ["uvx", "uvvx"],
+        extensions: ["uvx", "uvvx"]
       },
       "application/vnd.dece.zip": {
         source: "iana",
-        extensions: ["uvz", "uvvz"],
+        extensions: ["uvz", "uvvz"]
       },
       "application/vnd.denovo.fcselayout-link": {
         source: "iana",
-        extensions: ["fe_launch"],
+        extensions: ["fe_launch"]
       },
       "application/vnd.desmume.movie": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dir-bi.plate-dl-nosuffix": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dm.delegation+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.dna": {
         source: "iana",
-        extensions: ["dna"],
+        extensions: ["dna"]
       },
       "application/vnd.document+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.dolby.mlp": {
         source: "apache",
-        extensions: ["mlp"],
+        extensions: ["mlp"]
       },
       "application/vnd.dolby.mobile.1": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dolby.mobile.2": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.doremir.scorecloud-binary-document": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dpgraph": {
         source: "iana",
-        extensions: ["dpg"],
+        extensions: ["dpg"]
       },
       "application/vnd.dreamfactory": {
         source: "iana",
-        extensions: ["dfac"],
+        extensions: ["dfac"]
       },
       "application/vnd.drive+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.ds-keypoint": {
         source: "apache",
-        extensions: ["kpxx"],
+        extensions: ["kpxx"]
       },
       "application/vnd.dtg.local": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dtg.local.flash": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dtg.local.html": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dvb.ait": {
         source: "iana",
-        extensions: ["ait"],
+        extensions: ["ait"]
       },
       "application/vnd.dvb.dvbisl+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.dvb.dvbj": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dvb.esgcontainer": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dvb.ipdcdftnotifaccess": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dvb.ipdcesgaccess": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dvb.ipdcesgaccess2": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dvb.ipdcesgpdd": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dvb.ipdcroaming": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dvb.iptv.alfec-base": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dvb.iptv.alfec-enhancement": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dvb.notif-aggregate-root+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.dvb.notif-container+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.dvb.notif-generic+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.dvb.notif-ia-msglist+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.dvb.notif-ia-registration-request+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.dvb.notif-ia-registration-response+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.dvb.notif-init+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.dvb.pfr": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dvb.service": {
         source: "iana",
-        extensions: ["svc"],
+        extensions: ["svc"]
       },
       "application/vnd.dxr": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.dynageo": {
         source: "iana",
-        extensions: ["geo"],
+        extensions: ["geo"]
       },
       "application/vnd.dzr": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.easykaraoke.cdgdownload": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ecdis-update": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ecip.rlp": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.eclipse.ditto+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.ecowin.chart": {
         source: "iana",
-        extensions: ["mag"],
+        extensions: ["mag"]
       },
       "application/vnd.ecowin.filerequest": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ecowin.fileupdate": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ecowin.series": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ecowin.seriesrequest": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ecowin.seriesupdate": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.efi.img": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.efi.iso": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.emclient.accessrequest+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.enliven": {
         source: "iana",
-        extensions: ["nml"],
+        extensions: ["nml"]
       },
       "application/vnd.enphase.envoy": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.eprints.data+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.epson.esf": {
         source: "iana",
-        extensions: ["esf"],
+        extensions: ["esf"]
       },
       "application/vnd.epson.msf": {
         source: "iana",
-        extensions: ["msf"],
+        extensions: ["msf"]
       },
       "application/vnd.epson.quickanime": {
         source: "iana",
-        extensions: ["qam"],
+        extensions: ["qam"]
       },
       "application/vnd.epson.salt": {
         source: "iana",
-        extensions: ["slt"],
+        extensions: ["slt"]
       },
       "application/vnd.epson.ssf": {
         source: "iana",
-        extensions: ["ssf"],
+        extensions: ["ssf"]
       },
       "application/vnd.ericsson.quickcall": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.espass-espass+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/vnd.eszigno3+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["es3", "et3"],
+        extensions: ["es3", "et3"]
       },
       "application/vnd.etsi.aoc+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.asic-e+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/vnd.etsi.asic-s+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/vnd.etsi.cug+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.iptvcommand+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.iptvdiscovery+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.iptvprofile+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.iptvsad-bc+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.iptvsad-cod+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.iptvsad-npvr+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.iptvservice+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.iptvsync+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.iptvueprofile+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.mcid+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.mheg5": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.etsi.overload-control-policy-dataset+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.pstn+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.sci+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.simservs+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.timestamp-token": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.etsi.tsl+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.etsi.tsl.der": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.eu.kasparian.car+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.eudora.data": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.evolv.ecig.profile": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.evolv.ecig.settings": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.evolv.ecig.theme": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.exstream-empower+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/vnd.exstream-package": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ezpix-album": {
         source: "iana",
-        extensions: ["ez2"],
+        extensions: ["ez2"]
       },
       "application/vnd.ezpix-package": {
         source: "iana",
-        extensions: ["ez3"],
+        extensions: ["ez3"]
       },
       "application/vnd.f-secure.mobile": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.familysearch.gedcom+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/vnd.fastcopy-disk-image": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.fdf": {
         source: "iana",
-        extensions: ["fdf"],
+        extensions: ["fdf"]
       },
       "application/vnd.fdsn.mseed": {
         source: "iana",
-        extensions: ["mseed"],
+        extensions: ["mseed"]
       },
       "application/vnd.fdsn.seed": {
         source: "iana",
-        extensions: ["seed", "dataless"],
+        extensions: ["seed", "dataless"]
       },
       "application/vnd.ffsns": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ficlab.flb+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/vnd.filmit.zfc": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.fints": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.firemonkeys.cloudcell": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.flographit": {
         source: "iana",
-        extensions: ["gph"],
+        extensions: ["gph"]
       },
       "application/vnd.fluxtime.clip": {
         source: "iana",
-        extensions: ["ftc"],
+        extensions: ["ftc"]
       },
       "application/vnd.font-fontforge-sfd": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.framemaker": {
         source: "iana",
-        extensions: ["fm", "frame", "maker", "book"],
+        extensions: ["fm", "frame", "maker", "book"]
       },
       "application/vnd.frogans.fnc": {
         source: "iana",
-        extensions: ["fnc"],
+        extensions: ["fnc"]
       },
       "application/vnd.frogans.ltf": {
         source: "iana",
-        extensions: ["ltf"],
+        extensions: ["ltf"]
       },
       "application/vnd.fsc.weblaunch": {
         source: "iana",
-        extensions: ["fsc"],
+        extensions: ["fsc"]
       },
       "application/vnd.fujifilm.fb.docuworks": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.fujifilm.fb.docuworks.binder": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.fujifilm.fb.docuworks.container": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.fujifilm.fb.jfi+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.fujitsu.oasys": {
         source: "iana",
-        extensions: ["oas"],
+        extensions: ["oas"]
       },
       "application/vnd.fujitsu.oasys2": {
         source: "iana",
-        extensions: ["oa2"],
+        extensions: ["oa2"]
       },
       "application/vnd.fujitsu.oasys3": {
         source: "iana",
-        extensions: ["oa3"],
+        extensions: ["oa3"]
       },
       "application/vnd.fujitsu.oasysgp": {
         source: "iana",
-        extensions: ["fg5"],
+        extensions: ["fg5"]
       },
       "application/vnd.fujitsu.oasysprs": {
         source: "iana",
-        extensions: ["bh2"],
+        extensions: ["bh2"]
       },
       "application/vnd.fujixerox.art-ex": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.fujixerox.art4": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.fujixerox.ddd": {
         source: "iana",
-        extensions: ["ddd"],
+        extensions: ["ddd"]
       },
       "application/vnd.fujixerox.docuworks": {
         source: "iana",
-        extensions: ["xdw"],
+        extensions: ["xdw"]
       },
       "application/vnd.fujixerox.docuworks.binder": {
         source: "iana",
-        extensions: ["xbd"],
+        extensions: ["xbd"]
       },
       "application/vnd.fujixerox.docuworks.container": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.fujixerox.hbpl": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.fut-misnet": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.futoin+cbor": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.futoin+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.fuzzysheet": {
         source: "iana",
-        extensions: ["fzs"],
+        extensions: ["fzs"]
       },
       "application/vnd.genomatix.tuxedo": {
         source: "iana",
-        extensions: ["txd"],
+        extensions: ["txd"]
       },
       "application/vnd.gentics.grd+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.geo+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.geocube+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.geogebra.file": {
         source: "iana",
-        extensions: ["ggb"],
+        extensions: ["ggb"]
       },
       "application/vnd.geogebra.slides": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.geogebra.tool": {
         source: "iana",
-        extensions: ["ggt"],
+        extensions: ["ggt"]
       },
       "application/vnd.geometry-explorer": {
         source: "iana",
-        extensions: ["gex", "gre"],
+        extensions: ["gex", "gre"]
       },
       "application/vnd.geonext": {
         source: "iana",
-        extensions: ["gxt"],
+        extensions: ["gxt"]
       },
       "application/vnd.geoplan": {
         source: "iana",
-        extensions: ["g2w"],
+        extensions: ["g2w"]
       },
       "application/vnd.geospace": {
         source: "iana",
-        extensions: ["g3w"],
+        extensions: ["g3w"]
       },
       "application/vnd.gerber": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.globalplatform.card-content-mgt": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.globalplatform.card-content-mgt-response": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.gmx": {
         source: "iana",
-        extensions: ["gmx"],
+        extensions: ["gmx"]
       },
       "application/vnd.google-apps.document": {
         compressible: false,
-        extensions: ["gdoc"],
+        extensions: ["gdoc"]
       },
       "application/vnd.google-apps.presentation": {
         compressible: false,
-        extensions: ["gslides"],
+        extensions: ["gslides"]
       },
       "application/vnd.google-apps.spreadsheet": {
         compressible: false,
-        extensions: ["gsheet"],
+        extensions: ["gsheet"]
       },
       "application/vnd.google-earth.kml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["kml"],
+        extensions: ["kml"]
       },
       "application/vnd.google-earth.kmz": {
         source: "iana",
         compressible: false,
-        extensions: ["kmz"],
+        extensions: ["kmz"]
       },
       "application/vnd.gov.sk.e-form+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.gov.sk.e-form+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/vnd.gov.sk.xmldatacontainer+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.grafeq": {
         source: "iana",
-        extensions: ["gqf", "gqs"],
+        extensions: ["gqf", "gqs"]
       },
       "application/vnd.gridmp": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.groove-account": {
         source: "iana",
-        extensions: ["gac"],
+        extensions: ["gac"]
       },
       "application/vnd.groove-help": {
         source: "iana",
-        extensions: ["ghf"],
+        extensions: ["ghf"]
       },
       "application/vnd.groove-identity-message": {
         source: "iana",
-        extensions: ["gim"],
+        extensions: ["gim"]
       },
       "application/vnd.groove-injector": {
         source: "iana",
-        extensions: ["grv"],
+        extensions: ["grv"]
       },
       "application/vnd.groove-tool-message": {
         source: "iana",
-        extensions: ["gtm"],
+        extensions: ["gtm"]
       },
       "application/vnd.groove-tool-template": {
         source: "iana",
-        extensions: ["tpl"],
+        extensions: ["tpl"]
       },
       "application/vnd.groove-vcard": {
         source: "iana",
-        extensions: ["vcg"],
+        extensions: ["vcg"]
       },
       "application/vnd.hal+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.hal+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["hal"],
+        extensions: ["hal"]
       },
       "application/vnd.handheld-entertainment+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["zmm"],
+        extensions: ["zmm"]
       },
       "application/vnd.hbci": {
         source: "iana",
-        extensions: ["hbci"],
+        extensions: ["hbci"]
       },
       "application/vnd.hc+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.hcl-bireports": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.hdt": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.heroku+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.hhe.lesson-player": {
         source: "iana",
-        extensions: ["les"],
+        extensions: ["les"]
       },
       "application/vnd.hl7cda+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.hl7v2+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.hp-hpgl": {
         source: "iana",
-        extensions: ["hpgl"],
+        extensions: ["hpgl"]
       },
       "application/vnd.hp-hpid": {
         source: "iana",
-        extensions: ["hpid"],
+        extensions: ["hpid"]
       },
       "application/vnd.hp-hps": {
         source: "iana",
-        extensions: ["hps"],
+        extensions: ["hps"]
       },
       "application/vnd.hp-jlyt": {
         source: "iana",
-        extensions: ["jlt"],
+        extensions: ["jlt"]
       },
       "application/vnd.hp-pcl": {
         source: "iana",
-        extensions: ["pcl"],
+        extensions: ["pcl"]
       },
       "application/vnd.hp-pclxl": {
         source: "iana",
-        extensions: ["pclxl"],
+        extensions: ["pclxl"]
       },
       "application/vnd.httphone": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.hydrostatix.sof-data": {
         source: "iana",
-        extensions: ["sfd-hdstx"],
+        extensions: ["sfd-hdstx"]
       },
       "application/vnd.hyper+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.hyper-item+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.hyperdrive+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.hzn-3d-crossword": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ibm.afplinedata": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ibm.electronic-media": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ibm.minipay": {
         source: "iana",
-        extensions: ["mpy"],
+        extensions: ["mpy"]
       },
       "application/vnd.ibm.modcap": {
         source: "iana",
-        extensions: ["afp", "listafp", "list3820"],
+        extensions: ["afp", "listafp", "list3820"]
       },
       "application/vnd.ibm.rights-management": {
         source: "iana",
-        extensions: ["irm"],
+        extensions: ["irm"]
       },
       "application/vnd.ibm.secure-container": {
         source: "iana",
-        extensions: ["sc"],
+        extensions: ["sc"]
       },
       "application/vnd.iccprofile": {
         source: "iana",
-        extensions: ["icc", "icm"],
+        extensions: ["icc", "icm"]
       },
       "application/vnd.ieee.1905": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.igloader": {
         source: "iana",
-        extensions: ["igl"],
+        extensions: ["igl"]
       },
       "application/vnd.imagemeter.folder+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/vnd.imagemeter.image+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/vnd.immervision-ivp": {
         source: "iana",
-        extensions: ["ivp"],
+        extensions: ["ivp"]
       },
       "application/vnd.immervision-ivu": {
         source: "iana",
-        extensions: ["ivu"],
+        extensions: ["ivu"]
       },
       "application/vnd.ims.imsccv1p1": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ims.imsccv1p2": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ims.imsccv1p3": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ims.lis.v2.result+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.ims.lti.v2.toolconsumerprofile+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.ims.lti.v2.toolproxy+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.ims.lti.v2.toolproxy.id+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.ims.lti.v2.toolsettings+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.ims.lti.v2.toolsettings.simple+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.informedcontrol.rms+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.informix-visionary": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.infotech.project": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.infotech.project+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.innopath.wamp.notification": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.insors.igm": {
         source: "iana",
-        extensions: ["igm"],
+        extensions: ["igm"]
       },
       "application/vnd.intercon.formnet": {
         source: "iana",
-        extensions: ["xpw", "xpx"],
+        extensions: ["xpw", "xpx"]
       },
       "application/vnd.intergeo": {
         source: "iana",
-        extensions: ["i2g"],
+        extensions: ["i2g"]
       },
       "application/vnd.intertrust.digibox": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.intertrust.nncp": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.intu.qbo": {
         source: "iana",
-        extensions: ["qbo"],
+        extensions: ["qbo"]
       },
       "application/vnd.intu.qfx": {
         source: "iana",
-        extensions: ["qfx"],
+        extensions: ["qfx"]
       },
       "application/vnd.iptc.g2.catalogitem+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.iptc.g2.conceptitem+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.iptc.g2.knowledgeitem+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.iptc.g2.newsitem+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.iptc.g2.newsmessage+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.iptc.g2.packageitem+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.iptc.g2.planningitem+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.ipunplugged.rcprofile": {
         source: "iana",
-        extensions: ["rcprofile"],
+        extensions: ["rcprofile"]
       },
       "application/vnd.irepository.package+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["irp"],
+        extensions: ["irp"]
       },
       "application/vnd.is-xpr": {
         source: "iana",
-        extensions: ["xpr"],
+        extensions: ["xpr"]
       },
       "application/vnd.isac.fcs": {
         source: "iana",
-        extensions: ["fcs"],
+        extensions: ["fcs"]
       },
       "application/vnd.iso11783-10+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/vnd.jam": {
         source: "iana",
-        extensions: ["jam"],
+        extensions: ["jam"]
       },
       "application/vnd.japannet-directory-service": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.japannet-jpnstore-wakeup": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.japannet-payment-wakeup": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.japannet-registration": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.japannet-registration-wakeup": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.japannet-setstore-wakeup": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.japannet-verification": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.japannet-verification-wakeup": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.jcp.javame.midlet-rms": {
         source: "iana",
-        extensions: ["rms"],
+        extensions: ["rms"]
       },
       "application/vnd.jisp": {
         source: "iana",
-        extensions: ["jisp"],
+        extensions: ["jisp"]
       },
       "application/vnd.joost.joda-archive": {
         source: "iana",
-        extensions: ["joda"],
+        extensions: ["joda"]
       },
       "application/vnd.jsk.isdn-ngn": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.kahootz": {
         source: "iana",
-        extensions: ["ktz", "ktr"],
+        extensions: ["ktz", "ktr"]
       },
       "application/vnd.kde.karbon": {
         source: "iana",
-        extensions: ["karbon"],
+        extensions: ["karbon"]
       },
       "application/vnd.kde.kchart": {
         source: "iana",
-        extensions: ["chrt"],
+        extensions: ["chrt"]
       },
       "application/vnd.kde.kformula": {
         source: "iana",
-        extensions: ["kfo"],
+        extensions: ["kfo"]
       },
       "application/vnd.kde.kivio": {
         source: "iana",
-        extensions: ["flw"],
+        extensions: ["flw"]
       },
       "application/vnd.kde.kontour": {
         source: "iana",
-        extensions: ["kon"],
+        extensions: ["kon"]
       },
       "application/vnd.kde.kpresenter": {
         source: "iana",
-        extensions: ["kpr", "kpt"],
+        extensions: ["kpr", "kpt"]
       },
       "application/vnd.kde.kspread": {
         source: "iana",
-        extensions: ["ksp"],
+        extensions: ["ksp"]
       },
       "application/vnd.kde.kword": {
         source: "iana",
-        extensions: ["kwd", "kwt"],
+        extensions: ["kwd", "kwt"]
       },
       "application/vnd.kenameaapp": {
         source: "iana",
-        extensions: ["htke"],
+        extensions: ["htke"]
       },
       "application/vnd.kidspiration": {
         source: "iana",
-        extensions: ["kia"],
+        extensions: ["kia"]
       },
       "application/vnd.kinar": {
         source: "iana",
-        extensions: ["kne", "knp"],
+        extensions: ["kne", "knp"]
       },
       "application/vnd.koan": {
         source: "iana",
-        extensions: ["skp", "skd", "skt", "skm"],
+        extensions: ["skp", "skd", "skt", "skm"]
       },
       "application/vnd.kodak-descriptor": {
         source: "iana",
-        extensions: ["sse"],
+        extensions: ["sse"]
       },
       "application/vnd.las": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.las.las+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.las.las+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["lasxml"],
+        extensions: ["lasxml"]
       },
       "application/vnd.laszip": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.leap+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.liberty-request+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.llamagraphics.life-balance.desktop": {
         source: "iana",
-        extensions: ["lbd"],
+        extensions: ["lbd"]
       },
       "application/vnd.llamagraphics.life-balance.exchange+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["lbe"],
+        extensions: ["lbe"]
       },
       "application/vnd.logipipe.circuit+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/vnd.loom": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.lotus-1-2-3": {
         source: "iana",
-        extensions: ["123"],
+        extensions: ["123"]
       },
       "application/vnd.lotus-approach": {
         source: "iana",
-        extensions: ["apr"],
+        extensions: ["apr"]
       },
       "application/vnd.lotus-freelance": {
         source: "iana",
-        extensions: ["pre"],
+        extensions: ["pre"]
       },
       "application/vnd.lotus-notes": {
         source: "iana",
-        extensions: ["nsf"],
+        extensions: ["nsf"]
       },
       "application/vnd.lotus-organizer": {
         source: "iana",
-        extensions: ["org"],
+        extensions: ["org"]
       },
       "application/vnd.lotus-screencam": {
         source: "iana",
-        extensions: ["scm"],
+        extensions: ["scm"]
       },
       "application/vnd.lotus-wordpro": {
         source: "iana",
-        extensions: ["lwp"],
+        extensions: ["lwp"]
       },
       "application/vnd.macports.portpkg": {
         source: "iana",
-        extensions: ["portpkg"],
+        extensions: ["portpkg"]
       },
       "application/vnd.mapbox-vector-tile": {
         source: "iana",
-        extensions: ["mvt"],
+        extensions: ["mvt"]
       },
       "application/vnd.marlin.drm.actiontoken+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.marlin.drm.conftoken+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.marlin.drm.license+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.marlin.drm.mdcf": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.mason+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.maxar.archive.3tz+zip": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "application/vnd.maxmind.maxmind-db": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.mcd": {
         source: "iana",
-        extensions: ["mcd"],
+        extensions: ["mcd"]
       },
       "application/vnd.medcalcdata": {
         source: "iana",
-        extensions: ["mc1"],
+        extensions: ["mc1"]
       },
       "application/vnd.mediastation.cdkey": {
         source: "iana",
-        extensions: ["cdkey"],
+        extensions: ["cdkey"]
       },
       "application/vnd.meridian-slingshot": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.mfer": {
         source: "iana",
-        extensions: ["mwf"],
+        extensions: ["mwf"]
       },
       "application/vnd.mfmp": {
         source: "iana",
-        extensions: ["mfm"],
+        extensions: ["mfm"]
       },
       "application/vnd.micro+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.micrografx.flo": {
         source: "iana",
-        extensions: ["flo"],
+        extensions: ["flo"]
       },
       "application/vnd.micrografx.igx": {
         source: "iana",
-        extensions: ["igx"],
+        extensions: ["igx"]
       },
       "application/vnd.microsoft.portable-executable": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.microsoft.windows.thumbnail-cache": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.miele+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.mif": {
         source: "iana",
-        extensions: ["mif"],
+        extensions: ["mif"]
       },
       "application/vnd.minisoft-hp3000-save": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.mitsubishi.misty-guard.trustweb": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.mobius.daf": {
         source: "iana",
-        extensions: ["daf"],
+        extensions: ["daf"]
       },
       "application/vnd.mobius.dis": {
         source: "iana",
-        extensions: ["dis"],
+        extensions: ["dis"]
       },
       "application/vnd.mobius.mbk": {
         source: "iana",
-        extensions: ["mbk"],
+        extensions: ["mbk"]
       },
       "application/vnd.mobius.mqy": {
         source: "iana",
-        extensions: ["mqy"],
+        extensions: ["mqy"]
       },
       "application/vnd.mobius.msl": {
         source: "iana",
-        extensions: ["msl"],
+        extensions: ["msl"]
       },
       "application/vnd.mobius.plc": {
         source: "iana",
-        extensions: ["plc"],
+        extensions: ["plc"]
       },
       "application/vnd.mobius.txf": {
         source: "iana",
-        extensions: ["txf"],
+        extensions: ["txf"]
       },
       "application/vnd.mophun.application": {
         source: "iana",
-        extensions: ["mpn"],
+        extensions: ["mpn"]
       },
       "application/vnd.mophun.certificate": {
         source: "iana",
-        extensions: ["mpc"],
+        extensions: ["mpc"]
       },
       "application/vnd.motorola.flexsuite": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.motorola.flexsuite.adsi": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.motorola.flexsuite.fis": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.motorola.flexsuite.gotap": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.motorola.flexsuite.kmr": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.motorola.flexsuite.ttc": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.motorola.flexsuite.wem": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.motorola.iprm": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.mozilla.xul+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xul"],
+        extensions: ["xul"]
       },
       "application/vnd.ms-3mfdocument": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ms-artgalry": {
         source: "iana",
-        extensions: ["cil"],
+        extensions: ["cil"]
       },
       "application/vnd.ms-asf": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ms-cab-compressed": {
         source: "iana",
-        extensions: ["cab"],
+        extensions: ["cab"]
       },
       "application/vnd.ms-color.iccprofile": {
-        source: "apache",
+        source: "apache"
       },
       "application/vnd.ms-excel": {
         source: "iana",
         compressible: false,
-        extensions: ["xls", "xlm", "xla", "xlc", "xlt", "xlw"],
+        extensions: ["xls", "xlm", "xla", "xlc", "xlt", "xlw"]
       },
       "application/vnd.ms-excel.addin.macroenabled.12": {
         source: "iana",
-        extensions: ["xlam"],
+        extensions: ["xlam"]
       },
       "application/vnd.ms-excel.sheet.binary.macroenabled.12": {
         source: "iana",
-        extensions: ["xlsb"],
+        extensions: ["xlsb"]
       },
       "application/vnd.ms-excel.sheet.macroenabled.12": {
         source: "iana",
-        extensions: ["xlsm"],
+        extensions: ["xlsm"]
       },
       "application/vnd.ms-excel.template.macroenabled.12": {
         source: "iana",
-        extensions: ["xltm"],
+        extensions: ["xltm"]
       },
       "application/vnd.ms-fontobject": {
         source: "iana",
         compressible: true,
-        extensions: ["eot"],
+        extensions: ["eot"]
       },
       "application/vnd.ms-htmlhelp": {
         source: "iana",
-        extensions: ["chm"],
+        extensions: ["chm"]
       },
       "application/vnd.ms-ims": {
         source: "iana",
-        extensions: ["ims"],
+        extensions: ["ims"]
       },
       "application/vnd.ms-lrm": {
         source: "iana",
-        extensions: ["lrm"],
+        extensions: ["lrm"]
       },
       "application/vnd.ms-office.activex+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.ms-officetheme": {
         source: "iana",
-        extensions: ["thmx"],
+        extensions: ["thmx"]
       },
       "application/vnd.ms-opentype": {
         source: "apache",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.ms-outlook": {
         compressible: false,
-        extensions: ["msg"],
+        extensions: ["msg"]
       },
       "application/vnd.ms-package.obfuscated-opentype": {
-        source: "apache",
+        source: "apache"
       },
       "application/vnd.ms-pki.seccat": {
         source: "apache",
-        extensions: ["cat"],
+        extensions: ["cat"]
       },
       "application/vnd.ms-pki.stl": {
         source: "apache",
-        extensions: ["stl"],
+        extensions: ["stl"]
       },
       "application/vnd.ms-playready.initiator+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.ms-powerpoint": {
         source: "iana",
         compressible: false,
-        extensions: ["ppt", "pps", "pot"],
+        extensions: ["ppt", "pps", "pot"]
       },
       "application/vnd.ms-powerpoint.addin.macroenabled.12": {
         source: "iana",
-        extensions: ["ppam"],
+        extensions: ["ppam"]
       },
       "application/vnd.ms-powerpoint.presentation.macroenabled.12": {
         source: "iana",
-        extensions: ["pptm"],
+        extensions: ["pptm"]
       },
       "application/vnd.ms-powerpoint.slide.macroenabled.12": {
         source: "iana",
-        extensions: ["sldm"],
+        extensions: ["sldm"]
       },
       "application/vnd.ms-powerpoint.slideshow.macroenabled.12": {
         source: "iana",
-        extensions: ["ppsm"],
+        extensions: ["ppsm"]
       },
       "application/vnd.ms-powerpoint.template.macroenabled.12": {
         source: "iana",
-        extensions: ["potm"],
+        extensions: ["potm"]
       },
       "application/vnd.ms-printdevicecapabilities+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.ms-printing.printticket+xml": {
         source: "apache",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.ms-printschematicket+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.ms-project": {
         source: "iana",
-        extensions: ["mpp", "mpt"],
+        extensions: ["mpp", "mpt"]
       },
       "application/vnd.ms-tnef": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ms-windows.devicepairing": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ms-windows.nwprinting.oob": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ms-windows.printerpairing": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ms-windows.wsd.oob": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ms-wmdrm.lic-chlg-req": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ms-wmdrm.lic-resp": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ms-wmdrm.meter-chlg-req": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ms-wmdrm.meter-resp": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ms-word.document.macroenabled.12": {
         source: "iana",
-        extensions: ["docm"],
+        extensions: ["docm"]
       },
       "application/vnd.ms-word.template.macroenabled.12": {
         source: "iana",
-        extensions: ["dotm"],
+        extensions: ["dotm"]
       },
       "application/vnd.ms-works": {
         source: "iana",
-        extensions: ["wps", "wks", "wcm", "wdb"],
+        extensions: ["wps", "wks", "wcm", "wdb"]
       },
       "application/vnd.ms-wpl": {
         source: "iana",
-        extensions: ["wpl"],
+        extensions: ["wpl"]
       },
       "application/vnd.ms-xpsdocument": {
         source: "iana",
         compressible: false,
-        extensions: ["xps"],
+        extensions: ["xps"]
       },
       "application/vnd.msa-disk-image": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.mseq": {
         source: "iana",
-        extensions: ["mseq"],
+        extensions: ["mseq"]
       },
       "application/vnd.msign": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.multiad.creator": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.multiad.creator.cif": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.music-niff": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.musician": {
         source: "iana",
-        extensions: ["mus"],
+        extensions: ["mus"]
       },
       "application/vnd.muvee.style": {
         source: "iana",
-        extensions: ["msty"],
+        extensions: ["msty"]
       },
       "application/vnd.mynfc": {
         source: "iana",
-        extensions: ["taglet"],
+        extensions: ["taglet"]
       },
       "application/vnd.nacamar.ybrid+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.ncd.control": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ncd.reference": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.nearst.inv+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.nebumind.line": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.nervana": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.netfpx": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.neurolanguage.nlu": {
         source: "iana",
-        extensions: ["nlu"],
+        extensions: ["nlu"]
       },
       "application/vnd.nimn": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.nintendo.nitro.rom": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.nintendo.snes.rom": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.nitf": {
         source: "iana",
-        extensions: ["ntf", "nitf"],
+        extensions: ["ntf", "nitf"]
       },
       "application/vnd.noblenet-directory": {
         source: "iana",
-        extensions: ["nnd"],
+        extensions: ["nnd"]
       },
       "application/vnd.noblenet-sealer": {
         source: "iana",
-        extensions: ["nns"],
+        extensions: ["nns"]
       },
       "application/vnd.noblenet-web": {
         source: "iana",
-        extensions: ["nnw"],
+        extensions: ["nnw"]
       },
       "application/vnd.nokia.catalogs": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.nokia.conml+wbxml": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.nokia.conml+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.nokia.iptv.config+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.nokia.isds-radio-presets": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.nokia.landmark+wbxml": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.nokia.landmark+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.nokia.landmarkcollection+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.nokia.n-gage.ac+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["ac"],
+        extensions: ["ac"]
       },
       "application/vnd.nokia.n-gage.data": {
         source: "iana",
-        extensions: ["ngdat"],
+        extensions: ["ngdat"]
       },
       "application/vnd.nokia.n-gage.symbian.install": {
         source: "iana",
-        extensions: ["n-gage"],
+        extensions: ["n-gage"]
       },
       "application/vnd.nokia.ncd": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.nokia.pcd+wbxml": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.nokia.pcd+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.nokia.radio-preset": {
         source: "iana",
-        extensions: ["rpst"],
+        extensions: ["rpst"]
       },
       "application/vnd.nokia.radio-presets": {
         source: "iana",
-        extensions: ["rpss"],
+        extensions: ["rpss"]
       },
       "application/vnd.novadigm.edm": {
         source: "iana",
-        extensions: ["edm"],
+        extensions: ["edm"]
       },
       "application/vnd.novadigm.edx": {
         source: "iana",
-        extensions: ["edx"],
+        extensions: ["edx"]
       },
       "application/vnd.novadigm.ext": {
         source: "iana",
-        extensions: ["ext"],
+        extensions: ["ext"]
       },
       "application/vnd.ntt-local.content-share": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ntt-local.file-transfer": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ntt-local.ogw_remote-access": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ntt-local.sip-ta_remote": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ntt-local.sip-ta_tcp_stream": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oasis.opendocument.chart": {
         source: "iana",
-        extensions: ["odc"],
+        extensions: ["odc"]
       },
       "application/vnd.oasis.opendocument.chart-template": {
         source: "iana",
-        extensions: ["otc"],
+        extensions: ["otc"]
       },
       "application/vnd.oasis.opendocument.database": {
         source: "iana",
-        extensions: ["odb"],
+        extensions: ["odb"]
       },
       "application/vnd.oasis.opendocument.formula": {
         source: "iana",
-        extensions: ["odf"],
+        extensions: ["odf"]
       },
       "application/vnd.oasis.opendocument.formula-template": {
         source: "iana",
-        extensions: ["odft"],
+        extensions: ["odft"]
       },
       "application/vnd.oasis.opendocument.graphics": {
         source: "iana",
         compressible: false,
-        extensions: ["odg"],
+        extensions: ["odg"]
       },
       "application/vnd.oasis.opendocument.graphics-template": {
         source: "iana",
-        extensions: ["otg"],
+        extensions: ["otg"]
       },
       "application/vnd.oasis.opendocument.image": {
         source: "iana",
-        extensions: ["odi"],
+        extensions: ["odi"]
       },
       "application/vnd.oasis.opendocument.image-template": {
         source: "iana",
-        extensions: ["oti"],
+        extensions: ["oti"]
       },
       "application/vnd.oasis.opendocument.presentation": {
         source: "iana",
         compressible: false,
-        extensions: ["odp"],
+        extensions: ["odp"]
       },
       "application/vnd.oasis.opendocument.presentation-template": {
         source: "iana",
-        extensions: ["otp"],
+        extensions: ["otp"]
       },
       "application/vnd.oasis.opendocument.spreadsheet": {
         source: "iana",
         compressible: false,
-        extensions: ["ods"],
+        extensions: ["ods"]
       },
       "application/vnd.oasis.opendocument.spreadsheet-template": {
         source: "iana",
-        extensions: ["ots"],
+        extensions: ["ots"]
       },
       "application/vnd.oasis.opendocument.text": {
         source: "iana",
         compressible: false,
-        extensions: ["odt"],
+        extensions: ["odt"]
       },
       "application/vnd.oasis.opendocument.text-master": {
         source: "iana",
-        extensions: ["odm"],
+        extensions: ["odm"]
       },
       "application/vnd.oasis.opendocument.text-template": {
         source: "iana",
-        extensions: ["ott"],
+        extensions: ["ott"]
       },
       "application/vnd.oasis.opendocument.text-web": {
         source: "iana",
-        extensions: ["oth"],
+        extensions: ["oth"]
       },
       "application/vnd.obn": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ocf+cbor": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oci.image.manifest.v1+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oftn.l10n+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oipf.contentaccessdownload+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oipf.contentaccessstreaming+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oipf.cspg-hexbinary": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oipf.dae.svg+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oipf.dae.xhtml+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oipf.mippvcontrolmessage+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oipf.pae.gem": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oipf.spdiscovery+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oipf.spdlist+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oipf.ueprofile+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oipf.userprofile+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.olpc-sugar": {
         source: "iana",
-        extensions: ["xo"],
+        extensions: ["xo"]
       },
       "application/vnd.oma-scws-config": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oma-scws-http-request": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oma-scws-http-response": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oma.bcast.associated-procedure-parameter+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.bcast.drm-trigger+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.bcast.imd+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.bcast.ltkm": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oma.bcast.notification+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.bcast.provisioningtrigger": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oma.bcast.sgboot": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oma.bcast.sgdd+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.bcast.sgdu": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oma.bcast.simple-symbol-container": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oma.bcast.smartcard-trigger+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.bcast.sprov+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.bcast.stkm": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oma.cab-address-book+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.cab-feature-handler+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.cab-pcc+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.cab-subs-invite+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.cab-user-prefs+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.dcd": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oma.dcdc": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oma.dd2+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["dd2"],
+        extensions: ["dd2"]
       },
       "application/vnd.oma.drm.risd+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.group-usage-list+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.lwm2m+cbor": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oma.lwm2m+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.lwm2m+tlv": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oma.pal+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.poc.detailed-progress-report+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.poc.final-report+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.poc.groups+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.poc.invocation-descriptor+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.poc.optimized-progress-report+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.push": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.oma.scidm.messages+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oma.xcap-directory+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.omads-email+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.omads-file+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.omads-folder+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.omaloc-supl-init": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.onepager": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.onepagertamp": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.onepagertamx": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.onepagertat": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.onepagertatp": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.onepagertatx": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.openblox.game+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["obgx"],
+        extensions: ["obgx"]
       },
       "application/vnd.openblox.game-binary": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.openeye.oeb": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.openofficeorg.extension": {
         source: "apache",
-        extensions: ["oxt"],
+        extensions: ["oxt"]
       },
       "application/vnd.openstreetmap.data+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["osm"],
+        extensions: ["osm"]
       },
       "application/vnd.opentimestamps.ots": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.openxmlformats-officedocument.custom-properties+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.openxmlformats-officedocument.customxmlproperties+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.openxmlformats-officedocument.drawing+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.openxmlformats-officedocument.drawingml.chart+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
-      "application/vnd.openxmlformats-officedocument.drawingml.chartshapes+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.drawingml.diagramcolors+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.drawingml.diagramdata+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.drawingml.diagramlayout+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.drawingml.diagramstyle+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
+      "application/vnd.openxmlformats-officedocument.drawingml.chartshapes+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.drawingml.diagramcolors+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.drawingml.diagramdata+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.drawingml.diagramlayout+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.drawingml.diagramstyle+xml": {
+        source: "iana",
+        compressible: true
+      },
       "application/vnd.openxmlformats-officedocument.extended-properties+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
-      "application/vnd.openxmlformats-officedocument.presentationml.commentauthors+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.presentationml.comments+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.presentationml.handoutmaster+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.presentationml.notesmaster+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.presentationml.notesslide+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-        {
-          source: "iana",
-          compressible: false,
-          extensions: ["pptx"],
-        },
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.presentationml.presprops+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
+      "application/vnd.openxmlformats-officedocument.presentationml.commentauthors+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.presentationml.comments+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.presentationml.handoutmaster+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.presentationml.notesmaster+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.presentationml.notesslide+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation": {
+        source: "iana",
+        compressible: false,
+        extensions: ["pptx"]
+      },
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.presentationml.presprops+xml": {
+        source: "iana",
+        compressible: true
+      },
       "application/vnd.openxmlformats-officedocument.presentationml.slide": {
         source: "iana",
-        extensions: ["sldx"],
+        extensions: ["sldx"]
       },
-      "application/vnd.openxmlformats-officedocument.presentationml.slide+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.presentationml.slidelayout+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.presentationml.slidemaster+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.presentationml.slideshow":
-        {
-          source: "iana",
-          extensions: ["ppsx"],
-        },
-      "application/vnd.openxmlformats-officedocument.presentationml.slideshow.main+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.presentationml.slideupdateinfo+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.presentationml.tablestyles+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
+      "application/vnd.openxmlformats-officedocument.presentationml.slide+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.presentationml.slidelayout+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.presentationml.slidemaster+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.presentationml.slideshow": {
+        source: "iana",
+        extensions: ["ppsx"]
+      },
+      "application/vnd.openxmlformats-officedocument.presentationml.slideshow.main+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.presentationml.slideupdateinfo+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.presentationml.tablestyles+xml": {
+        source: "iana",
+        compressible: true
+      },
       "application/vnd.openxmlformats-officedocument.presentationml.tags+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.openxmlformats-officedocument.presentationml.template": {
         source: "iana",
-        extensions: ["potx"],
+        extensions: ["potx"]
       },
-      "application/vnd.openxmlformats-officedocument.presentationml.template.main+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.presentationml.viewprops+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.calcchain+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.connections+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.dialogsheet+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.externallink+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotcachedefinition+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotcacherecords+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.pivottable+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.querytable+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.revisionheaders+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.revisionlog+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedstrings+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
+      "application/vnd.openxmlformats-officedocument.presentationml.template.main+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.presentationml.viewprops+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.calcchain+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.connections+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.dialogsheet+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.externallink+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotcachedefinition+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotcacherecords+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.pivottable+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.querytable+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.revisionheaders+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.revisionlog+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedstrings+xml": {
+        source: "iana",
+        compressible: true
+      },
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
         source: "iana",
         compressible: false,
-        extensions: ["xlsx"],
+        extensions: ["xlsx"]
       },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheetmetadata+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheetmetadata+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml": {
+        source: "iana",
+        compressible: true
+      },
       "application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.tablesinglecells+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.tablesinglecells+xml": {
+        source: "iana",
+        compressible: true
+      },
       "application/vnd.openxmlformats-officedocument.spreadsheetml.template": {
         source: "iana",
-        extensions: ["xltx"],
+        extensions: ["xltx"]
       },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.usernames+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.volatiledependencies+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.usernames+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.volatiledependencies+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml": {
+        source: "iana",
+        compressible: true
+      },
       "application/vnd.openxmlformats-officedocument.theme+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.openxmlformats-officedocument.themeoverride+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.openxmlformats-officedocument.vmldrawing": {
-        source: "iana",
+        source: "iana"
       },
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        {
-          source: "iana",
-          compressible: false,
-          extensions: ["docx"],
-        },
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document.glossary+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.endnotes+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.fonttable+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.template":
-        {
-          source: "iana",
-          extensions: ["dotx"],
-        },
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.websettings+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+        source: "iana",
+        compressible: false,
+        extensions: ["docx"]
+      },
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document.glossary+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.endnotes+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.fonttable+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.template": {
+        source: "iana",
+        extensions: ["dotx"]
+      },
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml": {
+        source: "iana",
+        compressible: true
+      },
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.websettings+xml": {
+        source: "iana",
+        compressible: true
+      },
       "application/vnd.openxmlformats-package.core-properties+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
-      "application/vnd.openxmlformats-package.digital-signature-xmlsignature+xml":
-        {
-          source: "iana",
-          compressible: true,
-        },
+      "application/vnd.openxmlformats-package.digital-signature-xmlsignature+xml": {
+        source: "iana",
+        compressible: true
+      },
       "application/vnd.openxmlformats-package.relationships+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oracle.resource+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.orange.indata": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.osa.netdeploy": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.osgeo.mapguide.package": {
         source: "iana",
-        extensions: ["mgp"],
+        extensions: ["mgp"]
       },
       "application/vnd.osgi.bundle": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.osgi.dp": {
         source: "iana",
-        extensions: ["dp"],
+        extensions: ["dp"]
       },
       "application/vnd.osgi.subsystem": {
         source: "iana",
-        extensions: ["esa"],
+        extensions: ["esa"]
       },
       "application/vnd.otps.ct-kip+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.oxli.countgraph": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.pagerduty+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.palm": {
         source: "iana",
-        extensions: ["pdb", "pqa", "oprc"],
+        extensions: ["pdb", "pqa", "oprc"]
       },
       "application/vnd.panoply": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.paos.xml": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.patentdive": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.patientecommsdoc": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.pawaafile": {
         source: "iana",
-        extensions: ["paw"],
+        extensions: ["paw"]
       },
       "application/vnd.pcos": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.pg.format": {
         source: "iana",
-        extensions: ["str"],
+        extensions: ["str"]
       },
       "application/vnd.pg.osasli": {
         source: "iana",
-        extensions: ["ei6"],
+        extensions: ["ei6"]
       },
       "application/vnd.piaccess.application-licence": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.picsel": {
         source: "iana",
-        extensions: ["efif"],
+        extensions: ["efif"]
       },
       "application/vnd.pmi.widget": {
         source: "iana",
-        extensions: ["wg"],
+        extensions: ["wg"]
       },
       "application/vnd.poc.group-advertisement+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.pocketlearn": {
         source: "iana",
-        extensions: ["plf"],
+        extensions: ["plf"]
       },
       "application/vnd.powerbuilder6": {
         source: "iana",
-        extensions: ["pbd"],
+        extensions: ["pbd"]
       },
       "application/vnd.powerbuilder6-s": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.powerbuilder7": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.powerbuilder7-s": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.powerbuilder75": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.powerbuilder75-s": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.preminet": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.previewsystems.box": {
         source: "iana",
-        extensions: ["box"],
+        extensions: ["box"]
       },
       "application/vnd.proteus.magazine": {
         source: "iana",
-        extensions: ["mgz"],
+        extensions: ["mgz"]
       },
       "application/vnd.psfs": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.publishare-delta-tree": {
         source: "iana",
-        extensions: ["qps"],
+        extensions: ["qps"]
       },
       "application/vnd.pvi.ptid1": {
         source: "iana",
-        extensions: ["ptid"],
+        extensions: ["ptid"]
       },
       "application/vnd.pwg-multiplexed": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.pwg-xhtml-print+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.qualcomm.brew-app-res": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.quarantainenet": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.quark.quarkxpress": {
         source: "iana",
-        extensions: ["qxd", "qxt", "qwd", "qwt", "qxl", "qxb"],
+        extensions: ["qxd", "qxt", "qwd", "qwt", "qxl", "qxb"]
       },
       "application/vnd.quobject-quoxdocument": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.radisys.moml+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.radisys.msml+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.radisys.msml-audit+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.radisys.msml-audit-conf+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.radisys.msml-audit-conn+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.radisys.msml-audit-dialog+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.radisys.msml-audit-stream+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.radisys.msml-conf+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.radisys.msml-dialog+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.radisys.msml-dialog-base+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.radisys.msml-dialog-fax-detect+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.radisys.msml-dialog-fax-sendrecv+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.radisys.msml-dialog-group+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.radisys.msml-dialog-speech+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.radisys.msml-dialog-transform+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.rainstor.data": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.rapid": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.rar": {
         source: "iana",
-        extensions: ["rar"],
+        extensions: ["rar"]
       },
       "application/vnd.realvnc.bed": {
         source: "iana",
-        extensions: ["bed"],
+        extensions: ["bed"]
       },
       "application/vnd.recordare.musicxml": {
         source: "iana",
-        extensions: ["mxl"],
+        extensions: ["mxl"]
       },
       "application/vnd.recordare.musicxml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["musicxml"],
+        extensions: ["musicxml"]
       },
       "application/vnd.renlearn.rlprint": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.resilient.logic": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.restful+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.rig.cryptonote": {
         source: "iana",
-        extensions: ["cryptonote"],
+        extensions: ["cryptonote"]
       },
       "application/vnd.rim.cod": {
         source: "apache",
-        extensions: ["cod"],
+        extensions: ["cod"]
       },
       "application/vnd.rn-realmedia": {
         source: "apache",
-        extensions: ["rm"],
+        extensions: ["rm"]
       },
       "application/vnd.rn-realmedia-vbr": {
         source: "apache",
-        extensions: ["rmvb"],
+        extensions: ["rmvb"]
       },
       "application/vnd.route66.link66+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["link66"],
+        extensions: ["link66"]
       },
       "application/vnd.rs-274x": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ruckus.download": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.s3sms": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sailingtracker.track": {
         source: "iana",
-        extensions: ["st"],
+        extensions: ["st"]
       },
       "application/vnd.sar": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sbm.cid": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sbm.mid2": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.scribus": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sealed.3df": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sealed.csf": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sealed.doc": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sealed.eml": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sealed.mht": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sealed.net": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sealed.ppt": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sealed.tiff": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sealed.xls": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sealedmedia.softseal.html": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sealedmedia.softseal.pdf": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.seemail": {
         source: "iana",
-        extensions: ["see"],
+        extensions: ["see"]
       },
       "application/vnd.seis+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.sema": {
         source: "iana",
-        extensions: ["sema"],
+        extensions: ["sema"]
       },
       "application/vnd.semd": {
         source: "iana",
-        extensions: ["semd"],
+        extensions: ["semd"]
       },
       "application/vnd.semf": {
         source: "iana",
-        extensions: ["semf"],
+        extensions: ["semf"]
       },
       "application/vnd.shade-save-file": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.shana.informed.formdata": {
         source: "iana",
-        extensions: ["ifm"],
+        extensions: ["ifm"]
       },
       "application/vnd.shana.informed.formtemplate": {
         source: "iana",
-        extensions: ["itp"],
+        extensions: ["itp"]
       },
       "application/vnd.shana.informed.interchange": {
         source: "iana",
-        extensions: ["iif"],
+        extensions: ["iif"]
       },
       "application/vnd.shana.informed.package": {
         source: "iana",
-        extensions: ["ipk"],
+        extensions: ["ipk"]
       },
       "application/vnd.shootproof+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.shopkick+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.shp": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.shx": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sigrok.session": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.simtech-mindmapper": {
         source: "iana",
-        extensions: ["twd", "twds"],
+        extensions: ["twd", "twds"]
       },
       "application/vnd.siren+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.smaf": {
         source: "iana",
-        extensions: ["mmf"],
+        extensions: ["mmf"]
       },
       "application/vnd.smart.notebook": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.smart.teacher": {
         source: "iana",
-        extensions: ["teacher"],
+        extensions: ["teacher"]
       },
       "application/vnd.snesdev-page-table": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.software602.filler.form+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["fo"],
+        extensions: ["fo"]
       },
       "application/vnd.software602.filler.form-xml-zip": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.solent.sdkm+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["sdkm", "sdkd"],
+        extensions: ["sdkm", "sdkd"]
       },
       "application/vnd.spotfire.dxp": {
         source: "iana",
-        extensions: ["dxp"],
+        extensions: ["dxp"]
       },
       "application/vnd.spotfire.sfs": {
         source: "iana",
-        extensions: ["sfs"],
+        extensions: ["sfs"]
       },
       "application/vnd.sqlite3": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sss-cod": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sss-dtf": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sss-ntf": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.stardivision.calc": {
         source: "apache",
-        extensions: ["sdc"],
+        extensions: ["sdc"]
       },
       "application/vnd.stardivision.draw": {
         source: "apache",
-        extensions: ["sda"],
+        extensions: ["sda"]
       },
       "application/vnd.stardivision.impress": {
         source: "apache",
-        extensions: ["sdd"],
+        extensions: ["sdd"]
       },
       "application/vnd.stardivision.math": {
         source: "apache",
-        extensions: ["smf"],
+        extensions: ["smf"]
       },
       "application/vnd.stardivision.writer": {
         source: "apache",
-        extensions: ["sdw", "vor"],
+        extensions: ["sdw", "vor"]
       },
       "application/vnd.stardivision.writer-global": {
         source: "apache",
-        extensions: ["sgl"],
+        extensions: ["sgl"]
       },
       "application/vnd.stepmania.package": {
         source: "iana",
-        extensions: ["smzip"],
+        extensions: ["smzip"]
       },
       "application/vnd.stepmania.stepchart": {
         source: "iana",
-        extensions: ["sm"],
+        extensions: ["sm"]
       },
       "application/vnd.street-stream": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sun.wadl+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["wadl"],
+        extensions: ["wadl"]
       },
       "application/vnd.sun.xml.calc": {
         source: "apache",
-        extensions: ["sxc"],
+        extensions: ["sxc"]
       },
       "application/vnd.sun.xml.calc.template": {
         source: "apache",
-        extensions: ["stc"],
+        extensions: ["stc"]
       },
       "application/vnd.sun.xml.draw": {
         source: "apache",
-        extensions: ["sxd"],
+        extensions: ["sxd"]
       },
       "application/vnd.sun.xml.draw.template": {
         source: "apache",
-        extensions: ["std"],
+        extensions: ["std"]
       },
       "application/vnd.sun.xml.impress": {
         source: "apache",
-        extensions: ["sxi"],
+        extensions: ["sxi"]
       },
       "application/vnd.sun.xml.impress.template": {
         source: "apache",
-        extensions: ["sti"],
+        extensions: ["sti"]
       },
       "application/vnd.sun.xml.math": {
         source: "apache",
-        extensions: ["sxm"],
+        extensions: ["sxm"]
       },
       "application/vnd.sun.xml.writer": {
         source: "apache",
-        extensions: ["sxw"],
+        extensions: ["sxw"]
       },
       "application/vnd.sun.xml.writer.global": {
         source: "apache",
-        extensions: ["sxg"],
+        extensions: ["sxg"]
       },
       "application/vnd.sun.xml.writer.template": {
         source: "apache",
-        extensions: ["stw"],
+        extensions: ["stw"]
       },
       "application/vnd.sus-calendar": {
         source: "iana",
-        extensions: ["sus", "susp"],
+        extensions: ["sus", "susp"]
       },
       "application/vnd.svd": {
         source: "iana",
-        extensions: ["svd"],
+        extensions: ["svd"]
       },
       "application/vnd.swiftview-ics": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.sycle+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.syft+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.symbian.install": {
         source: "apache",
-        extensions: ["sis", "sisx"],
+        extensions: ["sis", "sisx"]
       },
       "application/vnd.syncml+xml": {
         source: "iana",
         charset: "UTF-8",
         compressible: true,
-        extensions: ["xsm"],
+        extensions: ["xsm"]
       },
       "application/vnd.syncml.dm+wbxml": {
         source: "iana",
         charset: "UTF-8",
-        extensions: ["bdm"],
+        extensions: ["bdm"]
       },
       "application/vnd.syncml.dm+xml": {
         source: "iana",
         charset: "UTF-8",
         compressible: true,
-        extensions: ["xdm"],
+        extensions: ["xdm"]
       },
       "application/vnd.syncml.dm.notification": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.syncml.dmddf+wbxml": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.syncml.dmddf+xml": {
         source: "iana",
         charset: "UTF-8",
         compressible: true,
-        extensions: ["ddf"],
+        extensions: ["ddf"]
       },
       "application/vnd.syncml.dmtnds+wbxml": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.syncml.dmtnds+xml": {
         source: "iana",
         charset: "UTF-8",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.syncml.ds.notification": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.tableschema+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.tao.intent-module-archive": {
         source: "iana",
-        extensions: ["tao"],
+        extensions: ["tao"]
       },
       "application/vnd.tcpdump.pcap": {
         source: "iana",
-        extensions: ["pcap", "cap", "dmp"],
+        extensions: ["pcap", "cap", "dmp"]
       },
       "application/vnd.think-cell.ppttc+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.tmd.mediaflex.api+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.tml": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.tmobile-livetv": {
         source: "iana",
-        extensions: ["tmo"],
+        extensions: ["tmo"]
       },
       "application/vnd.tri.onesource": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.trid.tpt": {
         source: "iana",
-        extensions: ["tpt"],
+        extensions: ["tpt"]
       },
       "application/vnd.triscape.mxs": {
         source: "iana",
-        extensions: ["mxs"],
+        extensions: ["mxs"]
       },
       "application/vnd.trueapp": {
         source: "iana",
-        extensions: ["tra"],
+        extensions: ["tra"]
       },
       "application/vnd.truedoc": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ubisoft.webplayer": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ufdl": {
         source: "iana",
-        extensions: ["ufd", "ufdl"],
+        extensions: ["ufd", "ufdl"]
       },
       "application/vnd.uiq.theme": {
         source: "iana",
-        extensions: ["utz"],
+        extensions: ["utz"]
       },
       "application/vnd.umajin": {
         source: "iana",
-        extensions: ["umj"],
+        extensions: ["umj"]
       },
       "application/vnd.unity": {
         source: "iana",
-        extensions: ["unityweb"],
+        extensions: ["unityweb"]
       },
       "application/vnd.uoml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["uoml"],
+        extensions: ["uoml"]
       },
       "application/vnd.uplanet.alert": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.uplanet.alert-wbxml": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.uplanet.bearer-choice": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.uplanet.bearer-choice-wbxml": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.uplanet.cacheop": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.uplanet.cacheop-wbxml": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.uplanet.channel": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.uplanet.channel-wbxml": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.uplanet.list": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.uplanet.list-wbxml": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.uplanet.listcmd": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.uplanet.listcmd-wbxml": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.uplanet.signal": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.uri-map": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.valve.source.material": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.vcx": {
         source: "iana",
-        extensions: ["vcx"],
+        extensions: ["vcx"]
       },
       "application/vnd.vd-study": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.vectorworks": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.vel+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.verimatrix.vcas": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.veritone.aion+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.veryant.thin": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.ves.encrypted": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.vidsoft.vidconference": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.visio": {
         source: "iana",
-        extensions: ["vsd", "vst", "vss", "vsw"],
+        extensions: ["vsd", "vst", "vss", "vsw"]
       },
       "application/vnd.visionary": {
         source: "iana",
-        extensions: ["vis"],
+        extensions: ["vis"]
       },
       "application/vnd.vividence.scriptfile": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.vsf": {
         source: "iana",
-        extensions: ["vsf"],
+        extensions: ["vsf"]
       },
       "application/vnd.wap.sic": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.wap.slc": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.wap.wbxml": {
         source: "iana",
         charset: "UTF-8",
-        extensions: ["wbxml"],
+        extensions: ["wbxml"]
       },
       "application/vnd.wap.wmlc": {
         source: "iana",
-        extensions: ["wmlc"],
+        extensions: ["wmlc"]
       },
       "application/vnd.wap.wmlscriptc": {
         source: "iana",
-        extensions: ["wmlsc"],
+        extensions: ["wmlsc"]
       },
       "application/vnd.webturbo": {
         source: "iana",
-        extensions: ["wtb"],
+        extensions: ["wtb"]
       },
       "application/vnd.wfa.dpp": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.wfa.p2p": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.wfa.wsc": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.windows.devicepairing": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.wmc": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.wmf.bootstrap": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.wolfram.mathematica": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.wolfram.mathematica.package": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.wolfram.player": {
         source: "iana",
-        extensions: ["nbp"],
+        extensions: ["nbp"]
       },
       "application/vnd.wordperfect": {
         source: "iana",
-        extensions: ["wpd"],
+        extensions: ["wpd"]
       },
       "application/vnd.wqd": {
         source: "iana",
-        extensions: ["wqd"],
+        extensions: ["wqd"]
       },
       "application/vnd.wrq-hp3000-labelled": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.wt.stf": {
         source: "iana",
-        extensions: ["stf"],
+        extensions: ["stf"]
       },
       "application/vnd.wv.csp+wbxml": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.wv.csp+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.wv.ssp+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.xacml+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.xara": {
         source: "iana",
-        extensions: ["xar"],
+        extensions: ["xar"]
       },
       "application/vnd.xfdl": {
         source: "iana",
-        extensions: ["xfdl"],
+        extensions: ["xfdl"]
       },
       "application/vnd.xfdl.webform": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.xmi+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vnd.xmpie.cpkg": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.xmpie.dpkg": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.xmpie.plan": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.xmpie.ppkg": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.xmpie.xlim": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.yamaha.hv-dic": {
         source: "iana",
-        extensions: ["hvd"],
+        extensions: ["hvd"]
       },
       "application/vnd.yamaha.hv-script": {
         source: "iana",
-        extensions: ["hvs"],
+        extensions: ["hvs"]
       },
       "application/vnd.yamaha.hv-voice": {
         source: "iana",
-        extensions: ["hvp"],
+        extensions: ["hvp"]
       },
       "application/vnd.yamaha.openscoreformat": {
         source: "iana",
-        extensions: ["osf"],
+        extensions: ["osf"]
       },
       "application/vnd.yamaha.openscoreformat.osfpvg+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["osfpvg"],
+        extensions: ["osfpvg"]
       },
       "application/vnd.yamaha.remote-setup": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.yamaha.smaf-audio": {
         source: "iana",
-        extensions: ["saf"],
+        extensions: ["saf"]
       },
       "application/vnd.yamaha.smaf-phrase": {
         source: "iana",
-        extensions: ["spf"],
+        extensions: ["spf"]
       },
       "application/vnd.yamaha.through-ngn": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.yamaha.tunnel-udpencap": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.yaoweme": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.yellowriver-custom-menu": {
         source: "iana",
-        extensions: ["cmp"],
+        extensions: ["cmp"]
       },
       "application/vnd.youtube.yt": {
-        source: "iana",
+        source: "iana"
       },
       "application/vnd.zul": {
         source: "iana",
-        extensions: ["zir", "zirz"],
+        extensions: ["zir", "zirz"]
       },
       "application/vnd.zzazz.deck+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["zaz"],
+        extensions: ["zaz"]
       },
       "application/voicexml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["vxml"],
+        extensions: ["vxml"]
       },
       "application/voucher-cms+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/vq-rtcpxr": {
-        source: "iana",
+        source: "iana"
       },
       "application/wasm": {
         source: "iana",
         compressible: true,
-        extensions: ["wasm"],
+        extensions: ["wasm"]
       },
       "application/watcherinfo+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["wif"],
+        extensions: ["wif"]
       },
       "application/webpush-options+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/whoispp-query": {
-        source: "iana",
+        source: "iana"
       },
       "application/whoispp-response": {
-        source: "iana",
+        source: "iana"
       },
       "application/widget": {
         source: "iana",
-        extensions: ["wgt"],
+        extensions: ["wgt"]
       },
       "application/winhlp": {
         source: "apache",
-        extensions: ["hlp"],
+        extensions: ["hlp"]
       },
       "application/wita": {
-        source: "iana",
+        source: "iana"
       },
       "application/wordperfect5.1": {
-        source: "iana",
+        source: "iana"
       },
       "application/wsdl+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["wsdl"],
+        extensions: ["wsdl"]
       },
       "application/wspolicy+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["wspolicy"],
+        extensions: ["wspolicy"]
       },
       "application/x-7z-compressed": {
         source: "apache",
         compressible: false,
-        extensions: ["7z"],
+        extensions: ["7z"]
       },
       "application/x-abiword": {
         source: "apache",
-        extensions: ["abw"],
+        extensions: ["abw"]
       },
       "application/x-ace-compressed": {
         source: "apache",
-        extensions: ["ace"],
+        extensions: ["ace"]
       },
       "application/x-amf": {
-        source: "apache",
+        source: "apache"
       },
       "application/x-apple-diskimage": {
         source: "apache",
-        extensions: ["dmg"],
+        extensions: ["dmg"]
       },
       "application/x-arj": {
         compressible: false,
-        extensions: ["arj"],
+        extensions: ["arj"]
       },
       "application/x-authorware-bin": {
         source: "apache",
-        extensions: ["aab", "x32", "u32", "vox"],
+        extensions: ["aab", "x32", "u32", "vox"]
       },
       "application/x-authorware-map": {
         source: "apache",
-        extensions: ["aam"],
+        extensions: ["aam"]
       },
       "application/x-authorware-seg": {
         source: "apache",
-        extensions: ["aas"],
+        extensions: ["aas"]
       },
       "application/x-bcpio": {
         source: "apache",
-        extensions: ["bcpio"],
+        extensions: ["bcpio"]
       },
       "application/x-bdoc": {
         compressible: false,
-        extensions: ["bdoc"],
+        extensions: ["bdoc"]
       },
       "application/x-bittorrent": {
         source: "apache",
-        extensions: ["torrent"],
+        extensions: ["torrent"]
       },
       "application/x-blorb": {
         source: "apache",
-        extensions: ["blb", "blorb"],
+        extensions: ["blb", "blorb"]
       },
       "application/x-bzip": {
         source: "apache",
         compressible: false,
-        extensions: ["bz"],
+        extensions: ["bz"]
       },
       "application/x-bzip2": {
         source: "apache",
         compressible: false,
-        extensions: ["bz2", "boz"],
+        extensions: ["bz2", "boz"]
       },
       "application/x-cbr": {
         source: "apache",
-        extensions: ["cbr", "cba", "cbt", "cbz", "cb7"],
+        extensions: ["cbr", "cba", "cbt", "cbz", "cb7"]
       },
       "application/x-cdlink": {
         source: "apache",
-        extensions: ["vcd"],
+        extensions: ["vcd"]
       },
       "application/x-cfs-compressed": {
         source: "apache",
-        extensions: ["cfs"],
+        extensions: ["cfs"]
       },
       "application/x-chat": {
         source: "apache",
-        extensions: ["chat"],
+        extensions: ["chat"]
       },
       "application/x-chess-pgn": {
         source: "apache",
-        extensions: ["pgn"],
+        extensions: ["pgn"]
       },
       "application/x-chrome-extension": {
-        extensions: ["crx"],
+        extensions: ["crx"]
       },
       "application/x-cocoa": {
         source: "nginx",
-        extensions: ["cco"],
+        extensions: ["cco"]
       },
       "application/x-compress": {
-        source: "apache",
+        source: "apache"
       },
       "application/x-conference": {
         source: "apache",
-        extensions: ["nsc"],
+        extensions: ["nsc"]
       },
       "application/x-cpio": {
         source: "apache",
-        extensions: ["cpio"],
+        extensions: ["cpio"]
       },
       "application/x-csh": {
         source: "apache",
-        extensions: ["csh"],
+        extensions: ["csh"]
       },
       "application/x-deb": {
-        compressible: false,
+        compressible: false
       },
       "application/x-debian-package": {
         source: "apache",
-        extensions: ["deb", "udeb"],
+        extensions: ["deb", "udeb"]
       },
       "application/x-dgc-compressed": {
         source: "apache",
-        extensions: ["dgc"],
+        extensions: ["dgc"]
       },
       "application/x-director": {
         source: "apache",
-        extensions: [
-          "dir",
-          "dcr",
-          "dxr",
-          "cst",
-          "cct",
-          "cxt",
-          "w3d",
-          "fgd",
-          "swa",
-        ],
+        extensions: ["dir", "dcr", "dxr", "cst", "cct", "cxt", "w3d", "fgd", "swa"]
       },
       "application/x-doom": {
         source: "apache",
-        extensions: ["wad"],
+        extensions: ["wad"]
       },
       "application/x-dtbncx+xml": {
         source: "apache",
         compressible: true,
-        extensions: ["ncx"],
+        extensions: ["ncx"]
       },
       "application/x-dtbook+xml": {
         source: "apache",
         compressible: true,
-        extensions: ["dtb"],
+        extensions: ["dtb"]
       },
       "application/x-dtbresource+xml": {
         source: "apache",
         compressible: true,
-        extensions: ["res"],
+        extensions: ["res"]
       },
       "application/x-dvi": {
         source: "apache",
         compressible: false,
-        extensions: ["dvi"],
+        extensions: ["dvi"]
       },
       "application/x-envoy": {
         source: "apache",
-        extensions: ["evy"],
+        extensions: ["evy"]
       },
       "application/x-eva": {
         source: "apache",
-        extensions: ["eva"],
+        extensions: ["eva"]
       },
       "application/x-font-bdf": {
         source: "apache",
-        extensions: ["bdf"],
+        extensions: ["bdf"]
       },
       "application/x-font-dos": {
-        source: "apache",
+        source: "apache"
       },
       "application/x-font-framemaker": {
-        source: "apache",
+        source: "apache"
       },
       "application/x-font-ghostscript": {
         source: "apache",
-        extensions: ["gsf"],
+        extensions: ["gsf"]
       },
       "application/x-font-libgrx": {
-        source: "apache",
+        source: "apache"
       },
       "application/x-font-linux-psf": {
         source: "apache",
-        extensions: ["psf"],
+        extensions: ["psf"]
       },
       "application/x-font-pcf": {
         source: "apache",
-        extensions: ["pcf"],
+        extensions: ["pcf"]
       },
       "application/x-font-snf": {
         source: "apache",
-        extensions: ["snf"],
+        extensions: ["snf"]
       },
       "application/x-font-speedo": {
-        source: "apache",
+        source: "apache"
       },
       "application/x-font-sunos-news": {
-        source: "apache",
+        source: "apache"
       },
       "application/x-font-type1": {
         source: "apache",
-        extensions: ["pfa", "pfb", "pfm", "afm"],
+        extensions: ["pfa", "pfb", "pfm", "afm"]
       },
       "application/x-font-vfont": {
-        source: "apache",
+        source: "apache"
       },
       "application/x-freearc": {
         source: "apache",
-        extensions: ["arc"],
+        extensions: ["arc"]
       },
       "application/x-futuresplash": {
         source: "apache",
-        extensions: ["spl"],
+        extensions: ["spl"]
       },
       "application/x-gca-compressed": {
         source: "apache",
-        extensions: ["gca"],
+        extensions: ["gca"]
       },
       "application/x-glulx": {
         source: "apache",
-        extensions: ["ulx"],
+        extensions: ["ulx"]
       },
       "application/x-gnumeric": {
         source: "apache",
-        extensions: ["gnumeric"],
+        extensions: ["gnumeric"]
       },
       "application/x-gramps-xml": {
         source: "apache",
-        extensions: ["gramps"],
+        extensions: ["gramps"]
       },
       "application/x-gtar": {
         source: "apache",
-        extensions: ["gtar"],
+        extensions: ["gtar"]
       },
       "application/x-gzip": {
-        source: "apache",
+        source: "apache"
       },
       "application/x-hdf": {
         source: "apache",
-        extensions: ["hdf"],
+        extensions: ["hdf"]
       },
       "application/x-httpd-php": {
         compressible: true,
-        extensions: ["php"],
+        extensions: ["php"]
       },
       "application/x-install-instructions": {
         source: "apache",
-        extensions: ["install"],
+        extensions: ["install"]
       },
       "application/x-iso9660-image": {
         source: "apache",
-        extensions: ["iso"],
+        extensions: ["iso"]
       },
       "application/x-iwork-keynote-sffkey": {
-        extensions: ["key"],
+        extensions: ["key"]
       },
       "application/x-iwork-numbers-sffnumbers": {
-        extensions: ["numbers"],
+        extensions: ["numbers"]
       },
       "application/x-iwork-pages-sffpages": {
-        extensions: ["pages"],
+        extensions: ["pages"]
       },
       "application/x-java-archive-diff": {
         source: "nginx",
-        extensions: ["jardiff"],
+        extensions: ["jardiff"]
       },
       "application/x-java-jnlp-file": {
         source: "apache",
         compressible: false,
-        extensions: ["jnlp"],
+        extensions: ["jnlp"]
       },
       "application/x-javascript": {
-        compressible: true,
+        compressible: true
       },
       "application/x-keepass2": {
-        extensions: ["kdbx"],
+        extensions: ["kdbx"]
       },
       "application/x-latex": {
         source: "apache",
         compressible: false,
-        extensions: ["latex"],
+        extensions: ["latex"]
       },
       "application/x-lua-bytecode": {
-        extensions: ["luac"],
+        extensions: ["luac"]
       },
       "application/x-lzh-compressed": {
         source: "apache",
-        extensions: ["lzh", "lha"],
+        extensions: ["lzh", "lha"]
       },
       "application/x-makeself": {
         source: "nginx",
-        extensions: ["run"],
+        extensions: ["run"]
       },
       "application/x-mie": {
         source: "apache",
-        extensions: ["mie"],
+        extensions: ["mie"]
       },
       "application/x-mobipocket-ebook": {
         source: "apache",
-        extensions: ["prc", "mobi"],
+        extensions: ["prc", "mobi"]
       },
       "application/x-mpegurl": {
-        compressible: false,
+        compressible: false
       },
       "application/x-ms-application": {
         source: "apache",
-        extensions: ["application"],
+        extensions: ["application"]
       },
       "application/x-ms-shortcut": {
         source: "apache",
-        extensions: ["lnk"],
+        extensions: ["lnk"]
       },
       "application/x-ms-wmd": {
         source: "apache",
-        extensions: ["wmd"],
+        extensions: ["wmd"]
       },
       "application/x-ms-wmz": {
         source: "apache",
-        extensions: ["wmz"],
+        extensions: ["wmz"]
       },
       "application/x-ms-xbap": {
         source: "apache",
-        extensions: ["xbap"],
+        extensions: ["xbap"]
       },
       "application/x-msaccess": {
         source: "apache",
-        extensions: ["mdb"],
+        extensions: ["mdb"]
       },
       "application/x-msbinder": {
         source: "apache",
-        extensions: ["obd"],
+        extensions: ["obd"]
       },
       "application/x-mscardfile": {
         source: "apache",
-        extensions: ["crd"],
+        extensions: ["crd"]
       },
       "application/x-msclip": {
         source: "apache",
-        extensions: ["clp"],
+        extensions: ["clp"]
       },
       "application/x-msdos-program": {
-        extensions: ["exe"],
+        extensions: ["exe"]
       },
       "application/x-msdownload": {
         source: "apache",
-        extensions: ["exe", "dll", "com", "bat", "msi"],
+        extensions: ["exe", "dll", "com", "bat", "msi"]
       },
       "application/x-msmediaview": {
         source: "apache",
-        extensions: ["mvb", "m13", "m14"],
+        extensions: ["mvb", "m13", "m14"]
       },
       "application/x-msmetafile": {
         source: "apache",
-        extensions: ["wmf", "wmz", "emf", "emz"],
+        extensions: ["wmf", "wmz", "emf", "emz"]
       },
       "application/x-msmoney": {
         source: "apache",
-        extensions: ["mny"],
+        extensions: ["mny"]
       },
       "application/x-mspublisher": {
         source: "apache",
-        extensions: ["pub"],
+        extensions: ["pub"]
       },
       "application/x-msschedule": {
         source: "apache",
-        extensions: ["scd"],
+        extensions: ["scd"]
       },
       "application/x-msterminal": {
         source: "apache",
-        extensions: ["trm"],
+        extensions: ["trm"]
       },
       "application/x-mswrite": {
         source: "apache",
-        extensions: ["wri"],
+        extensions: ["wri"]
       },
       "application/x-netcdf": {
         source: "apache",
-        extensions: ["nc", "cdf"],
+        extensions: ["nc", "cdf"]
       },
       "application/x-ns-proxy-autoconfig": {
         compressible: true,
-        extensions: ["pac"],
+        extensions: ["pac"]
       },
       "application/x-nzb": {
         source: "apache",
-        extensions: ["nzb"],
+        extensions: ["nzb"]
       },
       "application/x-perl": {
         source: "nginx",
-        extensions: ["pl", "pm"],
+        extensions: ["pl", "pm"]
       },
       "application/x-pilot": {
         source: "nginx",
-        extensions: ["prc", "pdb"],
+        extensions: ["prc", "pdb"]
       },
       "application/x-pkcs12": {
         source: "apache",
         compressible: false,
-        extensions: ["p12", "pfx"],
+        extensions: ["p12", "pfx"]
       },
       "application/x-pkcs7-certificates": {
         source: "apache",
-        extensions: ["p7b", "spc"],
+        extensions: ["p7b", "spc"]
       },
       "application/x-pkcs7-certreqresp": {
         source: "apache",
-        extensions: ["p7r"],
+        extensions: ["p7r"]
       },
       "application/x-pki-message": {
-        source: "iana",
+        source: "iana"
       },
       "application/x-rar-compressed": {
         source: "apache",
         compressible: false,
-        extensions: ["rar"],
+        extensions: ["rar"]
       },
       "application/x-redhat-package-manager": {
         source: "nginx",
-        extensions: ["rpm"],
+        extensions: ["rpm"]
       },
       "application/x-research-info-systems": {
         source: "apache",
-        extensions: ["ris"],
+        extensions: ["ris"]
       },
       "application/x-sea": {
         source: "nginx",
-        extensions: ["sea"],
+        extensions: ["sea"]
       },
       "application/x-sh": {
         source: "apache",
         compressible: true,
-        extensions: ["sh"],
+        extensions: ["sh"]
       },
       "application/x-shar": {
         source: "apache",
-        extensions: ["shar"],
+        extensions: ["shar"]
       },
       "application/x-shockwave-flash": {
         source: "apache",
         compressible: false,
-        extensions: ["swf"],
+        extensions: ["swf"]
       },
       "application/x-silverlight-app": {
         source: "apache",
-        extensions: ["xap"],
+        extensions: ["xap"]
       },
       "application/x-sql": {
         source: "apache",
-        extensions: ["sql"],
+        extensions: ["sql"]
       },
       "application/x-stuffit": {
         source: "apache",
         compressible: false,
-        extensions: ["sit"],
+        extensions: ["sit"]
       },
       "application/x-stuffitx": {
         source: "apache",
-        extensions: ["sitx"],
+        extensions: ["sitx"]
       },
       "application/x-subrip": {
         source: "apache",
-        extensions: ["srt"],
+        extensions: ["srt"]
       },
       "application/x-sv4cpio": {
         source: "apache",
-        extensions: ["sv4cpio"],
+        extensions: ["sv4cpio"]
       },
       "application/x-sv4crc": {
         source: "apache",
-        extensions: ["sv4crc"],
+        extensions: ["sv4crc"]
       },
       "application/x-t3vm-image": {
         source: "apache",
-        extensions: ["t3"],
+        extensions: ["t3"]
       },
       "application/x-tads": {
         source: "apache",
-        extensions: ["gam"],
+        extensions: ["gam"]
       },
       "application/x-tar": {
         source: "apache",
         compressible: true,
-        extensions: ["tar"],
+        extensions: ["tar"]
       },
       "application/x-tcl": {
         source: "apache",
-        extensions: ["tcl", "tk"],
+        extensions: ["tcl", "tk"]
       },
       "application/x-tex": {
         source: "apache",
-        extensions: ["tex"],
+        extensions: ["tex"]
       },
       "application/x-tex-tfm": {
         source: "apache",
-        extensions: ["tfm"],
+        extensions: ["tfm"]
       },
       "application/x-texinfo": {
         source: "apache",
-        extensions: ["texinfo", "texi"],
+        extensions: ["texinfo", "texi"]
       },
       "application/x-tgif": {
         source: "apache",
-        extensions: ["obj"],
+        extensions: ["obj"]
       },
       "application/x-ustar": {
         source: "apache",
-        extensions: ["ustar"],
+        extensions: ["ustar"]
       },
       "application/x-virtualbox-hdd": {
         compressible: true,
-        extensions: ["hdd"],
+        extensions: ["hdd"]
       },
       "application/x-virtualbox-ova": {
         compressible: true,
-        extensions: ["ova"],
+        extensions: ["ova"]
       },
       "application/x-virtualbox-ovf": {
         compressible: true,
-        extensions: ["ovf"],
+        extensions: ["ovf"]
       },
       "application/x-virtualbox-vbox": {
         compressible: true,
-        extensions: ["vbox"],
+        extensions: ["vbox"]
       },
       "application/x-virtualbox-vbox-extpack": {
         compressible: false,
-        extensions: ["vbox-extpack"],
+        extensions: ["vbox-extpack"]
       },
       "application/x-virtualbox-vdi": {
         compressible: true,
-        extensions: ["vdi"],
+        extensions: ["vdi"]
       },
       "application/x-virtualbox-vhd": {
         compressible: true,
-        extensions: ["vhd"],
+        extensions: ["vhd"]
       },
       "application/x-virtualbox-vmdk": {
         compressible: true,
-        extensions: ["vmdk"],
+        extensions: ["vmdk"]
       },
       "application/x-wais-source": {
         source: "apache",
-        extensions: ["src"],
+        extensions: ["src"]
       },
       "application/x-web-app-manifest+json": {
         compressible: true,
-        extensions: ["webapp"],
+        extensions: ["webapp"]
       },
       "application/x-www-form-urlencoded": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/x-x509-ca-cert": {
         source: "iana",
-        extensions: ["der", "crt", "pem"],
+        extensions: ["der", "crt", "pem"]
       },
       "application/x-x509-ca-ra-cert": {
-        source: "iana",
+        source: "iana"
       },
       "application/x-x509-next-ca-cert": {
-        source: "iana",
+        source: "iana"
       },
       "application/x-xfig": {
         source: "apache",
-        extensions: ["fig"],
+        extensions: ["fig"]
       },
       "application/x-xliff+xml": {
         source: "apache",
         compressible: true,
-        extensions: ["xlf"],
+        extensions: ["xlf"]
       },
       "application/x-xpinstall": {
         source: "apache",
         compressible: false,
-        extensions: ["xpi"],
+        extensions: ["xpi"]
       },
       "application/x-xz": {
         source: "apache",
-        extensions: ["xz"],
+        extensions: ["xz"]
       },
       "application/x-zmachine": {
         source: "apache",
-        extensions: ["z1", "z2", "z3", "z4", "z5", "z6", "z7", "z8"],
+        extensions: ["z1", "z2", "z3", "z4", "z5", "z6", "z7", "z8"]
       },
       "application/x400-bp": {
-        source: "iana",
+        source: "iana"
       },
       "application/xacml+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/xaml+xml": {
         source: "apache",
         compressible: true,
-        extensions: ["xaml"],
+        extensions: ["xaml"]
       },
       "application/xcap-att+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xav"],
+        extensions: ["xav"]
       },
       "application/xcap-caps+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xca"],
+        extensions: ["xca"]
       },
       "application/xcap-diff+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xdf"],
+        extensions: ["xdf"]
       },
       "application/xcap-el+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xel"],
+        extensions: ["xel"]
       },
       "application/xcap-error+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/xcap-ns+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xns"],
+        extensions: ["xns"]
       },
       "application/xcon-conference-info+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/xcon-conference-info-diff+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/xenc+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xenc"],
+        extensions: ["xenc"]
       },
       "application/xhtml+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xhtml", "xht"],
+        extensions: ["xhtml", "xht"]
       },
       "application/xhtml-voice+xml": {
         source: "apache",
-        compressible: true,
+        compressible: true
       },
       "application/xliff+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xlf"],
+        extensions: ["xlf"]
       },
       "application/xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xml", "xsl", "xsd", "rng"],
+        extensions: ["xml", "xsl", "xsd", "rng"]
       },
       "application/xml-dtd": {
         source: "iana",
         compressible: true,
-        extensions: ["dtd"],
+        extensions: ["dtd"]
       },
       "application/xml-external-parsed-entity": {
-        source: "iana",
+        source: "iana"
       },
       "application/xml-patch+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/xmpp+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/xop+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xop"],
+        extensions: ["xop"]
       },
       "application/xproc+xml": {
         source: "apache",
         compressible: true,
-        extensions: ["xpl"],
+        extensions: ["xpl"]
       },
       "application/xslt+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xsl", "xslt"],
+        extensions: ["xsl", "xslt"]
       },
       "application/xspf+xml": {
         source: "apache",
         compressible: true,
-        extensions: ["xspf"],
+        extensions: ["xspf"]
       },
       "application/xv+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["mxml", "xhvml", "xvml", "xvm"],
+        extensions: ["mxml", "xhvml", "xvml", "xvm"]
       },
       "application/yang": {
         source: "iana",
-        extensions: ["yang"],
+        extensions: ["yang"]
       },
       "application/yang-data+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/yang-data+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/yang-patch+json": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/yang-patch+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "application/yin+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["yin"],
+        extensions: ["yin"]
       },
       "application/zip": {
         source: "iana",
         compressible: false,
-        extensions: ["zip"],
+        extensions: ["zip"]
       },
       "application/zlib": {
-        source: "iana",
+        source: "iana"
       },
       "application/zstd": {
-        source: "iana",
+        source: "iana"
       },
       "audio/1d-interleaved-parityfec": {
-        source: "iana",
+        source: "iana"
       },
       "audio/32kadpcm": {
-        source: "iana",
+        source: "iana"
       },
       "audio/3gpp": {
         source: "iana",
         compressible: false,
-        extensions: ["3gpp"],
+        extensions: ["3gpp"]
       },
       "audio/3gpp2": {
-        source: "iana",
+        source: "iana"
       },
       "audio/aac": {
-        source: "iana",
+        source: "iana"
       },
       "audio/ac3": {
-        source: "iana",
+        source: "iana"
       },
       "audio/adpcm": {
         source: "apache",
-        extensions: ["adp"],
+        extensions: ["adp"]
       },
       "audio/amr": {
         source: "iana",
-        extensions: ["amr"],
+        extensions: ["amr"]
       },
       "audio/amr-wb": {
-        source: "iana",
+        source: "iana"
       },
       "audio/amr-wb+": {
-        source: "iana",
+        source: "iana"
       },
       "audio/aptx": {
-        source: "iana",
+        source: "iana"
       },
       "audio/asc": {
-        source: "iana",
+        source: "iana"
       },
       "audio/atrac-advanced-lossless": {
-        source: "iana",
+        source: "iana"
       },
       "audio/atrac-x": {
-        source: "iana",
+        source: "iana"
       },
       "audio/atrac3": {
-        source: "iana",
+        source: "iana"
       },
       "audio/basic": {
         source: "iana",
         compressible: false,
-        extensions: ["au", "snd"],
+        extensions: ["au", "snd"]
       },
       "audio/bv16": {
-        source: "iana",
+        source: "iana"
       },
       "audio/bv32": {
-        source: "iana",
+        source: "iana"
       },
       "audio/clearmode": {
-        source: "iana",
+        source: "iana"
       },
       "audio/cn": {
-        source: "iana",
+        source: "iana"
       },
       "audio/dat12": {
-        source: "iana",
+        source: "iana"
       },
       "audio/dls": {
-        source: "iana",
+        source: "iana"
       },
       "audio/dsr-es201108": {
-        source: "iana",
+        source: "iana"
       },
       "audio/dsr-es202050": {
-        source: "iana",
+        source: "iana"
       },
       "audio/dsr-es202211": {
-        source: "iana",
+        source: "iana"
       },
       "audio/dsr-es202212": {
-        source: "iana",
+        source: "iana"
       },
       "audio/dv": {
-        source: "iana",
+        source: "iana"
       },
       "audio/dvi4": {
-        source: "iana",
+        source: "iana"
       },
       "audio/eac3": {
-        source: "iana",
+        source: "iana"
       },
       "audio/encaprtp": {
-        source: "iana",
+        source: "iana"
       },
       "audio/evrc": {
-        source: "iana",
+        source: "iana"
       },
       "audio/evrc-qcp": {
-        source: "iana",
+        source: "iana"
       },
       "audio/evrc0": {
-        source: "iana",
+        source: "iana"
       },
       "audio/evrc1": {
-        source: "iana",
+        source: "iana"
       },
       "audio/evrcb": {
-        source: "iana",
+        source: "iana"
       },
       "audio/evrcb0": {
-        source: "iana",
+        source: "iana"
       },
       "audio/evrcb1": {
-        source: "iana",
+        source: "iana"
       },
       "audio/evrcnw": {
-        source: "iana",
+        source: "iana"
       },
       "audio/evrcnw0": {
-        source: "iana",
+        source: "iana"
       },
       "audio/evrcnw1": {
-        source: "iana",
+        source: "iana"
       },
       "audio/evrcwb": {
-        source: "iana",
+        source: "iana"
       },
       "audio/evrcwb0": {
-        source: "iana",
+        source: "iana"
       },
       "audio/evrcwb1": {
-        source: "iana",
+        source: "iana"
       },
       "audio/evs": {
-        source: "iana",
+        source: "iana"
       },
       "audio/flexfec": {
-        source: "iana",
+        source: "iana"
       },
       "audio/fwdred": {
-        source: "iana",
+        source: "iana"
       },
       "audio/g711-0": {
-        source: "iana",
+        source: "iana"
       },
       "audio/g719": {
-        source: "iana",
+        source: "iana"
       },
       "audio/g722": {
-        source: "iana",
+        source: "iana"
       },
       "audio/g7221": {
-        source: "iana",
+        source: "iana"
       },
       "audio/g723": {
-        source: "iana",
+        source: "iana"
       },
       "audio/g726-16": {
-        source: "iana",
+        source: "iana"
       },
       "audio/g726-24": {
-        source: "iana",
+        source: "iana"
       },
       "audio/g726-32": {
-        source: "iana",
+        source: "iana"
       },
       "audio/g726-40": {
-        source: "iana",
+        source: "iana"
       },
       "audio/g728": {
-        source: "iana",
+        source: "iana"
       },
       "audio/g729": {
-        source: "iana",
+        source: "iana"
       },
       "audio/g7291": {
-        source: "iana",
+        source: "iana"
       },
       "audio/g729d": {
-        source: "iana",
+        source: "iana"
       },
       "audio/g729e": {
-        source: "iana",
+        source: "iana"
       },
       "audio/gsm": {
-        source: "iana",
+        source: "iana"
       },
       "audio/gsm-efr": {
-        source: "iana",
+        source: "iana"
       },
       "audio/gsm-hr-08": {
-        source: "iana",
+        source: "iana"
       },
       "audio/ilbc": {
-        source: "iana",
+        source: "iana"
       },
       "audio/ip-mr_v2.5": {
-        source: "iana",
+        source: "iana"
       },
       "audio/isac": {
-        source: "apache",
+        source: "apache"
       },
       "audio/l16": {
-        source: "iana",
+        source: "iana"
       },
       "audio/l20": {
-        source: "iana",
+        source: "iana"
       },
       "audio/l24": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "audio/l8": {
-        source: "iana",
+        source: "iana"
       },
       "audio/lpc": {
-        source: "iana",
+        source: "iana"
       },
       "audio/melp": {
-        source: "iana",
+        source: "iana"
       },
       "audio/melp1200": {
-        source: "iana",
+        source: "iana"
       },
       "audio/melp2400": {
-        source: "iana",
+        source: "iana"
       },
       "audio/melp600": {
-        source: "iana",
+        source: "iana"
       },
       "audio/mhas": {
-        source: "iana",
+        source: "iana"
       },
       "audio/midi": {
         source: "apache",
-        extensions: ["mid", "midi", "kar", "rmi"],
+        extensions: ["mid", "midi", "kar", "rmi"]
       },
       "audio/mobile-xmf": {
         source: "iana",
-        extensions: ["mxmf"],
+        extensions: ["mxmf"]
       },
       "audio/mp3": {
         compressible: false,
-        extensions: ["mp3"],
+        extensions: ["mp3"]
       },
       "audio/mp4": {
         source: "iana",
         compressible: false,
-        extensions: ["m4a", "mp4a"],
+        extensions: ["m4a", "mp4a"]
       },
       "audio/mp4a-latm": {
-        source: "iana",
+        source: "iana"
       },
       "audio/mpa": {
-        source: "iana",
+        source: "iana"
       },
       "audio/mpa-robust": {
-        source: "iana",
+        source: "iana"
       },
       "audio/mpeg": {
         source: "iana",
         compressible: false,
-        extensions: ["mpga", "mp2", "mp2a", "mp3", "m2a", "m3a"],
+        extensions: ["mpga", "mp2", "mp2a", "mp3", "m2a", "m3a"]
       },
       "audio/mpeg4-generic": {
-        source: "iana",
+        source: "iana"
       },
       "audio/musepack": {
-        source: "apache",
+        source: "apache"
       },
       "audio/ogg": {
         source: "iana",
         compressible: false,
-        extensions: ["oga", "ogg", "spx", "opus"],
+        extensions: ["oga", "ogg", "spx", "opus"]
       },
       "audio/opus": {
-        source: "iana",
+        source: "iana"
       },
       "audio/parityfec": {
-        source: "iana",
+        source: "iana"
       },
       "audio/pcma": {
-        source: "iana",
+        source: "iana"
       },
       "audio/pcma-wb": {
-        source: "iana",
+        source: "iana"
       },
       "audio/pcmu": {
-        source: "iana",
+        source: "iana"
       },
       "audio/pcmu-wb": {
-        source: "iana",
+        source: "iana"
       },
       "audio/prs.sid": {
-        source: "iana",
+        source: "iana"
       },
       "audio/qcelp": {
-        source: "iana",
+        source: "iana"
       },
       "audio/raptorfec": {
-        source: "iana",
+        source: "iana"
       },
       "audio/red": {
-        source: "iana",
+        source: "iana"
       },
       "audio/rtp-enc-aescm128": {
-        source: "iana",
+        source: "iana"
       },
       "audio/rtp-midi": {
-        source: "iana",
+        source: "iana"
       },
       "audio/rtploopback": {
-        source: "iana",
+        source: "iana"
       },
       "audio/rtx": {
-        source: "iana",
+        source: "iana"
       },
       "audio/s3m": {
         source: "apache",
-        extensions: ["s3m"],
+        extensions: ["s3m"]
       },
       "audio/scip": {
-        source: "iana",
+        source: "iana"
       },
       "audio/silk": {
         source: "apache",
-        extensions: ["sil"],
+        extensions: ["sil"]
       },
       "audio/smv": {
-        source: "iana",
+        source: "iana"
       },
       "audio/smv-qcp": {
-        source: "iana",
+        source: "iana"
       },
       "audio/smv0": {
-        source: "iana",
+        source: "iana"
       },
       "audio/sofa": {
-        source: "iana",
+        source: "iana"
       },
       "audio/sp-midi": {
-        source: "iana",
+        source: "iana"
       },
       "audio/speex": {
-        source: "iana",
+        source: "iana"
       },
       "audio/t140c": {
-        source: "iana",
+        source: "iana"
       },
       "audio/t38": {
-        source: "iana",
+        source: "iana"
       },
       "audio/telephone-event": {
-        source: "iana",
+        source: "iana"
       },
       "audio/tetra_acelp": {
-        source: "iana",
+        source: "iana"
       },
       "audio/tetra_acelp_bb": {
-        source: "iana",
+        source: "iana"
       },
       "audio/tone": {
-        source: "iana",
+        source: "iana"
       },
       "audio/tsvcis": {
-        source: "iana",
+        source: "iana"
       },
       "audio/uemclip": {
-        source: "iana",
+        source: "iana"
       },
       "audio/ulpfec": {
-        source: "iana",
+        source: "iana"
       },
       "audio/usac": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vdvi": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vmr-wb": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.3gpp.iufp": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.4sb": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.audiokoz": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.celp": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.cisco.nse": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.cmles.radio-events": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.cns.anp1": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.cns.inf1": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.dece.audio": {
         source: "iana",
-        extensions: ["uva", "uvva"],
+        extensions: ["uva", "uvva"]
       },
       "audio/vnd.digital-winds": {
         source: "iana",
-        extensions: ["eol"],
+        extensions: ["eol"]
       },
       "audio/vnd.dlna.adts": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.dolby.heaac.1": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.dolby.heaac.2": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.dolby.mlp": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.dolby.mps": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.dolby.pl2": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.dolby.pl2x": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.dolby.pl2z": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.dolby.pulse.1": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.dra": {
         source: "iana",
-        extensions: ["dra"],
+        extensions: ["dra"]
       },
       "audio/vnd.dts": {
         source: "iana",
-        extensions: ["dts"],
+        extensions: ["dts"]
       },
       "audio/vnd.dts.hd": {
         source: "iana",
-        extensions: ["dtshd"],
+        extensions: ["dtshd"]
       },
       "audio/vnd.dts.uhd": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.dvb.file": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.everad.plj": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.hns.audio": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.lucent.voice": {
         source: "iana",
-        extensions: ["lvp"],
+        extensions: ["lvp"]
       },
       "audio/vnd.ms-playready.media.pya": {
         source: "iana",
-        extensions: ["pya"],
+        extensions: ["pya"]
       },
       "audio/vnd.nokia.mobile-xmf": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.nortel.vbk": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.nuera.ecelp4800": {
         source: "iana",
-        extensions: ["ecelp4800"],
+        extensions: ["ecelp4800"]
       },
       "audio/vnd.nuera.ecelp7470": {
         source: "iana",
-        extensions: ["ecelp7470"],
+        extensions: ["ecelp7470"]
       },
       "audio/vnd.nuera.ecelp9600": {
         source: "iana",
-        extensions: ["ecelp9600"],
+        extensions: ["ecelp9600"]
       },
       "audio/vnd.octel.sbc": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.presonus.multitrack": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.qcelp": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.rhetorex.32kadpcm": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.rip": {
         source: "iana",
-        extensions: ["rip"],
+        extensions: ["rip"]
       },
       "audio/vnd.rn-realaudio": {
-        compressible: false,
+        compressible: false
       },
       "audio/vnd.sealedmedia.softseal.mpeg": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.vmx.cvsd": {
-        source: "iana",
+        source: "iana"
       },
       "audio/vnd.wave": {
-        compressible: false,
+        compressible: false
       },
       "audio/vorbis": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "audio/vorbis-config": {
-        source: "iana",
+        source: "iana"
       },
       "audio/wav": {
         compressible: false,
-        extensions: ["wav"],
+        extensions: ["wav"]
       },
       "audio/wave": {
         compressible: false,
-        extensions: ["wav"],
+        extensions: ["wav"]
       },
       "audio/webm": {
         source: "apache",
         compressible: false,
-        extensions: ["weba"],
+        extensions: ["weba"]
       },
       "audio/x-aac": {
         source: "apache",
         compressible: false,
-        extensions: ["aac"],
+        extensions: ["aac"]
       },
       "audio/x-aiff": {
         source: "apache",
-        extensions: ["aif", "aiff", "aifc"],
+        extensions: ["aif", "aiff", "aifc"]
       },
       "audio/x-caf": {
         source: "apache",
         compressible: false,
-        extensions: ["caf"],
+        extensions: ["caf"]
       },
       "audio/x-flac": {
         source: "apache",
-        extensions: ["flac"],
+        extensions: ["flac"]
       },
       "audio/x-m4a": {
         source: "nginx",
-        extensions: ["m4a"],
+        extensions: ["m4a"]
       },
       "audio/x-matroska": {
         source: "apache",
-        extensions: ["mka"],
+        extensions: ["mka"]
       },
       "audio/x-mpegurl": {
         source: "apache",
-        extensions: ["m3u"],
+        extensions: ["m3u"]
       },
       "audio/x-ms-wax": {
         source: "apache",
-        extensions: ["wax"],
+        extensions: ["wax"]
       },
       "audio/x-ms-wma": {
         source: "apache",
-        extensions: ["wma"],
+        extensions: ["wma"]
       },
       "audio/x-pn-realaudio": {
         source: "apache",
-        extensions: ["ram", "ra"],
+        extensions: ["ram", "ra"]
       },
       "audio/x-pn-realaudio-plugin": {
         source: "apache",
-        extensions: ["rmp"],
+        extensions: ["rmp"]
       },
       "audio/x-realaudio": {
         source: "nginx",
-        extensions: ["ra"],
+        extensions: ["ra"]
       },
       "audio/x-tta": {
-        source: "apache",
+        source: "apache"
       },
       "audio/x-wav": {
         source: "apache",
-        extensions: ["wav"],
+        extensions: ["wav"]
       },
       "audio/xm": {
         source: "apache",
-        extensions: ["xm"],
+        extensions: ["xm"]
       },
       "chemical/x-cdx": {
         source: "apache",
-        extensions: ["cdx"],
+        extensions: ["cdx"]
       },
       "chemical/x-cif": {
         source: "apache",
-        extensions: ["cif"],
+        extensions: ["cif"]
       },
       "chemical/x-cmdf": {
         source: "apache",
-        extensions: ["cmdf"],
+        extensions: ["cmdf"]
       },
       "chemical/x-cml": {
         source: "apache",
-        extensions: ["cml"],
+        extensions: ["cml"]
       },
       "chemical/x-csml": {
         source: "apache",
-        extensions: ["csml"],
+        extensions: ["csml"]
       },
       "chemical/x-pdb": {
-        source: "apache",
+        source: "apache"
       },
       "chemical/x-xyz": {
         source: "apache",
-        extensions: ["xyz"],
+        extensions: ["xyz"]
       },
       "font/collection": {
         source: "iana",
-        extensions: ["ttc"],
+        extensions: ["ttc"]
       },
       "font/otf": {
         source: "iana",
         compressible: true,
-        extensions: ["otf"],
+        extensions: ["otf"]
       },
       "font/sfnt": {
-        source: "iana",
+        source: "iana"
       },
       "font/ttf": {
         source: "iana",
         compressible: true,
-        extensions: ["ttf"],
+        extensions: ["ttf"]
       },
       "font/woff": {
         source: "iana",
-        extensions: ["woff"],
+        extensions: ["woff"]
       },
       "font/woff2": {
         source: "iana",
-        extensions: ["woff2"],
+        extensions: ["woff2"]
       },
       "image/aces": {
         source: "iana",
-        extensions: ["exr"],
+        extensions: ["exr"]
       },
       "image/apng": {
         compressible: false,
-        extensions: ["apng"],
+        extensions: ["apng"]
       },
       "image/avci": {
         source: "iana",
-        extensions: ["avci"],
+        extensions: ["avci"]
       },
       "image/avcs": {
         source: "iana",
-        extensions: ["avcs"],
+        extensions: ["avcs"]
       },
       "image/avif": {
         source: "iana",
         compressible: false,
-        extensions: ["avif"],
+        extensions: ["avif"]
       },
       "image/bmp": {
         source: "iana",
         compressible: true,
-        extensions: ["bmp"],
+        extensions: ["bmp"]
       },
       "image/cgm": {
         source: "iana",
-        extensions: ["cgm"],
+        extensions: ["cgm"]
       },
       "image/dicom-rle": {
         source: "iana",
-        extensions: ["drle"],
+        extensions: ["drle"]
       },
       "image/emf": {
         source: "iana",
-        extensions: ["emf"],
+        extensions: ["emf"]
       },
       "image/fits": {
         source: "iana",
-        extensions: ["fits"],
+        extensions: ["fits"]
       },
       "image/g3fax": {
         source: "iana",
-        extensions: ["g3"],
+        extensions: ["g3"]
       },
       "image/gif": {
         source: "iana",
         compressible: false,
-        extensions: ["gif"],
+        extensions: ["gif"]
       },
       "image/heic": {
         source: "iana",
-        extensions: ["heic"],
+        extensions: ["heic"]
       },
       "image/heic-sequence": {
         source: "iana",
-        extensions: ["heics"],
+        extensions: ["heics"]
       },
       "image/heif": {
         source: "iana",
-        extensions: ["heif"],
+        extensions: ["heif"]
       },
       "image/heif-sequence": {
         source: "iana",
-        extensions: ["heifs"],
+        extensions: ["heifs"]
       },
       "image/hej2k": {
         source: "iana",
-        extensions: ["hej2"],
+        extensions: ["hej2"]
       },
       "image/hsj2": {
         source: "iana",
-        extensions: ["hsj2"],
+        extensions: ["hsj2"]
       },
       "image/ief": {
         source: "iana",
-        extensions: ["ief"],
+        extensions: ["ief"]
       },
       "image/jls": {
         source: "iana",
-        extensions: ["jls"],
+        extensions: ["jls"]
       },
       "image/jp2": {
         source: "iana",
         compressible: false,
-        extensions: ["jp2", "jpg2"],
+        extensions: ["jp2", "jpg2"]
       },
       "image/jpeg": {
         source: "iana",
         compressible: false,
-        extensions: ["jpeg", "jpg", "jpe"],
+        extensions: ["jpeg", "jpg", "jpe"]
       },
       "image/jph": {
         source: "iana",
-        extensions: ["jph"],
+        extensions: ["jph"]
       },
       "image/jphc": {
         source: "iana",
-        extensions: ["jhc"],
+        extensions: ["jhc"]
       },
       "image/jpm": {
         source: "iana",
         compressible: false,
-        extensions: ["jpm"],
+        extensions: ["jpm"]
       },
       "image/jpx": {
         source: "iana",
         compressible: false,
-        extensions: ["jpx", "jpf"],
+        extensions: ["jpx", "jpf"]
       },
       "image/jxr": {
         source: "iana",
-        extensions: ["jxr"],
+        extensions: ["jxr"]
       },
       "image/jxra": {
         source: "iana",
-        extensions: ["jxra"],
+        extensions: ["jxra"]
       },
       "image/jxrs": {
         source: "iana",
-        extensions: ["jxrs"],
+        extensions: ["jxrs"]
       },
       "image/jxs": {
         source: "iana",
-        extensions: ["jxs"],
+        extensions: ["jxs"]
       },
       "image/jxsc": {
         source: "iana",
-        extensions: ["jxsc"],
+        extensions: ["jxsc"]
       },
       "image/jxsi": {
         source: "iana",
-        extensions: ["jxsi"],
+        extensions: ["jxsi"]
       },
       "image/jxss": {
         source: "iana",
-        extensions: ["jxss"],
+        extensions: ["jxss"]
       },
       "image/ktx": {
         source: "iana",
-        extensions: ["ktx"],
+        extensions: ["ktx"]
       },
       "image/ktx2": {
         source: "iana",
-        extensions: ["ktx2"],
+        extensions: ["ktx2"]
       },
       "image/naplps": {
-        source: "iana",
+        source: "iana"
       },
       "image/pjpeg": {
-        compressible: false,
+        compressible: false
       },
       "image/png": {
         source: "iana",
         compressible: false,
-        extensions: ["png"],
+        extensions: ["png"]
       },
       "image/prs.btif": {
         source: "iana",
-        extensions: ["btif"],
+        extensions: ["btif"]
       },
       "image/prs.pti": {
         source: "iana",
-        extensions: ["pti"],
+        extensions: ["pti"]
       },
       "image/pwg-raster": {
-        source: "iana",
+        source: "iana"
       },
       "image/sgi": {
         source: "apache",
-        extensions: ["sgi"],
+        extensions: ["sgi"]
       },
       "image/svg+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["svg", "svgz"],
+        extensions: ["svg", "svgz"]
       },
       "image/t38": {
         source: "iana",
-        extensions: ["t38"],
+        extensions: ["t38"]
       },
       "image/tiff": {
         source: "iana",
         compressible: false,
-        extensions: ["tif", "tiff"],
+        extensions: ["tif", "tiff"]
       },
       "image/tiff-fx": {
         source: "iana",
-        extensions: ["tfx"],
+        extensions: ["tfx"]
       },
       "image/vnd.adobe.photoshop": {
         source: "iana",
         compressible: true,
-        extensions: ["psd"],
+        extensions: ["psd"]
       },
       "image/vnd.airzip.accelerator.azv": {
         source: "iana",
-        extensions: ["azv"],
+        extensions: ["azv"]
       },
       "image/vnd.cns.inf2": {
-        source: "iana",
+        source: "iana"
       },
       "image/vnd.dece.graphic": {
         source: "iana",
-        extensions: ["uvi", "uvvi", "uvg", "uvvg"],
+        extensions: ["uvi", "uvvi", "uvg", "uvvg"]
       },
       "image/vnd.djvu": {
         source: "iana",
-        extensions: ["djvu", "djv"],
+        extensions: ["djvu", "djv"]
       },
       "image/vnd.dvb.subtitle": {
         source: "iana",
-        extensions: ["sub"],
+        extensions: ["sub"]
       },
       "image/vnd.dwg": {
         source: "iana",
-        extensions: ["dwg"],
+        extensions: ["dwg"]
       },
       "image/vnd.dxf": {
         source: "iana",
-        extensions: ["dxf"],
+        extensions: ["dxf"]
       },
       "image/vnd.fastbidsheet": {
         source: "iana",
-        extensions: ["fbs"],
+        extensions: ["fbs"]
       },
       "image/vnd.fpx": {
         source: "iana",
-        extensions: ["fpx"],
+        extensions: ["fpx"]
       },
       "image/vnd.fst": {
         source: "iana",
-        extensions: ["fst"],
+        extensions: ["fst"]
       },
       "image/vnd.fujixerox.edmics-mmr": {
         source: "iana",
-        extensions: ["mmr"],
+        extensions: ["mmr"]
       },
       "image/vnd.fujixerox.edmics-rlc": {
         source: "iana",
-        extensions: ["rlc"],
+        extensions: ["rlc"]
       },
       "image/vnd.globalgraphics.pgb": {
-        source: "iana",
+        source: "iana"
       },
       "image/vnd.microsoft.icon": {
         source: "iana",
         compressible: true,
-        extensions: ["ico"],
+        extensions: ["ico"]
       },
       "image/vnd.mix": {
-        source: "iana",
+        source: "iana"
       },
       "image/vnd.mozilla.apng": {
-        source: "iana",
+        source: "iana"
       },
       "image/vnd.ms-dds": {
         compressible: true,
-        extensions: ["dds"],
+        extensions: ["dds"]
       },
       "image/vnd.ms-modi": {
         source: "iana",
-        extensions: ["mdi"],
+        extensions: ["mdi"]
       },
       "image/vnd.ms-photo": {
         source: "apache",
-        extensions: ["wdp"],
+        extensions: ["wdp"]
       },
       "image/vnd.net-fpx": {
         source: "iana",
-        extensions: ["npx"],
+        extensions: ["npx"]
       },
       "image/vnd.pco.b16": {
         source: "iana",
-        extensions: ["b16"],
+        extensions: ["b16"]
       },
       "image/vnd.radiance": {
-        source: "iana",
+        source: "iana"
       },
       "image/vnd.sealed.png": {
-        source: "iana",
+        source: "iana"
       },
       "image/vnd.sealedmedia.softseal.gif": {
-        source: "iana",
+        source: "iana"
       },
       "image/vnd.sealedmedia.softseal.jpg": {
-        source: "iana",
+        source: "iana"
       },
       "image/vnd.svf": {
-        source: "iana",
+        source: "iana"
       },
       "image/vnd.tencent.tap": {
         source: "iana",
-        extensions: ["tap"],
+        extensions: ["tap"]
       },
       "image/vnd.valve.source.texture": {
         source: "iana",
-        extensions: ["vtf"],
+        extensions: ["vtf"]
       },
       "image/vnd.wap.wbmp": {
         source: "iana",
-        extensions: ["wbmp"],
+        extensions: ["wbmp"]
       },
       "image/vnd.xiff": {
         source: "iana",
-        extensions: ["xif"],
+        extensions: ["xif"]
       },
       "image/vnd.zbrush.pcx": {
         source: "iana",
-        extensions: ["pcx"],
+        extensions: ["pcx"]
       },
       "image/webp": {
         source: "apache",
-        extensions: ["webp"],
+        extensions: ["webp"]
       },
       "image/wmf": {
         source: "iana",
-        extensions: ["wmf"],
+        extensions: ["wmf"]
       },
       "image/x-3ds": {
         source: "apache",
-        extensions: ["3ds"],
+        extensions: ["3ds"]
       },
       "image/x-cmu-raster": {
         source: "apache",
-        extensions: ["ras"],
+        extensions: ["ras"]
       },
       "image/x-cmx": {
         source: "apache",
-        extensions: ["cmx"],
+        extensions: ["cmx"]
       },
       "image/x-freehand": {
         source: "apache",
-        extensions: ["fh", "fhc", "fh4", "fh5", "fh7"],
+        extensions: ["fh", "fhc", "fh4", "fh5", "fh7"]
       },
       "image/x-icon": {
         source: "apache",
         compressible: true,
-        extensions: ["ico"],
+        extensions: ["ico"]
       },
       "image/x-jng": {
         source: "nginx",
-        extensions: ["jng"],
+        extensions: ["jng"]
       },
       "image/x-mrsid-image": {
         source: "apache",
-        extensions: ["sid"],
+        extensions: ["sid"]
       },
       "image/x-ms-bmp": {
         source: "nginx",
         compressible: true,
-        extensions: ["bmp"],
+        extensions: ["bmp"]
       },
       "image/x-pcx": {
         source: "apache",
-        extensions: ["pcx"],
+        extensions: ["pcx"]
       },
       "image/x-pict": {
         source: "apache",
-        extensions: ["pic", "pct"],
+        extensions: ["pic", "pct"]
       },
       "image/x-portable-anymap": {
         source: "apache",
-        extensions: ["pnm"],
+        extensions: ["pnm"]
       },
       "image/x-portable-bitmap": {
         source: "apache",
-        extensions: ["pbm"],
+        extensions: ["pbm"]
       },
       "image/x-portable-graymap": {
         source: "apache",
-        extensions: ["pgm"],
+        extensions: ["pgm"]
       },
       "image/x-portable-pixmap": {
         source: "apache",
-        extensions: ["ppm"],
+        extensions: ["ppm"]
       },
       "image/x-rgb": {
         source: "apache",
-        extensions: ["rgb"],
+        extensions: ["rgb"]
       },
       "image/x-tga": {
         source: "apache",
-        extensions: ["tga"],
+        extensions: ["tga"]
       },
       "image/x-xbitmap": {
         source: "apache",
-        extensions: ["xbm"],
+        extensions: ["xbm"]
       },
       "image/x-xcf": {
-        compressible: false,
+        compressible: false
       },
       "image/x-xpixmap": {
         source: "apache",
-        extensions: ["xpm"],
+        extensions: ["xpm"]
       },
       "image/x-xwindowdump": {
         source: "apache",
-        extensions: ["xwd"],
+        extensions: ["xwd"]
       },
       "message/cpim": {
-        source: "iana",
+        source: "iana"
       },
       "message/delivery-status": {
-        source: "iana",
+        source: "iana"
       },
       "message/disposition-notification": {
         source: "iana",
-        extensions: ["disposition-notification"],
+        extensions: [
+          "disposition-notification"
+        ]
       },
       "message/external-body": {
-        source: "iana",
+        source: "iana"
       },
       "message/feedback-report": {
-        source: "iana",
+        source: "iana"
       },
       "message/global": {
         source: "iana",
-        extensions: ["u8msg"],
+        extensions: ["u8msg"]
       },
       "message/global-delivery-status": {
         source: "iana",
-        extensions: ["u8dsn"],
+        extensions: ["u8dsn"]
       },
       "message/global-disposition-notification": {
         source: "iana",
-        extensions: ["u8mdn"],
+        extensions: ["u8mdn"]
       },
       "message/global-headers": {
         source: "iana",
-        extensions: ["u8hdr"],
+        extensions: ["u8hdr"]
       },
       "message/http": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "message/imdn+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "message/news": {
-        source: "iana",
+        source: "iana"
       },
       "message/partial": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "message/rfc822": {
         source: "iana",
         compressible: true,
-        extensions: ["eml", "mime"],
+        extensions: ["eml", "mime"]
       },
       "message/s-http": {
-        source: "iana",
+        source: "iana"
       },
       "message/sip": {
-        source: "iana",
+        source: "iana"
       },
       "message/sipfrag": {
-        source: "iana",
+        source: "iana"
       },
       "message/tracking-status": {
-        source: "iana",
+        source: "iana"
       },
       "message/vnd.si.simp": {
-        source: "iana",
+        source: "iana"
       },
       "message/vnd.wfa.wsc": {
         source: "iana",
-        extensions: ["wsc"],
+        extensions: ["wsc"]
       },
       "model/3mf": {
         source: "iana",
-        extensions: ["3mf"],
+        extensions: ["3mf"]
       },
       "model/e57": {
-        source: "iana",
+        source: "iana"
       },
       "model/gltf+json": {
         source: "iana",
         compressible: true,
-        extensions: ["gltf"],
+        extensions: ["gltf"]
       },
       "model/gltf-binary": {
         source: "iana",
         compressible: true,
-        extensions: ["glb"],
+        extensions: ["glb"]
       },
       "model/iges": {
         source: "iana",
         compressible: false,
-        extensions: ["igs", "iges"],
+        extensions: ["igs", "iges"]
       },
       "model/mesh": {
         source: "iana",
         compressible: false,
-        extensions: ["msh", "mesh", "silo"],
+        extensions: ["msh", "mesh", "silo"]
       },
       "model/mtl": {
         source: "iana",
-        extensions: ["mtl"],
+        extensions: ["mtl"]
       },
       "model/obj": {
         source: "iana",
-        extensions: ["obj"],
+        extensions: ["obj"]
       },
       "model/step": {
-        source: "iana",
+        source: "iana"
       },
       "model/step+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["stpx"],
+        extensions: ["stpx"]
       },
       "model/step+zip": {
         source: "iana",
         compressible: false,
-        extensions: ["stpz"],
+        extensions: ["stpz"]
       },
       "model/step-xml+zip": {
         source: "iana",
         compressible: false,
-        extensions: ["stpxz"],
+        extensions: ["stpxz"]
       },
       "model/stl": {
         source: "iana",
-        extensions: ["stl"],
+        extensions: ["stl"]
       },
       "model/vnd.collada+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["dae"],
+        extensions: ["dae"]
       },
       "model/vnd.dwf": {
         source: "iana",
-        extensions: ["dwf"],
+        extensions: ["dwf"]
       },
       "model/vnd.flatland.3dml": {
-        source: "iana",
+        source: "iana"
       },
       "model/vnd.gdl": {
         source: "iana",
-        extensions: ["gdl"],
+        extensions: ["gdl"]
       },
       "model/vnd.gs-gdl": {
-        source: "apache",
+        source: "apache"
       },
       "model/vnd.gs.gdl": {
-        source: "iana",
+        source: "iana"
       },
       "model/vnd.gtw": {
         source: "iana",
-        extensions: ["gtw"],
+        extensions: ["gtw"]
       },
       "model/vnd.moml+xml": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "model/vnd.mts": {
         source: "iana",
-        extensions: ["mts"],
+        extensions: ["mts"]
       },
       "model/vnd.opengex": {
         source: "iana",
-        extensions: ["ogex"],
+        extensions: ["ogex"]
       },
       "model/vnd.parasolid.transmit.binary": {
         source: "iana",
-        extensions: ["x_b"],
+        extensions: ["x_b"]
       },
       "model/vnd.parasolid.transmit.text": {
         source: "iana",
-        extensions: ["x_t"],
+        extensions: ["x_t"]
       },
       "model/vnd.pytha.pyox": {
-        source: "iana",
+        source: "iana"
       },
       "model/vnd.rosette.annotated-data-model": {
-        source: "iana",
+        source: "iana"
       },
       "model/vnd.sap.vds": {
         source: "iana",
-        extensions: ["vds"],
+        extensions: ["vds"]
       },
       "model/vnd.usdz+zip": {
         source: "iana",
         compressible: false,
-        extensions: ["usdz"],
+        extensions: ["usdz"]
       },
       "model/vnd.valve.source.compiled-map": {
         source: "iana",
-        extensions: ["bsp"],
+        extensions: ["bsp"]
       },
       "model/vnd.vtu": {
         source: "iana",
-        extensions: ["vtu"],
+        extensions: ["vtu"]
       },
       "model/vrml": {
         source: "iana",
         compressible: false,
-        extensions: ["wrl", "vrml"],
+        extensions: ["wrl", "vrml"]
       },
       "model/x3d+binary": {
         source: "apache",
         compressible: false,
-        extensions: ["x3db", "x3dbz"],
+        extensions: ["x3db", "x3dbz"]
       },
       "model/x3d+fastinfoset": {
         source: "iana",
-        extensions: ["x3db"],
+        extensions: ["x3db"]
       },
       "model/x3d+vrml": {
         source: "apache",
         compressible: false,
-        extensions: ["x3dv", "x3dvz"],
+        extensions: ["x3dv", "x3dvz"]
       },
       "model/x3d+xml": {
         source: "iana",
         compressible: true,
-        extensions: ["x3d", "x3dz"],
+        extensions: ["x3d", "x3dz"]
       },
       "model/x3d-vrml": {
         source: "iana",
-        extensions: ["x3dv"],
+        extensions: ["x3dv"]
       },
       "multipart/alternative": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "multipart/appledouble": {
-        source: "iana",
+        source: "iana"
       },
       "multipart/byteranges": {
-        source: "iana",
+        source: "iana"
       },
       "multipart/digest": {
-        source: "iana",
+        source: "iana"
       },
       "multipart/encrypted": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "multipart/form-data": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "multipart/header-set": {
-        source: "iana",
+        source: "iana"
       },
       "multipart/mixed": {
-        source: "iana",
+        source: "iana"
       },
       "multipart/multilingual": {
-        source: "iana",
+        source: "iana"
       },
       "multipart/parallel": {
-        source: "iana",
+        source: "iana"
       },
       "multipart/related": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "multipart/report": {
-        source: "iana",
+        source: "iana"
       },
       "multipart/signed": {
         source: "iana",
-        compressible: false,
+        compressible: false
       },
       "multipart/vnd.bint.med-plus": {
-        source: "iana",
+        source: "iana"
       },
       "multipart/voice-message": {
-        source: "iana",
+        source: "iana"
       },
       "multipart/x-mixed-replace": {
-        source: "iana",
+        source: "iana"
       },
       "text/1d-interleaved-parityfec": {
-        source: "iana",
+        source: "iana"
       },
       "text/cache-manifest": {
         source: "iana",
         compressible: true,
-        extensions: ["appcache", "manifest"],
+        extensions: ["appcache", "manifest"]
       },
       "text/calendar": {
         source: "iana",
-        extensions: ["ics", "ifb"],
+        extensions: ["ics", "ifb"]
       },
       "text/calender": {
-        compressible: true,
+        compressible: true
       },
       "text/cmd": {
-        compressible: true,
+        compressible: true
       },
       "text/coffeescript": {
-        extensions: ["coffee", "litcoffee"],
+        extensions: ["coffee", "litcoffee"]
       },
       "text/cql": {
-        source: "iana",
+        source: "iana"
       },
       "text/cql-expression": {
-        source: "iana",
+        source: "iana"
       },
       "text/cql-identifier": {
-        source: "iana",
+        source: "iana"
       },
       "text/css": {
         source: "iana",
         charset: "UTF-8",
         compressible: true,
-        extensions: ["css"],
+        extensions: ["css"]
       },
       "text/csv": {
         source: "iana",
         compressible: true,
-        extensions: ["csv"],
+        extensions: ["csv"]
       },
       "text/csv-schema": {
-        source: "iana",
+        source: "iana"
       },
       "text/directory": {
-        source: "iana",
+        source: "iana"
       },
       "text/dns": {
-        source: "iana",
+        source: "iana"
       },
       "text/ecmascript": {
-        source: "iana",
+        source: "iana"
       },
       "text/encaprtp": {
-        source: "iana",
+        source: "iana"
       },
       "text/enriched": {
-        source: "iana",
+        source: "iana"
       },
       "text/fhirpath": {
-        source: "iana",
+        source: "iana"
       },
       "text/flexfec": {
-        source: "iana",
+        source: "iana"
       },
       "text/fwdred": {
-        source: "iana",
+        source: "iana"
       },
       "text/gff3": {
-        source: "iana",
+        source: "iana"
       },
       "text/grammar-ref-list": {
-        source: "iana",
+        source: "iana"
       },
       "text/html": {
         source: "iana",
         compressible: true,
-        extensions: ["html", "htm", "shtml"],
+        extensions: ["html", "htm", "shtml"]
       },
       "text/jade": {
-        extensions: ["jade"],
+        extensions: ["jade"]
       },
       "text/javascript": {
         source: "iana",
-        compressible: true,
+        compressible: true
       },
       "text/jcr-cnd": {
-        source: "iana",
+        source: "iana"
       },
       "text/jsx": {
         compressible: true,
-        extensions: ["jsx"],
+        extensions: ["jsx"]
       },
       "text/less": {
         compressible: true,
-        extensions: ["less"],
+        extensions: ["less"]
       },
       "text/markdown": {
         source: "iana",
         compressible: true,
-        extensions: ["markdown", "md"],
+        extensions: ["markdown", "md"]
       },
       "text/mathml": {
         source: "nginx",
-        extensions: ["mml"],
+        extensions: ["mml"]
       },
       "text/mdx": {
         compressible: true,
-        extensions: ["mdx"],
+        extensions: ["mdx"]
       },
       "text/mizar": {
-        source: "iana",
+        source: "iana"
       },
       "text/n3": {
         source: "iana",
         charset: "UTF-8",
         compressible: true,
-        extensions: ["n3"],
+        extensions: ["n3"]
       },
       "text/parameters": {
         source: "iana",
-        charset: "UTF-8",
+        charset: "UTF-8"
       },
       "text/parityfec": {
-        source: "iana",
+        source: "iana"
       },
       "text/plain": {
         source: "iana",
         compressible: true,
-        extensions: ["txt", "text", "conf", "def", "list", "log", "in", "ini"],
+        extensions: ["txt", "text", "conf", "def", "list", "log", "in", "ini"]
       },
       "text/provenance-notation": {
         source: "iana",
-        charset: "UTF-8",
+        charset: "UTF-8"
       },
       "text/prs.fallenstein.rst": {
-        source: "iana",
+        source: "iana"
       },
       "text/prs.lines.tag": {
         source: "iana",
-        extensions: ["dsc"],
+        extensions: ["dsc"]
       },
       "text/prs.prop.logic": {
-        source: "iana",
+        source: "iana"
       },
       "text/raptorfec": {
-        source: "iana",
+        source: "iana"
       },
       "text/red": {
-        source: "iana",
+        source: "iana"
       },
       "text/rfc822-headers": {
-        source: "iana",
+        source: "iana"
       },
       "text/richtext": {
         source: "iana",
         compressible: true,
-        extensions: ["rtx"],
+        extensions: ["rtx"]
       },
       "text/rtf": {
         source: "iana",
         compressible: true,
-        extensions: ["rtf"],
+        extensions: ["rtf"]
       },
       "text/rtp-enc-aescm128": {
-        source: "iana",
+        source: "iana"
       },
       "text/rtploopback": {
-        source: "iana",
+        source: "iana"
       },
       "text/rtx": {
-        source: "iana",
+        source: "iana"
       },
       "text/sgml": {
         source: "iana",
-        extensions: ["sgml", "sgm"],
+        extensions: ["sgml", "sgm"]
       },
       "text/shaclc": {
-        source: "iana",
+        source: "iana"
       },
       "text/shex": {
         source: "iana",
-        extensions: ["shex"],
+        extensions: ["shex"]
       },
       "text/slim": {
-        extensions: ["slim", "slm"],
+        extensions: ["slim", "slm"]
       },
       "text/spdx": {
         source: "iana",
-        extensions: ["spdx"],
+        extensions: ["spdx"]
       },
       "text/strings": {
-        source: "iana",
+        source: "iana"
       },
       "text/stylus": {
-        extensions: ["stylus", "styl"],
+        extensions: ["stylus", "styl"]
       },
       "text/t140": {
-        source: "iana",
+        source: "iana"
       },
       "text/tab-separated-values": {
         source: "iana",
         compressible: true,
-        extensions: ["tsv"],
+        extensions: ["tsv"]
       },
       "text/troff": {
         source: "iana",
-        extensions: ["t", "tr", "roff", "man", "me", "ms"],
+        extensions: ["t", "tr", "roff", "man", "me", "ms"]
       },
       "text/turtle": {
         source: "iana",
         charset: "UTF-8",
-        extensions: ["ttl"],
+        extensions: ["ttl"]
       },
       "text/ulpfec": {
-        source: "iana",
+        source: "iana"
       },
       "text/uri-list": {
         source: "iana",
         compressible: true,
-        extensions: ["uri", "uris", "urls"],
+        extensions: ["uri", "uris", "urls"]
       },
       "text/vcard": {
         source: "iana",
         compressible: true,
-        extensions: ["vcard"],
+        extensions: ["vcard"]
       },
       "text/vnd.a": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.abc": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.ascii-art": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.curl": {
         source: "iana",
-        extensions: ["curl"],
+        extensions: ["curl"]
       },
       "text/vnd.curl.dcurl": {
         source: "apache",
-        extensions: ["dcurl"],
+        extensions: ["dcurl"]
       },
       "text/vnd.curl.mcurl": {
         source: "apache",
-        extensions: ["mcurl"],
+        extensions: ["mcurl"]
       },
       "text/vnd.curl.scurl": {
         source: "apache",
-        extensions: ["scurl"],
+        extensions: ["scurl"]
       },
       "text/vnd.debian.copyright": {
         source: "iana",
-        charset: "UTF-8",
+        charset: "UTF-8"
       },
       "text/vnd.dmclientscript": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.dvb.subtitle": {
         source: "iana",
-        extensions: ["sub"],
+        extensions: ["sub"]
       },
       "text/vnd.esmertec.theme-descriptor": {
         source: "iana",
-        charset: "UTF-8",
+        charset: "UTF-8"
       },
       "text/vnd.familysearch.gedcom": {
         source: "iana",
-        extensions: ["ged"],
+        extensions: ["ged"]
       },
       "text/vnd.ficlab.flt": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.fly": {
         source: "iana",
-        extensions: ["fly"],
+        extensions: ["fly"]
       },
       "text/vnd.fmi.flexstor": {
         source: "iana",
-        extensions: ["flx"],
+        extensions: ["flx"]
       },
       "text/vnd.gml": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.graphviz": {
         source: "iana",
-        extensions: ["gv"],
+        extensions: ["gv"]
       },
       "text/vnd.hans": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.hgl": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.in3d.3dml": {
         source: "iana",
-        extensions: ["3dml"],
+        extensions: ["3dml"]
       },
       "text/vnd.in3d.spot": {
         source: "iana",
-        extensions: ["spot"],
+        extensions: ["spot"]
       },
       "text/vnd.iptc.newsml": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.iptc.nitf": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.latex-z": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.motorola.reflex": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.ms-mediapackage": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.net2phone.commcenter.command": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.radisys.msml-basic-layout": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.senx.warpscript": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.si.uricatalogue": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.sosi": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.sun.j2me.app-descriptor": {
         source: "iana",
         charset: "UTF-8",
-        extensions: ["jad"],
+        extensions: ["jad"]
       },
       "text/vnd.trolltech.linguist": {
         source: "iana",
-        charset: "UTF-8",
+        charset: "UTF-8"
       },
       "text/vnd.wap.si": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.wap.sl": {
-        source: "iana",
+        source: "iana"
       },
       "text/vnd.wap.wml": {
         source: "iana",
-        extensions: ["wml"],
+        extensions: ["wml"]
       },
       "text/vnd.wap.wmlscript": {
         source: "iana",
-        extensions: ["wmls"],
+        extensions: ["wmls"]
       },
       "text/vtt": {
         source: "iana",
         charset: "UTF-8",
         compressible: true,
-        extensions: ["vtt"],
+        extensions: ["vtt"]
       },
       "text/x-asm": {
         source: "apache",
-        extensions: ["s", "asm"],
+        extensions: ["s", "asm"]
       },
       "text/x-c": {
         source: "apache",
-        extensions: ["c", "cc", "cxx", "cpp", "h", "hh", "dic"],
+        extensions: ["c", "cc", "cxx", "cpp", "h", "hh", "dic"]
       },
       "text/x-component": {
         source: "nginx",
-        extensions: ["htc"],
+        extensions: ["htc"]
       },
       "text/x-fortran": {
         source: "apache",
-        extensions: ["f", "for", "f77", "f90"],
+        extensions: ["f", "for", "f77", "f90"]
       },
       "text/x-gwt-rpc": {
-        compressible: true,
+        compressible: true
       },
       "text/x-handlebars-template": {
-        extensions: ["hbs"],
+        extensions: ["hbs"]
       },
       "text/x-java-source": {
         source: "apache",
-        extensions: ["java"],
+        extensions: ["java"]
       },
       "text/x-jquery-tmpl": {
-        compressible: true,
+        compressible: true
       },
       "text/x-lua": {
-        extensions: ["lua"],
+        extensions: ["lua"]
       },
       "text/x-markdown": {
         compressible: true,
-        extensions: ["mkd"],
+        extensions: ["mkd"]
       },
       "text/x-nfo": {
         source: "apache",
-        extensions: ["nfo"],
+        extensions: ["nfo"]
       },
       "text/x-opml": {
         source: "apache",
-        extensions: ["opml"],
+        extensions: ["opml"]
       },
       "text/x-org": {
         compressible: true,
-        extensions: ["org"],
+        extensions: ["org"]
       },
       "text/x-pascal": {
         source: "apache",
-        extensions: ["p", "pas"],
+        extensions: ["p", "pas"]
       },
       "text/x-processing": {
         compressible: true,
-        extensions: ["pde"],
+        extensions: ["pde"]
       },
       "text/x-sass": {
-        extensions: ["sass"],
+        extensions: ["sass"]
       },
       "text/x-scss": {
-        extensions: ["scss"],
+        extensions: ["scss"]
       },
       "text/x-setext": {
         source: "apache",
-        extensions: ["etx"],
+        extensions: ["etx"]
       },
       "text/x-sfv": {
         source: "apache",
-        extensions: ["sfv"],
+        extensions: ["sfv"]
       },
       "text/x-suse-ymp": {
         compressible: true,
-        extensions: ["ymp"],
+        extensions: ["ymp"]
       },
       "text/x-uuencode": {
         source: "apache",
-        extensions: ["uu"],
+        extensions: ["uu"]
       },
       "text/x-vcalendar": {
         source: "apache",
-        extensions: ["vcs"],
+        extensions: ["vcs"]
       },
       "text/x-vcard": {
         source: "apache",
-        extensions: ["vcf"],
+        extensions: ["vcf"]
       },
       "text/xml": {
         source: "iana",
         compressible: true,
-        extensions: ["xml"],
+        extensions: ["xml"]
       },
       "text/xml-external-parsed-entity": {
-        source: "iana",
+        source: "iana"
       },
       "text/yaml": {
         compressible: true,
-        extensions: ["yaml", "yml"],
+        extensions: ["yaml", "yml"]
       },
       "video/1d-interleaved-parityfec": {
-        source: "iana",
+        source: "iana"
       },
       "video/3gpp": {
         source: "iana",
-        extensions: ["3gp", "3gpp"],
+        extensions: ["3gp", "3gpp"]
       },
       "video/3gpp-tt": {
-        source: "iana",
+        source: "iana"
       },
       "video/3gpp2": {
         source: "iana",
-        extensions: ["3g2"],
+        extensions: ["3g2"]
       },
       "video/av1": {
-        source: "iana",
+        source: "iana"
       },
       "video/bmpeg": {
-        source: "iana",
+        source: "iana"
       },
       "video/bt656": {
-        source: "iana",
+        source: "iana"
       },
       "video/celb": {
-        source: "iana",
+        source: "iana"
       },
       "video/dv": {
-        source: "iana",
+        source: "iana"
       },
       "video/encaprtp": {
-        source: "iana",
+        source: "iana"
       },
       "video/ffv1": {
-        source: "iana",
+        source: "iana"
       },
       "video/flexfec": {
-        source: "iana",
+        source: "iana"
       },
       "video/h261": {
         source: "iana",
-        extensions: ["h261"],
+        extensions: ["h261"]
       },
       "video/h263": {
         source: "iana",
-        extensions: ["h263"],
+        extensions: ["h263"]
       },
       "video/h263-1998": {
-        source: "iana",
+        source: "iana"
       },
       "video/h263-2000": {
-        source: "iana",
+        source: "iana"
       },
       "video/h264": {
         source: "iana",
-        extensions: ["h264"],
+        extensions: ["h264"]
       },
       "video/h264-rcdo": {
-        source: "iana",
+        source: "iana"
       },
       "video/h264-svc": {
-        source: "iana",
+        source: "iana"
       },
       "video/h265": {
-        source: "iana",
+        source: "iana"
       },
       "video/iso.segment": {
         source: "iana",
-        extensions: ["m4s"],
+        extensions: ["m4s"]
       },
       "video/jpeg": {
         source: "iana",
-        extensions: ["jpgv"],
+        extensions: ["jpgv"]
       },
       "video/jpeg2000": {
-        source: "iana",
+        source: "iana"
       },
       "video/jpm": {
         source: "apache",
-        extensions: ["jpm", "jpgm"],
+        extensions: ["jpm", "jpgm"]
       },
       "video/jxsv": {
-        source: "iana",
+        source: "iana"
       },
       "video/mj2": {
         source: "iana",
-        extensions: ["mj2", "mjp2"],
+        extensions: ["mj2", "mjp2"]
       },
       "video/mp1s": {
-        source: "iana",
+        source: "iana"
       },
       "video/mp2p": {
-        source: "iana",
+        source: "iana"
       },
       "video/mp2t": {
         source: "iana",
-        extensions: ["ts"],
+        extensions: ["ts"]
       },
       "video/mp4": {
         source: "iana",
         compressible: false,
-        extensions: ["mp4", "mp4v", "mpg4"],
+        extensions: ["mp4", "mp4v", "mpg4"]
       },
       "video/mp4v-es": {
-        source: "iana",
+        source: "iana"
       },
       "video/mpeg": {
         source: "iana",
         compressible: false,
-        extensions: ["mpeg", "mpg", "mpe", "m1v", "m2v"],
+        extensions: ["mpeg", "mpg", "mpe", "m1v", "m2v"]
       },
       "video/mpeg4-generic": {
-        source: "iana",
+        source: "iana"
       },
       "video/mpv": {
-        source: "iana",
+        source: "iana"
       },
       "video/nv": {
-        source: "iana",
+        source: "iana"
       },
       "video/ogg": {
         source: "iana",
         compressible: false,
-        extensions: ["ogv"],
+        extensions: ["ogv"]
       },
       "video/parityfec": {
-        source: "iana",
+        source: "iana"
       },
       "video/pointer": {
-        source: "iana",
+        source: "iana"
       },
       "video/quicktime": {
         source: "iana",
         compressible: false,
-        extensions: ["qt", "mov"],
+        extensions: ["qt", "mov"]
       },
       "video/raptorfec": {
-        source: "iana",
+        source: "iana"
       },
       "video/raw": {
-        source: "iana",
+        source: "iana"
       },
       "video/rtp-enc-aescm128": {
-        source: "iana",
+        source: "iana"
       },
       "video/rtploopback": {
-        source: "iana",
+        source: "iana"
       },
       "video/rtx": {
-        source: "iana",
+        source: "iana"
       },
       "video/scip": {
-        source: "iana",
+        source: "iana"
       },
       "video/smpte291": {
-        source: "iana",
+        source: "iana"
       },
       "video/smpte292m": {
-        source: "iana",
+        source: "iana"
       },
       "video/ulpfec": {
-        source: "iana",
+        source: "iana"
       },
       "video/vc1": {
-        source: "iana",
+        source: "iana"
       },
       "video/vc2": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.cctv": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.dece.hd": {
         source: "iana",
-        extensions: ["uvh", "uvvh"],
+        extensions: ["uvh", "uvvh"]
       },
       "video/vnd.dece.mobile": {
         source: "iana",
-        extensions: ["uvm", "uvvm"],
+        extensions: ["uvm", "uvvm"]
       },
       "video/vnd.dece.mp4": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.dece.pd": {
         source: "iana",
-        extensions: ["uvp", "uvvp"],
+        extensions: ["uvp", "uvvp"]
       },
       "video/vnd.dece.sd": {
         source: "iana",
-        extensions: ["uvs", "uvvs"],
+        extensions: ["uvs", "uvvs"]
       },
       "video/vnd.dece.video": {
         source: "iana",
-        extensions: ["uvv", "uvvv"],
+        extensions: ["uvv", "uvvv"]
       },
       "video/vnd.directv.mpeg": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.directv.mpeg-tts": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.dlna.mpeg-tts": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.dvb.file": {
         source: "iana",
-        extensions: ["dvb"],
+        extensions: ["dvb"]
       },
       "video/vnd.fvt": {
         source: "iana",
-        extensions: ["fvt"],
+        extensions: ["fvt"]
       },
       "video/vnd.hns.video": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.iptvforum.1dparityfec-1010": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.iptvforum.1dparityfec-2005": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.iptvforum.2dparityfec-1010": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.iptvforum.2dparityfec-2005": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.iptvforum.ttsavc": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.iptvforum.ttsmpeg2": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.motorola.video": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.motorola.videop": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.mpegurl": {
         source: "iana",
-        extensions: ["mxu", "m4u"],
+        extensions: ["mxu", "m4u"]
       },
       "video/vnd.ms-playready.media.pyv": {
         source: "iana",
-        extensions: ["pyv"],
+        extensions: ["pyv"]
       },
       "video/vnd.nokia.interleaved-multimedia": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.nokia.mp4vr": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.nokia.videovoip": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.objectvideo": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.radgamettools.bink": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.radgamettools.smacker": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.sealed.mpeg1": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.sealed.mpeg4": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.sealed.swf": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.sealedmedia.softseal.mov": {
-        source: "iana",
+        source: "iana"
       },
       "video/vnd.uvvu.mp4": {
         source: "iana",
-        extensions: ["uvu", "uvvu"],
+        extensions: ["uvu", "uvvu"]
       },
       "video/vnd.vivo": {
         source: "iana",
-        extensions: ["viv"],
+        extensions: ["viv"]
       },
       "video/vnd.youtube.yt": {
-        source: "iana",
+        source: "iana"
       },
       "video/vp8": {
-        source: "iana",
+        source: "iana"
       },
       "video/vp9": {
-        source: "iana",
+        source: "iana"
       },
       "video/webm": {
         source: "apache",
         compressible: false,
-        extensions: ["webm"],
+        extensions: ["webm"]
       },
       "video/x-f4v": {
         source: "apache",
-        extensions: ["f4v"],
+        extensions: ["f4v"]
       },
       "video/x-fli": {
         source: "apache",
-        extensions: ["fli"],
+        extensions: ["fli"]
       },
       "video/x-flv": {
         source: "apache",
         compressible: false,
-        extensions: ["flv"],
+        extensions: ["flv"]
       },
       "video/x-m4v": {
         source: "apache",
-        extensions: ["m4v"],
+        extensions: ["m4v"]
       },
       "video/x-matroska": {
         source: "apache",
         compressible: false,
-        extensions: ["mkv", "mk3d", "mks"],
+        extensions: ["mkv", "mk3d", "mks"]
       },
       "video/x-mng": {
         source: "apache",
-        extensions: ["mng"],
+        extensions: ["mng"]
       },
       "video/x-ms-asf": {
         source: "apache",
-        extensions: ["asf", "asx"],
+        extensions: ["asf", "asx"]
       },
       "video/x-ms-vob": {
         source: "apache",
-        extensions: ["vob"],
+        extensions: ["vob"]
       },
       "video/x-ms-wm": {
         source: "apache",
-        extensions: ["wm"],
+        extensions: ["wm"]
       },
       "video/x-ms-wmv": {
         source: "apache",
         compressible: false,
-        extensions: ["wmv"],
+        extensions: ["wmv"]
       },
       "video/x-ms-wmx": {
         source: "apache",
-        extensions: ["wmx"],
+        extensions: ["wmx"]
       },
       "video/x-ms-wvx": {
         source: "apache",
-        extensions: ["wvx"],
+        extensions: ["wvx"]
       },
       "video/x-msvideo": {
         source: "apache",
-        extensions: ["avi"],
+        extensions: ["avi"]
       },
       "video/x-sgi-movie": {
         source: "apache",
-        extensions: ["movie"],
+        extensions: ["movie"]
       },
       "video/x-smv": {
         source: "apache",
-        extensions: ["smv"],
+        extensions: ["smv"]
       },
       "x-conference/x-cooltalk": {
         source: "apache",
-        extensions: ["ice"],
+        extensions: ["ice"]
       },
       "x-shader/x-fragment": {
-        compressible: true,
+        compressible: true
       },
       "x-shader/x-vertex": {
-        compressible: true,
-      },
+        compressible: true
+      }
     };
-  },
+  }
 });
 
 // node_modules/mime-db/index.js
 var require_mime_db = __commonJS({
   "node_modules/mime-db/index.js"(exports2, module2) {
     module2.exports = require_db();
-  },
+  }
 });
 
 // node_modules/mime-types/index.js
@@ -19412,9 +18545,7 @@ var require_mime_types = __commonJS({
       if (!path || typeof path !== "string") {
         return false;
       }
-      var extension2 = extname("x." + path)
-        .toLowerCase()
-        .substr(1);
+      var extension2 = extname("x." + path).toLowerCase().substr(1);
       if (!extension2) {
         return false;
       }
@@ -19434,12 +18565,7 @@ var require_mime_types = __commonJS({
           if (types[extension2]) {
             var from = preference.indexOf(db[types[extension2]].source);
             var to = preference.indexOf(mime.source);
-            if (
-              types[extension2] !== "application/octet-stream" &&
-              (from > to ||
-                (from === to &&
-                  types[extension2].substr(0, 12) === "application/"))
-            ) {
+            if (types[extension2] !== "application/octet-stream" && (from > to || from === to && types[extension2].substr(0, 12) === "application/")) {
               continue;
             }
           }
@@ -19447,7 +18573,7 @@ var require_mime_types = __commonJS({
         }
       });
     }
-  },
+  }
 });
 
 // node_modules/accepts/index.js
@@ -19464,7 +18590,7 @@ var require_accepts = __commonJS({
       this.headers = req.headers;
       this.negotiator = new Negotiator(req);
     }
-    Accepts.prototype.type = Accepts.prototype.types = function (types_) {
+    Accepts.prototype.type = Accepts.prototype.types = function(types_) {
       var types = types_;
       if (types && !Array.isArray(types)) {
         types = new Array(arguments.length);
@@ -19483,9 +18609,7 @@ var require_accepts = __commonJS({
       var first = accepts[0];
       return first ? types[mimes.indexOf(first)] : false;
     };
-    Accepts.prototype.encoding = Accepts.prototype.encodings = function (
-      encodings_,
-    ) {
+    Accepts.prototype.encoding = Accepts.prototype.encodings = function(encodings_) {
       var encodings = encodings_;
       if (encodings && !Array.isArray(encodings)) {
         encodings = new Array(arguments.length);
@@ -19498,9 +18622,7 @@ var require_accepts = __commonJS({
       }
       return this.negotiator.encodings(encodings)[0] || false;
     };
-    Accepts.prototype.charset = Accepts.prototype.charsets = function (
-      charsets_,
-    ) {
+    Accepts.prototype.charset = Accepts.prototype.charsets = function(charsets_) {
       var charsets = charsets_;
       if (charsets && !Array.isArray(charsets)) {
         charsets = new Array(arguments.length);
@@ -19513,38 +18635,35 @@ var require_accepts = __commonJS({
       }
       return this.negotiator.charsets(charsets)[0] || false;
     };
-    Accepts.prototype.lang =
-      Accepts.prototype.langs =
-      Accepts.prototype.language =
-      Accepts.prototype.languages =
-        function (languages_) {
-          var languages = languages_;
-          if (languages && !Array.isArray(languages)) {
-            languages = new Array(arguments.length);
-            for (var i = 0; i < languages.length; i++) {
-              languages[i] = arguments[i];
-            }
-          }
-          if (!languages || languages.length === 0) {
-            return this.negotiator.languages();
-          }
-          return this.negotiator.languages(languages)[0] || false;
-        };
+    Accepts.prototype.lang = Accepts.prototype.langs = Accepts.prototype.language = Accepts.prototype.languages = function(languages_) {
+      var languages = languages_;
+      if (languages && !Array.isArray(languages)) {
+        languages = new Array(arguments.length);
+        for (var i = 0; i < languages.length; i++) {
+          languages[i] = arguments[i];
+        }
+      }
+      if (!languages || languages.length === 0) {
+        return this.negotiator.languages();
+      }
+      return this.negotiator.languages(languages)[0] || false;
+    };
     function extToMime(type2) {
       return type2.indexOf("/") === -1 ? mime.lookup(type2) : type2;
     }
     function validMime(type2) {
       return typeof type2 === "string";
     }
-  },
+  }
 });
 
 // node_modules/base64id/lib/base64id.js
 var require_base64id = __commonJS({
   "node_modules/base64id/lib/base64id.js"(exports2, module2) {
     var crypto = require("crypto");
-    var Base64Id = function () {};
-    Base64Id.prototype.getRandomBytes = function (bytes) {
+    var Base64Id = function() {
+    };
+    Base64Id.prototype.getRandomBytes = function(bytes) {
       var BUFFER_SIZE = 4096;
       var self = this;
       bytes = bytes || 12;
@@ -19566,7 +18685,7 @@ var require_base64id = __commonJS({
       if (this.bytesBufferIndex == -1 || this.bytesBufferIndex > threshold) {
         if (!this.isGeneratingBytes) {
           this.isGeneratingBytes = true;
-          crypto.randomBytes(BUFFER_SIZE, function (err, bytes2) {
+          crypto.randomBytes(BUFFER_SIZE, function(err, bytes2) {
             self.bytesBuffer = bytes2;
             self.bytesBufferIndex = 0;
             self.isGeneratingBytes = false;
@@ -19576,36 +18695,28 @@ var require_base64id = __commonJS({
           return crypto.randomBytes(bytes);
         }
       }
-      var result = this.bytesBuffer.slice(
-        bytes * this.bytesBufferIndex,
-        bytes * (this.bytesBufferIndex + 1),
-      );
+      var result = this.bytesBuffer.slice(bytes * this.bytesBufferIndex, bytes * (this.bytesBufferIndex + 1));
       this.bytesBufferIndex++;
       return result;
     };
-    Base64Id.prototype.generateId = function () {
+    Base64Id.prototype.generateId = function() {
       var rand = Buffer.alloc(15);
       if (!rand.writeInt32BE) {
-        return (
-          Math.abs(
-            (Math.random() * Math.random() * Date.now()) | 0,
-          ).toString() +
-          Math.abs((Math.random() * Math.random() * Date.now()) | 0).toString()
-        );
+        return Math.abs(Math.random() * Math.random() * Date.now() | 0).toString() + Math.abs(Math.random() * Math.random() * Date.now() | 0).toString();
       }
-      this.sequenceNumber = (this.sequenceNumber + 1) | 0;
+      this.sequenceNumber = this.sequenceNumber + 1 | 0;
       rand.writeInt32BE(this.sequenceNumber, 11);
       if (crypto.randomBytes) {
         this.getRandomBytes(12).copy(rand);
       } else {
-        [0, 4, 8].forEach(function (i) {
-          rand.writeInt32BE((Math.random() * Math.pow(2, 32)) | 0, i);
+        [0, 4, 8].forEach(function(i) {
+          rand.writeInt32BE(Math.random() * Math.pow(2, 32) | 0, i);
         });
       }
       return rand.toString("base64").replace(/\//g, "_").replace(/\+/g, "-");
     };
     exports2 = module2.exports = new Base64Id();
-  },
+  }
 });
 
 // node_modules/engine.io/build/parser-v3/utf8.js
@@ -19643,8 +18754,8 @@ var require_utf8 = __commonJS({
         value = array[index];
         if (value > 65535) {
           value -= 65536;
-          output += stringFromCharCode(((value >>> 10) & 1023) | 55296);
-          value = 56320 | (value & 1023);
+          output += stringFromCharCode(value >>> 10 & 1023 | 55296);
+          value = 56320 | value & 1023;
         }
         output += stringFromCharCode(value);
       }
@@ -19653,18 +18764,14 @@ var require_utf8 = __commonJS({
     function checkScalarValue(codePoint, strict) {
       if (codePoint >= 55296 && codePoint <= 57343) {
         if (strict) {
-          throw Error(
-            "Lone surrogate U+" +
-              codePoint.toString(16).toUpperCase() +
-              " is not a scalar value",
-          );
+          throw Error("Lone surrogate U+" + codePoint.toString(16).toUpperCase() + " is not a scalar value");
         }
         return false;
       }
       return true;
     }
     function createByte(codePoint, shift) {
-      return stringFromCharCode(((codePoint >> shift) & 63) | 128);
+      return stringFromCharCode(codePoint >> shift & 63 | 128);
     }
     function encodeCodePoint(codePoint, strict) {
       if ((codePoint & 4294967168) == 0) {
@@ -19672,19 +18779,19 @@ var require_utf8 = __commonJS({
       }
       var symbol = "";
       if ((codePoint & 4294965248) == 0) {
-        symbol = stringFromCharCode(((codePoint >> 6) & 31) | 192);
+        symbol = stringFromCharCode(codePoint >> 6 & 31 | 192);
       } else if ((codePoint & 4294901760) == 0) {
         if (!checkScalarValue(codePoint, strict)) {
           codePoint = 65533;
         }
-        symbol = stringFromCharCode(((codePoint >> 12) & 15) | 224);
+        symbol = stringFromCharCode(codePoint >> 12 & 15 | 224);
         symbol += createByte(codePoint, 6);
       } else if ((codePoint & 4292870144) == 0) {
-        symbol = stringFromCharCode(((codePoint >> 18) & 7) | 240);
+        symbol = stringFromCharCode(codePoint >> 18 & 7 | 240);
         symbol += createByte(codePoint, 12);
         symbol += createByte(codePoint, 6);
       }
-      symbol += stringFromCharCode((codePoint & 63) | 128);
+      symbol += stringFromCharCode(codePoint & 63 | 128);
       return symbol;
     }
     function utf8encode(string, opts) {
@@ -19731,7 +18838,7 @@ var require_utf8 = __commonJS({
       }
       if ((byte1 & 224) == 192) {
         byte2 = readContinuationByte();
-        codePoint = ((byte1 & 31) << 6) | byte2;
+        codePoint = (byte1 & 31) << 6 | byte2;
         if (codePoint >= 128) {
           return codePoint;
         } else {
@@ -19741,7 +18848,7 @@ var require_utf8 = __commonJS({
       if ((byte1 & 240) == 224) {
         byte2 = readContinuationByte();
         byte3 = readContinuationByte();
-        codePoint = ((byte1 & 15) << 12) | (byte2 << 6) | byte3;
+        codePoint = (byte1 & 15) << 12 | byte2 << 6 | byte3;
         if (codePoint >= 2048) {
           return checkScalarValue(codePoint, strict) ? codePoint : 65533;
         } else {
@@ -19752,7 +18859,7 @@ var require_utf8 = __commonJS({
         byte2 = readContinuationByte();
         byte3 = readContinuationByte();
         byte4 = readContinuationByte();
-        codePoint = ((byte1 & 7) << 18) | (byte2 << 12) | (byte3 << 6) | byte4;
+        codePoint = (byte1 & 7) << 18 | byte2 << 12 | byte3 << 6 | byte4;
         if (codePoint >= 65536 && codePoint <= 1114111) {
           return codePoint;
         }
@@ -19778,9 +18885,9 @@ var require_utf8 = __commonJS({
     module2.exports = {
       version: "2.1.2",
       encode: utf8encode,
-      decode: utf8decode,
+      decode: utf8decode
     };
-  },
+  }
 });
 
 // node_modules/engine.io/build/parser-v3/index.js
@@ -19801,10 +18908,7 @@ var require_parser_v3 = __commonJS({
     exports2.protocol = 3;
     var hasBinary = (packets) => {
       for (const packet of packets) {
-        if (
-          packet.data instanceof ArrayBuffer ||
-          ArrayBuffer.isView(packet.data)
-        ) {
+        if (packet.data instanceof ArrayBuffer || ArrayBuffer.isView(packet.data)) {
           return true;
         }
       }
@@ -19817,7 +18921,7 @@ var require_parser_v3 = __commonJS({
       pong: 3,
       message: 4,
       upgrade: 5,
-      noop: 6,
+      noop: 6
     };
     var packetslist = Object.keys(exports2.packets);
     var err = { type: "error", data: "parser error" };
@@ -19833,21 +18937,12 @@ var require_parser_v3 = __commonJS({
       }
       if (Buffer.isBuffer(packet.data)) {
         return encodeBuffer(packet, supportsBinary, callback);
-      } else if (
-        packet.data &&
-        (packet.data.buffer || packet.data) instanceof ArrayBuffer
-      ) {
-        return encodeBuffer(
-          { type: packet.type, data: arrayBufferToBuffer(packet.data) },
-          supportsBinary,
-          callback,
-        );
+      } else if (packet.data && (packet.data.buffer || packet.data) instanceof ArrayBuffer) {
+        return encodeBuffer({ type: packet.type, data: arrayBufferToBuffer(packet.data) }, supportsBinary, callback);
       }
       var encoded = exports2.packets[packet.type];
       if (void 0 !== packet.data) {
-        encoded += utf8encode
-          ? utf8.encode(String(packet.data), { strict: false })
-          : String(packet.data);
+        encoded += utf8encode ? utf8.encode(String(packet.data), { strict: false }) : String(packet.data);
       }
       return callback("" + encoded);
     }
@@ -19861,9 +18956,7 @@ var require_parser_v3 = __commonJS({
       return callback(Buffer.concat([typeBuffer, data]));
     }
     function encodeBase64Packet(packet, callback) {
-      var data = Buffer.isBuffer(packet.data)
-        ? packet.data
-        : arrayBufferToBuffer(packet.data);
+      var data = Buffer.isBuffer(packet.data) ? packet.data : arrayBufferToBuffer(packet.data);
       var message = "b" + exports2.packets[packet.type];
       message += data.toString("base64");
       return callback(message);
@@ -19936,11 +19029,11 @@ var require_parser_v3 = __commonJS({
         return callback("0:");
       }
       function encodeOne(packet, doneCallback) {
-        encodePacket(packet, supportsBinary, false, function (message) {
+        encodePacket(packet, supportsBinary, false, function(message) {
           doneCallback(null, setLengthHeader(message));
         });
       }
-      map(packets, encodeOne, function (err2, results) {
+      map(packets, encodeOne, function(err2, results) {
         return callback(results.join(""));
       });
     }
@@ -19970,10 +19063,7 @@ var require_parser_v3 = __commonJS({
       if (data === "") {
         return callback(err, 0, 1);
       }
-      var length = "",
-        n,
-        msg,
-        packet;
+      var length = "", n, msg, packet;
       for (var i = 0, l = data.length; i < l; i++) {
         var chr = data.charAt(i);
         if (chr !== ":") {
@@ -19993,7 +19083,8 @@ var require_parser_v3 = __commonJS({
             return callback(err, 0, 1);
           }
           var more = callback(packet, i + n, l);
-          if (false === more) return;
+          if (false === more)
+            return;
         }
         i += n;
         length = "";
@@ -20025,7 +19116,7 @@ var require_parser_v3 = __commonJS({
       if (!packets.length) {
         return callback(EMPTY_BUFFER);
       }
-      map(packets, encodeOneBinaryPacket, function (err2, results) {
+      map(packets, encodeOneBinaryPacket, function(err2, results) {
         return callback(Buffer.concat(results));
       });
     }
@@ -20040,10 +19131,7 @@ var require_parser_v3 = __commonJS({
             sizeBuffer[i + 1] = parseInt(encodingLength[i], 10);
           }
           sizeBuffer[sizeBuffer.length - 1] = 255;
-          return doneCallback(
-            null,
-            Buffer.concat([sizeBuffer, stringToBuffer(packet)]),
-          );
+          return doneCallback(null, Buffer.concat([sizeBuffer, stringToBuffer(packet)]));
         }
         sizeBuffer = Buffer.allocUnsafe(encodingLength.length + 2);
         sizeBuffer[0] = 1;
@@ -20067,7 +19155,8 @@ var require_parser_v3 = __commonJS({
         var strLen = "";
         var isString = bufferTail[0] === 0;
         for (i = 1; ; i++) {
-          if (bufferTail[i] === 255) break;
+          if (bufferTail[i] === 255)
+            break;
           if (strLen.length > 310) {
             return callback(err, 0, 1);
           }
@@ -20076,7 +19165,8 @@ var require_parser_v3 = __commonJS({
         bufferTail = bufferTail.slice(strLen.length + 1);
         var msgLength = parseInt(strLen, 10);
         var msg = bufferTail.slice(1, msgLength + 1);
-        if (isString) msg = bufferToString(msg);
+        if (isString)
+          msg = bufferToString(msg);
         buffers.push(msg);
         bufferTail = bufferTail.slice(msgLength + 1);
       }
@@ -20086,7 +19176,7 @@ var require_parser_v3 = __commonJS({
         callback(decodePacket(buffer, binaryType, true), i, total);
       }
     }
-  },
+  }
 });
 
 // node_modules/engine.io/build/transport.js
@@ -20100,18 +19190,14 @@ var require_transport2 = __commonJS({
     var parser_v3 = require_parser_v3();
     var debug_1 = require_src();
     var debug = (0, debug_1.default)("engine:transport");
-    function noop() {}
+    function noop() {
+    }
     var Transport = class extends events_1.EventEmitter {
       get readyState() {
         return this._readyState;
       }
       set readyState(state) {
-        debug(
-          "readyState updated from %s to %s (%s)",
-          this._readyState,
-          state,
-          this.name,
-        );
+        debug("readyState updated from %s to %s (%s)", this._readyState, state, this.name);
         this._readyState = state;
       }
       /**
@@ -20142,7 +19228,8 @@ var require_transport2 = __commonJS({
        * @param req
        * @package
        */
-      onRequest(req) {}
+      onRequest(req) {
+      }
       /**
        * Closes the transport.
        *
@@ -20201,7 +19288,7 @@ var require_transport2 = __commonJS({
     };
     exports2.Transport = Transport;
     Transport.upgradesTo = [];
-  },
+  }
 });
 
 // node_modules/engine.io/build/transports/polling.js
@@ -20217,7 +19304,7 @@ var require_polling2 = __commonJS({
     var debug = (0, debug_1.default)("engine:polling");
     var compressionMethods = {
       gzip: zlib_1.createGzip,
-      deflate: zlib_1.createDeflate,
+      deflate: zlib_1.createDeflate
     };
     var Polling = class extends transport_1.Transport {
       /**
@@ -20295,8 +19382,7 @@ var require_polling2 = __commonJS({
           res.end();
           return;
         }
-        const isBinary =
-          "application/octet-stream" === req.headers["content-type"];
+        const isBinary = "application/octet-stream" === req.headers["content-type"];
         if (isBinary && this.protocol === 4) {
           return this.onError("invalid content");
         }
@@ -20333,14 +19419,15 @@ var require_polling2 = __commonJS({
             // text/html is required instead of text/plain to avoid an
             // unwanted download dialog on certain user-agents (GH-43)
             "Content-Type": "text/html",
-            "Content-Length": "2",
+            "Content-Length": "2"
           };
           res.writeHead(200, this.headers(req, headers));
           res.end("ok");
           cleanup();
         };
         req.on("close", onClose);
-        if (!isBinary) req.setEncoding("utf8");
+        if (!isBinary)
+          req.setEncoding("utf8");
         req.on("data", onData);
         req.on("end", onEnd);
       }
@@ -20418,15 +19505,12 @@ var require_polling2 = __commonJS({
        */
       doWrite(data, options, callback) {
         const isString = typeof data === "string";
-        const contentType = isString
-          ? "text/plain; charset=UTF-8"
-          : "application/octet-stream";
+        const contentType = isString ? "text/plain; charset=UTF-8" : "application/octet-stream";
         const headers = {
-          "Content-Type": contentType,
+          "Content-Type": contentType
         };
         const respond = (data2) => {
-          headers["Content-Length"] =
-            "string" === typeof data2 ? Buffer.byteLength(data2) : data2.length;
+          headers["Content-Length"] = "string" === typeof data2 ? Buffer.byteLength(data2) : data2.length;
           this.res.writeHead(200, this.headers(this.req, headers));
           this.res.end(data2);
           callback();
@@ -20465,16 +19549,12 @@ var require_polling2 = __commonJS({
         debug("compressing");
         const buffers = [];
         let nread = 0;
-        compressionMethods[encoding](this.httpCompression)
-          .on("error", callback)
-          .on("data", function (chunk) {
-            buffers.push(chunk);
-            nread += chunk.length;
-          })
-          .on("end", function () {
-            callback(null, Buffer.concat(buffers, nread));
-          })
-          .end(data);
+        compressionMethods[encoding](this.httpCompression).on("error", callback).on("data", function(chunk) {
+          buffers.push(chunk);
+          nread += chunk.length;
+        }).on("end", function() {
+          callback(null, Buffer.concat(buffers, nread));
+        }).end(data);
       }
       /**
        * Closes the transport.
@@ -20524,7 +19604,7 @@ var require_polling2 = __commonJS({
       }
     };
     exports2.Polling = Polling;
-  },
+  }
 });
 
 // node_modules/engine.io/build/transports/polling-jsonp.js
@@ -20543,29 +19623,26 @@ var require_polling_jsonp = __commonJS({
        */
       constructor(req) {
         super(req);
-        this.head =
-          "___eio[" + (req._query.j || "").replace(/[^0-9]/g, "") + "](";
+        this.head = "___eio[" + (req._query.j || "").replace(/[^0-9]/g, "") + "](";
         this.foot = ");";
       }
       onData(data) {
         data = qs.parse(data).d;
         if ("string" === typeof data) {
-          data = data.replace(rSlashes, function (match, slashes) {
+          data = data.replace(rSlashes, function(match, slashes) {
             return slashes ? match : "\n";
           });
           super.onData(data.replace(rDoubleSlashes, "\\n"));
         }
       }
       doWrite(data, options, callback) {
-        const js = JSON.stringify(data)
-          .replace(/\u2028/g, "\\u2028")
-          .replace(/\u2029/g, "\\u2029");
+        const js = JSON.stringify(data).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
         data = this.head + js + this.foot;
         super.doWrite(data, options, callback);
       }
     };
     exports2.JSONP = JSONP;
-  },
+  }
 });
 
 // node_modules/engine.io/build/transports/websocket.js
@@ -20634,16 +19711,9 @@ var require_websocket3 = __commonJS({
           const packet = packets[i];
           const isLast = i + 1 === packets.length;
           if (this._canSendPreEncodedFrame(packet)) {
-            this.socket._sender.sendFrame(
-              packet.options.wsPreEncodedFrame,
-              isLast ? this._onSentLast : this._onSent,
-            );
+            this.socket._sender.sendFrame(packet.options.wsPreEncodedFrame, isLast ? this._onSentLast : this._onSent);
           } else {
-            this.parser.encodePacket(
-              packet,
-              this.supportsBinary,
-              isLast ? this._doSendLast : this._doSend,
-            );
+            this.parser.encodePacket(packet, this.supportsBinary, isLast ? this._doSendLast : this._doSend);
           }
         }
       }
@@ -20654,18 +19724,8 @@ var require_websocket3 = __commonJS({
        */
       _canSendPreEncodedFrame(packet) {
         var _a, _b, _c;
-        return (
-          !this.perMessageDeflate && // @ts-expect-error use of untyped member
-          typeof ((_b =
-            (_a = this.socket) === null || _a === void 0
-              ? void 0
-              : _a._sender) === null || _b === void 0
-            ? void 0
-            : _b.sendFrame) === "function" &&
-          ((_c = packet.options) === null || _c === void 0
-            ? void 0
-            : _c.wsPreEncodedFrame) !== void 0
-        );
+        return !this.perMessageDeflate && // @ts-expect-error use of untyped member
+        typeof ((_b = (_a = this.socket) === null || _a === void 0 ? void 0 : _a._sender) === null || _b === void 0 ? void 0 : _b.sendFrame) === "function" && ((_c = packet.options) === null || _c === void 0 ? void 0 : _c.wsPreEncodedFrame) !== void 0;
       }
       doClose(fn) {
         debug("closing");
@@ -20674,7 +19734,7 @@ var require_websocket3 = __commonJS({
       }
     };
     exports2.WebSocket = WebSocket;
-  },
+  }
 });
 
 // node_modules/engine.io/build/transports/webtransport.js
@@ -20691,8 +19751,7 @@ var require_webtransport2 = __commonJS({
       constructor(session, stream, reader) {
         super({ _query: { EIO: "4" } });
         this.session = session;
-        const transformStream = (0,
-        engine_io_parser_1.createPacketEncoderStream)();
+        const transformStream = (0, engine_io_parser_1.createPacketEncoderStream)();
         transformStream.readable.pipeTo(stream.writable).catch(() => {
           debug("the stream was closed");
         });
@@ -20739,7 +19798,7 @@ var require_webtransport2 = __commonJS({
       }
     };
     exports2.WebTransport = WebTransport2;
-  },
+  }
 });
 
 // node_modules/engine.io/build/transports/index.js
@@ -20754,7 +19813,7 @@ var require_transports2 = __commonJS({
     exports2.default = {
       polling,
       websocket: websocket_1.WebSocket,
-      webtransport: webtransport_1.WebTransport,
+      webtransport: webtransport_1.WebTransport
     };
     function polling(req) {
       if ("string" === typeof req._query.j) {
@@ -20764,7 +19823,7 @@ var require_transports2 = __commonJS({
       }
     }
     polling.upgradesTo = ["websocket", "webtransport"];
-  },
+  }
 });
 
 // node_modules/engine.io/build/socket.js
@@ -20819,16 +19878,13 @@ var require_socket3 = __commonJS({
       onOpen() {
         this.readyState = "open";
         this.transport.sid = this.id;
-        this.sendPacket(
-          "open",
-          JSON.stringify({
-            sid: this.id,
-            upgrades: this.getAvailableUpgrades(),
-            pingInterval: this.server.opts.pingInterval,
-            pingTimeout: this.server.opts.pingTimeout,
-            maxPayload: this.server.opts.maxHttpBufferSize,
-          }),
-        );
+        this.sendPacket("open", JSON.stringify({
+          sid: this.id,
+          upgrades: this.getAvailableUpgrades(),
+          pingInterval: this.server.opts.pingInterval,
+          pingTimeout: this.server.opts.pingTimeout,
+          maxPayload: this.server.opts.maxHttpBufferSize
+        }));
         if (this.server.opts.initialPacket) {
           this.sendPacket("message", this.server.opts.initialPacket);
         }
@@ -20899,10 +19955,7 @@ var require_socket3 = __commonJS({
        */
       schedulePing() {
         this.pingIntervalTimer = (0, timers_1.setTimeout)(() => {
-          debug(
-            "writing ping packet - expecting pong within %sms",
-            this.server.opts.pingTimeout,
-          );
+          debug("writing ping packet - expecting pong within %sms", this.server.opts.pingTimeout);
           this.sendPacket("ping");
           this.resetPingTimeout();
         }, this.server.opts.pingInterval);
@@ -20914,15 +19967,11 @@ var require_socket3 = __commonJS({
        */
       resetPingTimeout() {
         (0, timers_1.clearTimeout)(this.pingTimeoutTimer);
-        this.pingTimeoutTimer = (0, timers_1.setTimeout)(
-          () => {
-            if (this.readyState === "closed") return;
-            this.onClose("ping timeout");
-          },
-          this.protocol === 3
-            ? this.server.opts.pingInterval + this.server.opts.pingTimeout
-            : this.server.opts.pingTimeout,
-        );
+        this.pingTimeoutTimer = (0, timers_1.setTimeout)(() => {
+          if (this.readyState === "closed")
+            return;
+          this.onClose("ping timeout");
+        }, this.protocol === 3 ? this.server.opts.pingInterval + this.server.opts.pingTimeout : this.server.opts.pingTimeout);
       }
       /**
        * Attaches handlers for the given transport.
@@ -20942,7 +19991,7 @@ var require_socket3 = __commonJS({
         this.transport.on("packet", onPacket);
         this.transport.on("drain", onDrain);
         this.transport.once("close", onClose);
-        this.cleanupFn.push(function () {
+        this.cleanupFn.push(function() {
           transport.removeListener("error", onError);
           transport.removeListener("ready", onReady);
           transport.removeListener("packet", onPacket);
@@ -20974,11 +20023,7 @@ var require_socket3 = __commonJS({
        */
       /* private */
       _maybeUpgrade(transport) {
-        debug(
-          'might upgrade socket transport from "%s" to "%s"',
-          this.transport.name,
-          transport.name,
-        );
+        debug('might upgrade socket transport from "%s" to "%s"', this.transport.name, transport.name);
         this.upgrading = true;
         const upgradeTimeoutTimer = (0, timers_1.setTimeout)(() => {
           debug("client did not complete upgrade - closing transport");
@@ -20995,10 +20040,7 @@ var require_socket3 = __commonJS({
             this.emit("upgrading", transport);
             clearInterval(checkIntervalTimer);
             checkIntervalTimer = setInterval(check, 100);
-          } else if (
-            "upgrade" === packet.type &&
-            this.readyState !== "closed"
-          ) {
+          } else if ("upgrade" === packet.type && this.readyState !== "closed") {
             debug("got upgrade packet - upgrading");
             cleanup();
             this.transport.discard();
@@ -21061,7 +20103,7 @@ var require_socket3 = __commonJS({
           cleanup = this.cleanupFn.shift();
           cleanup();
         }
-        this.transport.on("error", function () {
+        this.transport.on("error", function() {
           debug("error triggered by discarded transport");
         });
         this.transport.close();
@@ -21129,12 +20171,14 @@ var require_socket3 = __commonJS({
           options.compress = options.compress !== false;
           const packet = {
             type: type2,
-            options,
+            options
           };
-          if (data) packet.data = data;
+          if (data)
+            packet.data = data;
           this.emit("packetCreate", packet);
           this.writeBuffer.push(packet);
-          if ("function" === typeof callback) this.packetsFn.push(callback);
+          if ("function" === typeof callback)
+            this.packetsFn.push(callback);
           this.flush();
         }
       }
@@ -21144,11 +20188,7 @@ var require_socket3 = __commonJS({
        * @private
        */
       flush() {
-        if (
-          "closed" !== this.readyState &&
-          this.transport.writable &&
-          this.writeBuffer.length
-        ) {
+        if ("closed" !== this.readyState && this.transport.writable && this.writeBuffer.length) {
           debug("flushing buffer to transport");
           this.emit("flush", this.writeBuffer);
           this.server.emit("flush", this, this.writeBuffer);
@@ -21188,19 +20228,14 @@ var require_socket3 = __commonJS({
        * @return {Socket} for chaining
        */
       close(discard) {
-        if (
-          discard &&
-          (this.readyState === "open" || this.readyState === "closing")
-        ) {
+        if (discard && (this.readyState === "open" || this.readyState === "closing")) {
           return this.closeTransport(discard);
         }
-        if ("open" !== this.readyState) return;
+        if ("open" !== this.readyState)
+          return;
         this.readyState = "closing";
         if (this.writeBuffer.length) {
-          debug(
-            "there are %d remaining packets in the buffer, waiting for the 'drain' event",
-            this.writeBuffer.length,
-          );
+          debug("there are %d remaining packets in the buffer, waiting for the 'drain' event", this.writeBuffer.length);
           this.once("drain", () => {
             debug("all packets have been sent, closing the transport");
             this.closeTransport(discard);
@@ -21218,12 +20253,13 @@ var require_socket3 = __commonJS({
        */
       closeTransport(discard) {
         debug("closing the transport (discard? %s)", !!discard);
-        if (discard) this.transport.discard();
+        if (discard)
+          this.transport.discard();
         this.transport.close(this.onClose.bind(this, "forced close"));
       }
     };
     exports2.Socket = Socket;
-  },
+  }
 });
 
 // node_modules/cookie/index.js
@@ -21235,10 +20271,8 @@ var require_cookie = __commonJS({
     var __toString = Object.prototype.toString;
     var __hasOwnProperty = Object.prototype.hasOwnProperty;
     var cookieNameRegExp = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
-    var cookieValueRegExp =
-      /^("?)[\u0021\u0023-\u002B\u002D-\u003A\u003C-\u005B\u005D-\u007E]*\1$/;
-    var domainValueRegExp =
-      /^([.]?[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)([.][a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
+    var cookieValueRegExp = /^("?)[\u0021\u0023-\u002B\u002D-\u003A\u003C-\u005B\u005D-\u007E]*\1$/;
+    var domainValueRegExp = /^([.]?[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)([.][a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
     var pathValueRegExp = /^[\u0020-\u003A\u003D-\u007E]*$/;
     function parse(str, opt) {
       if (typeof str !== "string") {
@@ -21247,7 +20281,7 @@ var require_cookie = __commonJS({
       var obj = {};
       var len = str.length;
       if (len < 2) return obj;
-      var dec = (opt && opt.decode) || decode;
+      var dec = opt && opt.decode || decode;
       var index = 0;
       var eqIdx = 0;
       var endIdx = 0;
@@ -21267,10 +20301,7 @@ var require_cookie = __commonJS({
         if (!__hasOwnProperty.call(obj, key)) {
           var valStartIdx = startIndex(str, eqIdx + 1, endIdx);
           var valEndIdx = endIndex(str, endIdx, valStartIdx);
-          if (
-            str.charCodeAt(valStartIdx) === 34 &&
-            str.charCodeAt(valEndIdx - 1) === 34
-          ) {
+          if (str.charCodeAt(valStartIdx) === 34 && str.charCodeAt(valEndIdx - 1) === 34) {
             valStartIdx++;
             valEndIdx--;
           }
@@ -21296,7 +20327,7 @@ var require_cookie = __commonJS({
       return min;
     }
     function serialize(name, val, opt) {
-      var enc = (opt && opt.encode) || encodeURIComponent;
+      var enc = opt && opt.encode || encodeURIComponent;
       if (typeof enc !== "function") {
         throw new TypeError("option encode is invalid");
       }
@@ -21345,10 +20376,7 @@ var require_cookie = __commonJS({
         str += "; Partitioned";
       }
       if (opt.priority) {
-        var priority =
-          typeof opt.priority === "string"
-            ? opt.priority.toLowerCase()
-            : opt.priority;
+        var priority = typeof opt.priority === "string" ? opt.priority.toLowerCase() : opt.priority;
         switch (priority) {
           case "low":
             str += "; Priority=Low";
@@ -21364,10 +20392,7 @@ var require_cookie = __commonJS({
         }
       }
       if (opt.sameSite) {
-        var sameSite =
-          typeof opt.sameSite === "string"
-            ? opt.sameSite.toLowerCase()
-            : opt.sameSite;
+        var sameSite = typeof opt.sameSite === "string" ? opt.sameSite.toLowerCase() : opt.sameSite;
         switch (sameSite) {
           case true:
             str += "; SameSite=Strict";
@@ -21400,7 +20425,7 @@ var require_cookie = __commonJS({
         return str;
       }
     }
-  },
+  }
 });
 
 // node_modules/object-assign/index.js
@@ -21412,9 +20437,7 @@ var require_object_assign = __commonJS({
     var propIsEnumerable = Object.prototype.propertyIsEnumerable;
     function toObject(val) {
       if (val === null || val === void 0) {
-        throw new TypeError(
-          "Object.assign cannot be called with null or undefined",
-        );
+        throw new TypeError("Object.assign cannot be called with null or undefined");
       }
       return Object(val);
     }
@@ -21432,20 +20455,17 @@ var require_object_assign = __commonJS({
         for (var i = 0; i < 10; i++) {
           test2["_" + String.fromCharCode(i)] = i;
         }
-        var order2 = Object.getOwnPropertyNames(test2).map(function (n) {
+        var order2 = Object.getOwnPropertyNames(test2).map(function(n) {
           return test2[n];
         });
         if (order2.join("") !== "0123456789") {
           return false;
         }
         var test3 = {};
-        "abcdefghijklmnopqrst".split("").forEach(function (letter) {
+        "abcdefghijklmnopqrst".split("").forEach(function(letter) {
           test3[letter] = letter;
         });
-        if (
-          Object.keys(Object.assign({}, test3)).join("") !==
-          "abcdefghijklmnopqrst"
-        ) {
+        if (Object.keys(Object.assign({}, test3)).join("") !== "abcdefghijklmnopqrst") {
           return false;
         }
         return true;
@@ -21453,31 +20473,29 @@ var require_object_assign = __commonJS({
         return false;
       }
     }
-    module2.exports = shouldUseNative()
-      ? Object.assign
-      : function (target, source) {
-          var from;
-          var to = toObject(target);
-          var symbols;
-          for (var s = 1; s < arguments.length; s++) {
-            from = Object(arguments[s]);
-            for (var key in from) {
-              if (hasOwnProperty.call(from, key)) {
-                to[key] = from[key];
-              }
-            }
-            if (getOwnPropertySymbols) {
-              symbols = getOwnPropertySymbols(from);
-              for (var i = 0; i < symbols.length; i++) {
-                if (propIsEnumerable.call(from, symbols[i])) {
-                  to[symbols[i]] = from[symbols[i]];
-                }
-              }
+    module2.exports = shouldUseNative() ? Object.assign : function(target, source) {
+      var from;
+      var to = toObject(target);
+      var symbols;
+      for (var s = 1; s < arguments.length; s++) {
+        from = Object(arguments[s]);
+        for (var key in from) {
+          if (hasOwnProperty.call(from, key)) {
+            to[key] = from[key];
+          }
+        }
+        if (getOwnPropertySymbols) {
+          symbols = getOwnPropertySymbols(from);
+          for (var i = 0; i < symbols.length; i++) {
+            if (propIsEnumerable.call(from, symbols[i])) {
+              to[symbols[i]] = from[symbols[i]];
             }
           }
-          return to;
-        };
-  },
+        }
+      }
+      return to;
+    };
+  }
 });
 
 // node_modules/vary/index.js
@@ -21546,17 +20564,17 @@ var require_vary = __commonJS({
       }
       var val = res.getHeader("Vary") || "";
       var header = Array.isArray(val) ? val.join(", ") : String(val);
-      if ((val = append(header, field))) {
+      if (val = append(header, field)) {
         res.setHeader("Vary", val);
       }
     }
-  },
+  }
 });
 
 // node_modules/cors/lib/index.js
 var require_lib = __commonJS({
   "node_modules/cors/lib/index.js"(exports2, module2) {
-    (function () {
+    (function() {
       "use strict";
       var assign = require_object_assign();
       var vary = require_vary();
@@ -21564,7 +20582,7 @@ var require_lib = __commonJS({
         origin: "*",
         methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
         preflightContinue: false,
-        optionsSuccessStatus: 204,
+        optionsSuccessStatus: 204
       };
       function isString(s) {
         return typeof s === "string" || s instanceof String;
@@ -21586,43 +20604,31 @@ var require_lib = __commonJS({
         }
       }
       function configureOrigin(options, req) {
-        var requestOrigin = req.headers.origin,
-          headers = [],
-          isAllowed;
+        var requestOrigin = req.headers.origin, headers = [], isAllowed;
         if (!options.origin || options.origin === "*") {
-          headers.push([
-            {
-              key: "Access-Control-Allow-Origin",
-              value: "*",
-            },
-          ]);
+          headers.push([{
+            key: "Access-Control-Allow-Origin",
+            value: "*"
+          }]);
         } else if (isString(options.origin)) {
-          headers.push([
-            {
-              key: "Access-Control-Allow-Origin",
-              value: options.origin,
-            },
-          ]);
-          headers.push([
-            {
-              key: "Vary",
-              value: "Origin",
-            },
-          ]);
+          headers.push([{
+            key: "Access-Control-Allow-Origin",
+            value: options.origin
+          }]);
+          headers.push([{
+            key: "Vary",
+            value: "Origin"
+          }]);
         } else {
           isAllowed = isOriginAllowed(requestOrigin, options.origin);
-          headers.push([
-            {
-              key: "Access-Control-Allow-Origin",
-              value: isAllowed ? requestOrigin : false,
-            },
-          ]);
-          headers.push([
-            {
-              key: "Vary",
-              value: "Origin",
-            },
-          ]);
+          headers.push([{
+            key: "Access-Control-Allow-Origin",
+            value: isAllowed ? requestOrigin : false
+          }]);
+          headers.push([{
+            key: "Vary",
+            value: "Origin"
+          }]);
         }
         return headers;
       }
@@ -21633,14 +20639,14 @@ var require_lib = __commonJS({
         }
         return {
           key: "Access-Control-Allow-Methods",
-          value: methods,
+          value: methods
         };
       }
       function configureCredentials(options) {
         if (options.credentials === true) {
           return {
             key: "Access-Control-Allow-Credentials",
-            value: "true",
+            value: "true"
           };
         }
         return null;
@@ -21650,22 +20656,18 @@ var require_lib = __commonJS({
         var headers = [];
         if (!allowedHeaders) {
           allowedHeaders = req.headers["access-control-request-headers"];
-          headers.push([
-            {
-              key: "Vary",
-              value: "Access-Control-Request-Headers",
-            },
-          ]);
+          headers.push([{
+            key: "Vary",
+            value: "Access-Control-Request-Headers"
+          }]);
         } else if (allowedHeaders.join) {
           allowedHeaders = allowedHeaders.join(",");
         }
         if (allowedHeaders && allowedHeaders.length) {
-          headers.push([
-            {
-              key: "Access-Control-Allow-Headers",
-              value: allowedHeaders,
-            },
-          ]);
+          headers.push([{
+            key: "Access-Control-Allow-Headers",
+            value: allowedHeaders
+          }]);
         }
         return headers;
       }
@@ -21679,19 +20681,17 @@ var require_lib = __commonJS({
         if (headers && headers.length) {
           return {
             key: "Access-Control-Expose-Headers",
-            value: headers,
+            value: headers
           };
         }
         return null;
       }
       function configureMaxAge(options) {
-        var maxAge =
-          (typeof options.maxAge === "number" || options.maxAge) &&
-          options.maxAge.toString();
+        var maxAge = (typeof options.maxAge === "number" || options.maxAge) && options.maxAge.toString();
         if (maxAge && maxAge.length) {
           return {
             key: "Access-Control-Max-Age",
-            value: maxAge,
+            value: maxAge
           };
         }
         return null;
@@ -21711,9 +20711,7 @@ var require_lib = __commonJS({
         }
       }
       function cors(options, req, res, next) {
-        var headers = [],
-          method =
-            req.method && req.method.toUpperCase && req.method.toUpperCase();
+        var headers = [], method = req.method && req.method.toUpperCase && req.method.toUpperCase();
         if (method === "OPTIONS") {
           headers.push(configureOrigin(options, req));
           headers.push(configureCredentials(options));
@@ -21742,29 +20740,26 @@ var require_lib = __commonJS({
         if (typeof o === "function") {
           optionsCallback = o;
         } else {
-          optionsCallback = function (req, cb) {
+          optionsCallback = function(req, cb) {
             cb(null, o);
           };
         }
         return function corsMiddleware(req, res, next) {
-          optionsCallback(req, function (err, options) {
+          optionsCallback(req, function(err, options) {
             if (err) {
               next(err);
             } else {
               var corsOptions = assign({}, defaults, options);
               var originCallback = null;
-              if (
-                corsOptions.origin &&
-                typeof corsOptions.origin === "function"
-              ) {
+              if (corsOptions.origin && typeof corsOptions.origin === "function") {
                 originCallback = corsOptions.origin;
               } else if (corsOptions.origin) {
-                originCallback = function (origin, cb) {
+                originCallback = function(origin, cb) {
                   cb(null, corsOptions.origin);
                 };
               }
               if (originCallback) {
-                originCallback(req.headers.origin, function (err2, origin) {
+                originCallback(req.headers.origin, function(err2, origin) {
                   if (err2 || !origin) {
                     next(err2);
                   } else {
@@ -21781,7 +20776,7 @@ var require_lib = __commonJS({
       }
       module2.exports = middlewareWrapper;
     })();
-  },
+  }
 });
 
 // node_modules/engine.io/build/server.js
@@ -21807,7 +20802,8 @@ var require_server = __commonJS({
         if (typeof parsed.sid === "string") {
           return parsed.sid;
         }
-      } catch (e) {}
+      } catch (e) {
+      }
     }
     var BaseServer = class extends events_1.EventEmitter {
       /**
@@ -21820,46 +20816,37 @@ var require_server = __commonJS({
         this.middlewares = [];
         this.clients = {};
         this.clientsCount = 0;
-        this.opts = Object.assign(
-          {
-            wsEngine: ws_1.Server,
-            pingTimeout: 2e4,
-            pingInterval: 25e3,
-            upgradeTimeout: 1e4,
-            maxHttpBufferSize: 1e6,
-            transports: ["polling", "websocket"],
-            // WebTransport is disabled by default
-            allowUpgrades: true,
-            httpCompression: {
-              threshold: 1024,
-            },
-            cors: false,
-            allowEIO3: false,
+        this.opts = Object.assign({
+          wsEngine: ws_1.Server,
+          pingTimeout: 2e4,
+          pingInterval: 25e3,
+          upgradeTimeout: 1e4,
+          maxHttpBufferSize: 1e6,
+          transports: ["polling", "websocket"],
+          // WebTransport is disabled by default
+          allowUpgrades: true,
+          httpCompression: {
+            threshold: 1024
           },
-          opts,
-        );
+          cors: false,
+          allowEIO3: false
+        }, opts);
         if (opts.cookie) {
-          this.opts.cookie = Object.assign(
-            {
-              name: "io",
-              path: "/",
-              // @ts-ignore
-              httpOnly: opts.cookie.path !== false,
-              sameSite: "lax",
-            },
-            opts.cookie,
-          );
+          this.opts.cookie = Object.assign({
+            name: "io",
+            path: "/",
+            // @ts-ignore
+            httpOnly: opts.cookie.path !== false,
+            sameSite: "lax"
+          }, opts.cookie);
         }
         if (this.opts.cors) {
           this.use(require_lib()(this.opts.cors));
         }
         if (opts.perMessageDeflate) {
-          this.opts.perMessageDeflate = Object.assign(
-            {
-              threshold: 1024,
-            },
-            opts.perMessageDeflate,
-          );
+          this.opts.perMessageDeflate = Object.assign({
+            threshold: 1024
+          }, opts.perMessageDeflate);
         }
         this.init();
       }
@@ -21879,7 +20866,8 @@ var require_server = __commonJS({
        * Returns a list of available transports for upgrade given a certain transport.
        */
       upgrades(transport) {
-        if (!this.opts.allowUpgrades) return [];
+        if (!this.opts.allowUpgrades)
+          return [];
         return transports_1.default[transport].upgradesTo || [];
       }
       /**
@@ -21893,10 +20881,7 @@ var require_server = __commonJS({
        */
       verify(req, upgrade, fn) {
         const transport = req._query.transport;
-        if (
-          !~this.opts.transports.indexOf(transport) ||
-          transport === "webtransport"
-        ) {
+        if (!~this.opts.transports.indexOf(transport) || transport === "webtransport") {
           debug('unknown transport "%s"', transport);
           return fn(Server.errors.UNKNOWN_TRANSPORT, { transport });
         }
@@ -21907,7 +20892,7 @@ var require_server = __commonJS({
           debug("origin header invalid");
           return fn(Server.errors.BAD_REQUEST, {
             name: "INVALID_ORIGIN",
-            origin,
+            origin
           });
         }
         const sid = req._query.sid;
@@ -21915,7 +20900,7 @@ var require_server = __commonJS({
           if (!this.clients.hasOwnProperty(sid)) {
             debug('unknown sid "%s"', sid);
             return fn(Server.errors.UNKNOWN_SID, {
-              sid,
+              sid
             });
           }
           const previousTransport = this.clients[sid].transport.name;
@@ -21924,26 +20909,27 @@ var require_server = __commonJS({
             return fn(Server.errors.BAD_REQUEST, {
               name: "TRANSPORT_MISMATCH",
               transport,
-              previousTransport,
+              previousTransport
             });
           }
         } else {
           if ("GET" !== req.method) {
             return fn(Server.errors.BAD_HANDSHAKE_METHOD, {
-              method: req.method,
+              method: req.method
             });
           }
           if (transport === "websocket" && !upgrade) {
             debug("invalid transport upgrade");
             return fn(Server.errors.BAD_REQUEST, {
-              name: "TRANSPORT_HANDSHAKE_ERROR",
+              name: "TRANSPORT_HANDSHAKE_ERROR"
             });
           }
-          if (!this.opts.allowRequest) return fn();
+          if (!this.opts.allowRequest)
+            return fn();
           return this.opts.allowRequest(req, (message, success) => {
             if (!success) {
               return fn(Server.errors.FORBIDDEN, {
-                message,
+                message
               });
             }
             fn();
@@ -22030,11 +21016,10 @@ var require_server = __commonJS({
           this.emit("connection_error", {
             req,
             code: Server.errors.UNSUPPORTED_PROTOCOL_VERSION,
-            message:
-              Server.errorMessages[Server.errors.UNSUPPORTED_PROTOCOL_VERSION],
+            message: Server.errorMessages[Server.errors.UNSUPPORTED_PROTOCOL_VERSION],
             context: {
-              protocol,
-            },
+              protocol
+            }
           });
           closeConnection(Server.errors.UNSUPPORTED_PROTOCOL_VERSION);
           return;
@@ -22050,8 +21035,8 @@ var require_server = __commonJS({
             message: Server.errorMessages[Server.errors.BAD_REQUEST],
             context: {
               name: "ID_GENERATION_ERROR",
-              error: e,
-            },
+              error: e
+            }
           });
           closeConnection(Server.errors.BAD_REQUEST);
           return;
@@ -22073,8 +21058,8 @@ var require_server = __commonJS({
             message: Server.errorMessages[Server.errors.BAD_REQUEST],
             context: {
               name: "TRANSPORT_HANDSHAKE_ERROR",
-              error: e,
-            },
+              error: e
+            }
           });
           closeConnection(Server.errors.BAD_REQUEST);
           return;
@@ -22086,11 +21071,7 @@ var require_server = __commonJS({
             if (this.opts.cookie) {
               headers["Set-Cookie"] = [
                 // @ts-ignore
-                (0, cookie_1.serialize)(
-                  this.opts.cookie.name,
-                  id,
-                  this.opts.cookie,
-                ),
+                (0, cookie_1.serialize)(this.opts.cookie.name, id, this.opts.cookie)
               ];
             }
             this.emit("initial_headers", headers, req2);
@@ -22109,9 +21090,7 @@ var require_server = __commonJS({
       }
       async onWebTransportSession(session) {
         const timeout = setTimeout(() => {
-          debug(
-            "the client failed to establish a bidirectional stream in the given period",
-          );
+          debug("the client failed to establish a bidirectional stream in the given period");
           session.close();
         }, this.opts.upgradeTimeout);
         const streamReader = session.incomingBidirectionalStreams.getReader();
@@ -22121,11 +21100,7 @@ var require_server = __commonJS({
           return;
         }
         const stream = result.value;
-        const transformStream = (0,
-        engine_io_parser_1.createPacketDecoderStream)(
-          this.opts.maxHttpBufferSize,
-          "nodebuffer",
-        );
+        const transformStream = (0, engine_io_parser_1.createPacketDecoderStream)(this.opts.maxHttpBufferSize, "nodebuffer");
         const reader = stream.readable.pipeThrough(transformStream).getReader();
         const { value, done } = await reader.read();
         if (done) {
@@ -22138,11 +21113,7 @@ var require_server = __commonJS({
           return session.close();
         }
         if (value.data === void 0) {
-          const transport = new webtransport_1.WebTransport(
-            session,
-            stream,
-            reader,
-          );
+          const transport = new webtransport_1.WebTransport(session, stream, reader);
           const id = base64id.generateId();
           debug('handshaking client "%s" (WebTransport)', id);
           const socket = new socket_1.Socket(id, this, transport, null, 4);
@@ -22172,11 +21143,7 @@ var require_server = __commonJS({
           session.close();
         } else {
           debug("upgrading existing transport");
-          const transport = new webtransport_1.WebTransport(
-            session,
-            stream,
-            reader,
-          );
+          const transport = new webtransport_1.WebTransport(session, stream, reader);
           client._maybeUpgrade(transport);
         }
       }
@@ -22188,7 +21155,7 @@ var require_server = __commonJS({
       BAD_HANDSHAKE_METHOD: 2,
       BAD_REQUEST: 3,
       FORBIDDEN: 4,
-      UNSUPPORTED_PROTOCOL_VERSION: 5,
+      UNSUPPORTED_PROTOCOL_VERSION: 5
     };
     BaseServer.errorMessages = {
       0: "Transport unknown",
@@ -22196,7 +21163,7 @@ var require_server = __commonJS({
       2: "Bad handshake method",
       3: "Bad request",
       4: "Forbidden",
-      5: "Unsupported protocol version",
+      5: "Unsupported protocol version"
     };
     var WebSocketResponse = class {
       constructor(req, socket) {
@@ -22213,8 +21180,10 @@ var require_server = __commonJS({
       removeHeader(name) {
         delete this.req[kResponseHeaders][name];
       }
-      write() {}
-      writeHead() {}
+      write() {
+      }
+      writeHead() {
+      }
       end() {
         this.socket.destroy();
       }
@@ -22226,13 +21195,15 @@ var require_server = __commonJS({
        * @protected
        */
       init() {
-        if (!~this.opts.transports.indexOf("websocket")) return;
-        if (this.ws) this.ws.close();
+        if (!~this.opts.transports.indexOf("websocket"))
+          return;
+        if (this.ws)
+          this.ws.close();
         this.ws = new this.opts.wsEngine({
           noServer: true,
           clientTracking: false,
           perMessageDeflate: this.opts.perMessageDeflate,
-          maxPayload: this.opts.maxHttpBufferSize,
+          maxPayload: this.opts.maxHttpBufferSize
         });
         if (typeof this.ws.on === "function") {
           this.ws.on("headers", (headersArray, req) => {
@@ -22286,7 +21257,7 @@ var require_server = __commonJS({
               req,
               code: errorCode,
               message: _Server.errorMessages[errorCode],
-              context: errorContext,
+              context: errorContext
             });
             abortRequest(res, errorCode, errorContext);
             return;
@@ -22295,16 +21266,13 @@ var require_server = __commonJS({
             debug("setting new request for existing client");
             this.clients[req._query.sid].transport.onRequest(req);
           } else {
-            const closeConnection = (errorCode2, errorContext2) =>
-              abortRequest(res, errorCode2, errorContext2);
+            const closeConnection = (errorCode2, errorContext2) => abortRequest(res, errorCode2, errorContext2);
             this.handshake(req._query.transport, req, closeConnection);
           }
         };
         this._applyMiddlewares(req, res, (err) => {
           if (err) {
-            callback(_Server.errors.BAD_REQUEST, {
-              name: "MIDDLEWARE_FAILURE",
-            });
+            callback(_Server.errors.BAD_REQUEST, { name: "MIDDLEWARE_FAILURE" });
           } else {
             this.verify(req, false, callback);
           }
@@ -22322,7 +21290,7 @@ var require_server = __commonJS({
               req,
               code: errorCode,
               message: _Server.errorMessages[errorCode],
-              context: errorContext,
+              context: errorContext
             });
             abortUpgrade(socket, errorCode, errorContext);
             return;
@@ -22336,9 +21304,7 @@ var require_server = __commonJS({
         };
         this._applyMiddlewares(req, res, (err) => {
           if (err) {
-            callback(_Server.errors.BAD_REQUEST, {
-              name: "MIDDLEWARE_FAILURE",
-            });
+            callback(_Server.errors.BAD_REQUEST, { name: "MIDDLEWARE_FAILURE" });
           } else {
             this.verify(req, true, callback);
           }
@@ -22353,10 +21319,7 @@ var require_server = __commonJS({
        */
       onWebSocket(req, socket, websocket) {
         websocket.on("error", onUpgradeError);
-        if (
-          transports_1.default[req._query.transport] !== void 0 &&
-          !transports_1.default[req._query.transport].prototype.handlesUpgrades
-        ) {
+        if (transports_1.default[req._query.transport] !== void 0 && !transports_1.default[req._query.transport].prototype.handlesUpgrades) {
           debug("transport doesnt handle upgraded requests");
           websocket.close();
           return;
@@ -22382,8 +21345,7 @@ var require_server = __commonJS({
             client._maybeUpgrade(transport);
           }
         } else {
-          const closeConnection = (errorCode, errorContext) =>
-            abortUpgrade(socket, errorCode, errorContext);
+          const closeConnection = (errorCode, errorContext) => abortUpgrade(socket, errorCode, errorContext);
           this.handshake(req._query.transport, req, closeConnection);
         }
         function onUpgradeError() {
@@ -22423,7 +21385,7 @@ var require_server = __commonJS({
             if (check(req)) {
               this.handleUpgrade(req, socket, head);
             } else if (false !== options.destroyUpgrade) {
-              setTimeout(function () {
+              setTimeout(function() {
                 if (socket.writable && socket.bytesWritten <= 0) {
                   socket.on("error", (e) => {
                     debug("error while destroying upgrade: %s", e.message);
@@ -22439,17 +21401,12 @@ var require_server = __commonJS({
     exports2.Server = Server;
     function abortRequest(res, errorCode, errorContext) {
       const statusCode = errorCode === Server.errors.FORBIDDEN ? 403 : 400;
-      const message =
-        errorContext && errorContext.message
-          ? errorContext.message
-          : Server.errorMessages[errorCode];
+      const message = errorContext && errorContext.message ? errorContext.message : Server.errorMessages[errorCode];
       res.writeHead(statusCode, { "Content-Type": "application/json" });
-      res.end(
-        JSON.stringify({
-          code: errorCode,
-          message,
-        }),
-      );
+      res.end(JSON.stringify({
+        code: errorCode,
+        message
+      }));
     }
     function abortUpgrade(socket, errorCode, errorContext = {}) {
       socket.on("error", () => {
@@ -22458,59 +21415,300 @@ var require_server = __commonJS({
       if (socket.writable) {
         const message = errorContext.message || Server.errorMessages[errorCode];
         const length = Buffer.byteLength(message);
-        socket.write(
-          "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-type: text/html\r\nContent-Length: " +
-            length +
-            "\r\n\r\n" +
-            message,
-        );
+        socket.write("HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-type: text/html\r\nContent-Length: " + length + "\r\n\r\n" + message);
       }
       socket.destroy();
     }
     var validHdrChars = [
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       // 0 - 15
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       // 16 - 31
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       // 32 - 47
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       // 48 - 63
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       // 64 - 79
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       // 80 - 95
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       // 96 - 111
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
       // 112 - 127
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       // 128 ...
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
       // ... 255
     ];
     function checkInvalidHeaderChar(val) {
       val += "";
-      if (val.length < 1) return false;
+      if (val.length < 1)
+        return false;
       if (!validHdrChars[val.charCodeAt(0)]) {
         debug('invalid header, index 0, char "%s"', val.charCodeAt(0));
         return true;
       }
-      if (val.length < 2) return false;
+      if (val.length < 2)
+        return false;
       if (!validHdrChars[val.charCodeAt(1)]) {
         debug('invalid header, index 1, char "%s"', val.charCodeAt(1));
         return true;
       }
-      if (val.length < 3) return false;
+      if (val.length < 3)
+        return false;
       if (!validHdrChars[val.charCodeAt(2)]) {
         debug('invalid header, index 2, char "%s"', val.charCodeAt(2));
         return true;
       }
-      if (val.length < 4) return false;
+      if (val.length < 4)
+        return false;
       if (!validHdrChars[val.charCodeAt(3)]) {
         debug('invalid header, index 3, char "%s"', val.charCodeAt(3));
         return true;
@@ -22523,7 +21721,7 @@ var require_server = __commonJS({
       }
       return false;
     }
-  },
+  }
 });
 
 // node_modules/engine.io/build/transports-uws/polling.js
@@ -22539,7 +21737,7 @@ var require_polling3 = __commonJS({
     var debug = (0, debug_1.default)("engine:polling");
     var compressionMethods = {
       gzip: zlib_1.createGzip,
-      deflate: zlib_1.createDeflate,
+      deflate: zlib_1.createDeflate
     };
     var Polling = class extends transport_1.Transport {
       /**
@@ -22629,8 +21827,7 @@ var require_polling3 = __commonJS({
           res.writeStatus("413 Payload Too Large").end();
           return;
         }
-        const isBinary =
-          "application/octet-stream" === req.headers["content-type"];
+        const isBinary = "application/octet-stream" === req.headers["content-type"];
         if (isBinary && this.protocol === 4) {
           return this.onError("invalid content");
         }
@@ -22641,7 +21838,7 @@ var require_polling3 = __commonJS({
         const headers = {
           // text/html is required instead of text/plain to avoid an
           // unwanted download dialog on certain user-agents (GH-43)
-          "Content-Type": "text/html",
+          "Content-Type": "text/html"
         };
         this.headers(req, headers);
         for (let key in headers) {
@@ -22774,11 +21971,9 @@ var require_polling3 = __commonJS({
        */
       doWrite(data, options, callback) {
         const isString = typeof data === "string";
-        const contentType = isString
-          ? "text/plain; charset=UTF-8"
-          : "application/octet-stream";
+        const contentType = isString ? "text/plain; charset=UTF-8" : "application/octet-stream";
         const headers = {
-          "Content-Type": contentType,
+          "Content-Type": contentType
         };
         const respond = (data2) => {
           this.headers(this.req, headers);
@@ -22824,16 +22019,12 @@ var require_polling3 = __commonJS({
         debug("compressing");
         const buffers = [];
         let nread = 0;
-        compressionMethods[encoding](this.httpCompression)
-          .on("error", callback)
-          .on("data", function (chunk) {
-            buffers.push(chunk);
-            nread += chunk.length;
-          })
-          .on("end", function () {
-            callback(null, Buffer.concat(buffers, nread));
-          })
-          .end(data);
+        compressionMethods[encoding](this.httpCompression).on("error", callback).on("data", function(chunk) {
+          buffers.push(chunk);
+          nread += chunk.length;
+        }).on("end", function() {
+          callback(null, Buffer.concat(buffers, nread));
+        }).end(data);
       }
       /**
        * Closes the transport.
@@ -22880,7 +22071,7 @@ var require_polling3 = __commonJS({
       }
     };
     exports2.Polling = Polling;
-  },
+  }
 });
 
 // node_modules/engine.io/build/transports-uws/websocket.js
@@ -22928,9 +22119,7 @@ var require_websocket4 = __commonJS({
           const isLast = i + 1 === packets.length;
           const send = (data) => {
             const isBinary = typeof data !== "string";
-            const compress =
-              this.perMessageDeflate &&
-              Buffer.byteLength(data) > this.perMessageDeflate.threshold;
+            const compress = this.perMessageDeflate && Buffer.byteLength(data) > this.perMessageDeflate.threshold;
             debug('writing "%s"', data);
             this.socket.send(data, isBinary, compress);
             if (isLast) {
@@ -22939,10 +22128,7 @@ var require_websocket4 = __commonJS({
               this.emit("ready");
             }
           };
-          if (
-            packet.options &&
-            typeof packet.options.wsPreEncoded === "string"
-          ) {
+          if (packet.options && typeof packet.options.wsPreEncoded === "string") {
             send(packet.options.wsPreEncoded);
           } else {
             this.parser.encodePacket(packet, this.supportsBinary, send);
@@ -22961,7 +22147,7 @@ var require_websocket4 = __commonJS({
       }
     };
     exports2.WebSocket = WebSocket;
-  },
+  }
 });
 
 // node_modules/engine.io/build/transports-uws/index.js
@@ -22973,9 +22159,9 @@ var require_transports_uws = __commonJS({
     var websocket_1 = require_websocket4();
     exports2.default = {
       polling: polling_1.Polling,
-      websocket: websocket_1.WebSocket,
+      websocket: websocket_1.WebSocket
     };
-  },
+  }
 });
 
 // node_modules/engine.io/build/userver.js
@@ -22989,8 +22175,10 @@ var require_userver = __commonJS({
     var transports_uws_1 = require_transports_uws();
     var debug = (0, debug_1.default)("engine:uws");
     var uServer = class extends server_1.BaseServer {
-      init() {}
-      cleanup() {}
+      init() {
+      }
+      cleanup() {
+      }
       /**
        * Prepares a request by processing the query string.
        *
@@ -23006,7 +22194,7 @@ var require_userver = __commonJS({
           req.headers[key] = value;
         });
         req.connection = {
-          remoteAddress: Buffer.from(res.getRemoteAddressAsText()).toString(),
+          remoteAddress: Buffer.from(res.getRemoteAddressAsText()).toString()
         };
         res.onAborted(() => {
           debug("response has been aborted");
@@ -23035,13 +22223,11 @@ var require_userver = __commonJS({
             transport.emit("ready");
           },
           message: (ws, message, isBinary) => {
-            ws.getUserData().transport.onData(
-              isBinary ? message : Buffer.from(message).toString(),
-            );
+            ws.getUserData().transport.onData(isBinary ? message : Buffer.from(message).toString());
           },
           close: (ws, code, message) => {
             ws.getUserData().transport.onClose(code, message);
-          },
+          }
         });
       }
       _applyMiddlewares(req, res, callback) {
@@ -23064,7 +22250,7 @@ var require_userver = __commonJS({
               req,
               code: errorCode,
               message: server_1.Server.errorMessages[errorCode],
-              context: errorContext,
+              context: errorContext
             });
             this.abortRequest(req.res, errorCode, errorContext);
             return;
@@ -23073,16 +22259,13 @@ var require_userver = __commonJS({
             debug("setting new request for existing client");
             this.clients[req._query.sid].transport.onRequest(req);
           } else {
-            const closeConnection = (errorCode2, errorContext2) =>
-              this.abortRequest(res, errorCode2, errorContext2);
+            const closeConnection = (errorCode2, errorContext2) => this.abortRequest(res, errorCode2, errorContext2);
             this.handshake(req._query.transport, req, closeConnection);
           }
         };
         this._applyMiddlewares(req, res, (err) => {
           if (err) {
-            callback(server_1.Server.errors.BAD_REQUEST, {
-              name: "MIDDLEWARE_FAILURE",
-            });
+            callback(server_1.Server.errors.BAD_REQUEST, { name: "MIDDLEWARE_FAILURE" });
           } else {
             this.verify(req, false, callback);
           }
@@ -23098,7 +22281,7 @@ var require_userver = __commonJS({
               req,
               code: errorCode,
               message: server_1.Server.errorMessages[errorCode],
-              context: errorContext,
+              context: errorContext
             });
             this.abortRequest(res, errorCode, errorContext);
             return;
@@ -23122,12 +22305,7 @@ var require_userver = __commonJS({
               client._maybeUpgrade(transport);
             }
           } else {
-            transport = await this.handshake(
-              req._query.transport,
-              req,
-              (errorCode2, errorContext2) =>
-                this.abortRequest(res, errorCode2, errorContext2),
-            );
+            transport = await this.handshake(req._query.transport, req, (errorCode2, errorContext2) => this.abortRequest(res, errorCode2, errorContext2));
             if (!transport) {
               return;
             }
@@ -23142,43 +22320,27 @@ var require_userver = __commonJS({
           Object.keys(additionalHeaders).forEach((key) => {
             req.res.writeHeader(key, additionalHeaders[key]);
           });
-          res.upgrade(
-            {
-              transport,
-            },
-            req.getHeader("sec-websocket-key"),
-            req.getHeader("sec-websocket-protocol"),
-            req.getHeader("sec-websocket-extensions"),
-            context,
-          );
+          res.upgrade({
+            transport
+          }, req.getHeader("sec-websocket-key"), req.getHeader("sec-websocket-protocol"), req.getHeader("sec-websocket-extensions"), context);
         };
         this._applyMiddlewares(req, res, (err) => {
           if (err) {
-            callback(server_1.Server.errors.BAD_REQUEST, {
-              name: "MIDDLEWARE_FAILURE",
-            });
+            callback(server_1.Server.errors.BAD_REQUEST, { name: "MIDDLEWARE_FAILURE" });
           } else {
             this.verify(req, true, callback);
           }
         });
       }
       abortRequest(res, errorCode, errorContext) {
-        const statusCode =
-          errorCode === server_1.Server.errors.FORBIDDEN
-            ? "403 Forbidden"
-            : "400 Bad Request";
-        const message =
-          errorContext && errorContext.message
-            ? errorContext.message
-            : server_1.Server.errorMessages[errorCode];
+        const statusCode = errorCode === server_1.Server.errors.FORBIDDEN ? "403 Forbidden" : "400 Bad Request";
+        const message = errorContext && errorContext.message ? errorContext.message : server_1.Server.errorMessages[errorCode];
         res.writeStatus(statusCode);
         res.writeHeader("Content-Type", "application/json");
-        res.end(
-          JSON.stringify({
-            code: errorCode,
-            message,
-          }),
-        );
+        res.end(JSON.stringify({
+          code: errorCode,
+          message
+        }));
       }
     };
     exports2.uServer = uServer;
@@ -23207,18 +22369,22 @@ var require_userver = __commonJS({
           this.writeHeader(key, value);
         }
       }
-      removeHeader() {}
+      removeHeader() {
+      }
       // needed by vary: https://github.com/jshttp/vary/blob/5d725d059b3871025cf753e9dfa08924d0bcfa8f/index.js#L134
-      getHeader() {}
+      getHeader() {
+      }
       writeStatus(status) {
-        if (this.isAborted) return;
+        if (this.isAborted)
+          return;
         this.res.writeStatus(status);
         this.statusWritten = true;
         this.writeBufferedHeaders();
         return this;
       }
       writeHeader(key, value) {
-        if (this.isAborted) return;
+        if (this.isAborted)
+          return;
         if (key === "Content-Length") {
           return;
         }
@@ -23234,7 +22400,8 @@ var require_userver = __commonJS({
         });
       }
       end(data) {
-        if (this.isAborted) return;
+        if (this.isAborted)
+          return;
         this.res.cork(() => {
           if (!this.statusWritten) {
             this.writeBufferedHeaders();
@@ -23243,22 +22410,25 @@ var require_userver = __commonJS({
         });
       }
       onData(fn) {
-        if (this.isAborted) return;
+        if (this.isAborted)
+          return;
         this.res.onData(fn);
       }
       onAborted(fn) {
-        if (this.isAborted) return;
+        if (this.isAborted)
+          return;
         this.res.onAborted(() => {
           this.isAborted = true;
           fn();
         });
       }
       cork(fn) {
-        if (this.isAborted) return;
+        if (this.isAborted)
+          return;
         this.res.cork(fn);
       }
     };
-  },
+  }
 });
 
 // node_modules/engine.io/build/engine.io.js
@@ -23266,56 +22436,37 @@ var require_engine_io = __commonJS({
   "node_modules/engine.io/build/engine.io.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.protocol =
-      exports2.Transport =
-      exports2.Socket =
-      exports2.uServer =
-      exports2.parser =
-      exports2.transports =
-      exports2.Server =
-        void 0;
+    exports2.protocol = exports2.Transport = exports2.Socket = exports2.uServer = exports2.parser = exports2.transports = exports2.Server = void 0;
     exports2.listen = listen;
     exports2.attach = attach;
     var http_1 = require("http");
     var server_1 = require_server();
-    Object.defineProperty(exports2, "Server", {
-      enumerable: true,
-      get: function () {
-        return server_1.Server;
-      },
-    });
+    Object.defineProperty(exports2, "Server", { enumerable: true, get: function() {
+      return server_1.Server;
+    } });
     var index_1 = require_transports2();
     exports2.transports = index_1.default;
     var parser = require_cjs();
     exports2.parser = parser;
     var userver_1 = require_userver();
-    Object.defineProperty(exports2, "uServer", {
-      enumerable: true,
-      get: function () {
-        return userver_1.uServer;
-      },
-    });
+    Object.defineProperty(exports2, "uServer", { enumerable: true, get: function() {
+      return userver_1.uServer;
+    } });
     var socket_1 = require_socket3();
-    Object.defineProperty(exports2, "Socket", {
-      enumerable: true,
-      get: function () {
-        return socket_1.Socket;
-      },
-    });
+    Object.defineProperty(exports2, "Socket", { enumerable: true, get: function() {
+      return socket_1.Socket;
+    } });
     var transport_1 = require_transport2();
-    Object.defineProperty(exports2, "Transport", {
-      enumerable: true,
-      get: function () {
-        return transport_1.Transport;
-      },
-    });
+    Object.defineProperty(exports2, "Transport", { enumerable: true, get: function() {
+      return transport_1.Transport;
+    } });
     exports2.protocol = parser.protocol;
     function listen(port, options, listenCallback) {
       if ("function" === typeof options) {
         listenCallback = options;
         options = {};
       }
-      const server = (0, http_1.createServer)(function (req, res) {
+      const server = (0, http_1.createServer)(function(req, res) {
         res.writeHead(501);
         res.end("Not Implemented");
       });
@@ -23329,18 +22480,16 @@ var require_engine_io = __commonJS({
       engine.attach(server, options);
       return engine;
     }
-  },
+  }
 });
 
 // node_modules/socket.io/dist/client.js
 var require_client2 = __commonJS({
   "node_modules/socket.io/dist/client.js"(exports2) {
     "use strict";
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Client = void 0;
     var socket_io_parser_1 = require_cjs4();
@@ -23416,8 +22565,8 @@ var require_client2 = __commonJS({
               type: socket_io_parser_1.PacketType.CONNECT_ERROR,
               nsp: name,
               data: {
-                message: "Invalid namespace",
-              },
+                message: "Invalid namespace"
+              }
             });
           }
         });
@@ -23491,21 +22640,15 @@ var require_client2 = __commonJS({
           debug("ignoring packet write %j", packet);
           return;
         }
-        const encodedPackets = opts.preEncoded
-          ? packet
-          : this.encoder.encode(packet);
+        const encodedPackets = opts.preEncoded ? packet : this.encoder.encode(packet);
         this.writeToEngine(encodedPackets, opts);
       }
       writeToEngine(encodedPackets, opts) {
         if (opts.volatile && !this.conn.transport.writable) {
-          debug(
-            "volatile packet is discarded since the transport is not currently writable",
-          );
+          debug("volatile packet is discarded since the transport is not currently writable");
           return;
         }
-        const packets = Array.isArray(encodedPackets)
-          ? encodedPackets
-          : [encodedPackets];
+        const packets = Array.isArray(encodedPackets) ? encodedPackets : [encodedPackets];
         for (const encodedPacket of packets) {
           this.conn.write(encodedPacket, opts);
         }
@@ -23533,12 +22676,8 @@ var require_client2 = __commonJS({
         const socket = this.nsps.get(namespace);
         if (!socket && packet.type === socket_io_parser_1.PacketType.CONNECT) {
           this.connect(namespace, authPayload);
-        } else if (
-          socket &&
-          packet.type !== socket_io_parser_1.PacketType.CONNECT &&
-          packet.type !== socket_io_parser_1.PacketType.CONNECT_ERROR
-        ) {
-          process.nextTick(function () {
+        } else if (socket && packet.type !== socket_io_parser_1.PacketType.CONNECT && packet.type !== socket_io_parser_1.PacketType.CONNECT_ERROR) {
+          process.nextTick(function() {
             socket._onpacket(packet);
           });
         } else {
@@ -23550,13 +22689,13 @@ var require_client2 = __commonJS({
         if (this.conn.protocol !== 3) {
           return {
             namespace: packet.nsp,
-            authPayload: packet.data,
+            authPayload: packet.data
           };
         }
         const url = new URL(packet.nsp, "https://socket.io");
         return {
           namespace: url.pathname,
-          authPayload: Object.fromEntries(url.searchParams.entries()),
+          authPayload: Object.fromEntries(url.searchParams.entries())
         };
       }
       /**
@@ -23603,7 +22742,7 @@ var require_client2 = __commonJS({
       }
     };
     exports2.Client = Client;
-  },
+  }
 });
 
 // node_modules/socket.io/dist/typed-events.js
@@ -23677,7 +22816,7 @@ var require_typed_events = __commonJS({
       }
     };
     exports2.StrictEventEmitter = StrictEventEmitter;
-  },
+  }
 });
 
 // node_modules/socket.io/dist/socket-types.js
@@ -23692,9 +22831,9 @@ var require_socket_types = __commonJS({
       "disconnect",
       "disconnecting",
       "newListener",
-      "removeListener",
+      "removeListener"
     ]);
-  },
+  }
 });
 
 // node_modules/socket.io/dist/broadcast-operator.js
@@ -23706,12 +22845,7 @@ var require_broadcast_operator = __commonJS({
     var socket_types_1 = require_socket_types();
     var socket_io_parser_1 = require_cjs4();
     var BroadcastOperator = class _BroadcastOperator {
-      constructor(
-        adapter,
-        rooms = /* @__PURE__ */ new Set(),
-        exceptRooms = /* @__PURE__ */ new Set(),
-        flags = {},
-      ) {
+      constructor(adapter, rooms = /* @__PURE__ */ new Set(), exceptRooms = /* @__PURE__ */ new Set(), flags = {}) {
         this.adapter = adapter;
         this.rooms = rooms;
         this.exceptRooms = exceptRooms;
@@ -23740,12 +22874,7 @@ var require_broadcast_operator = __commonJS({
         } else {
           rooms.add(room);
         }
-        return new _BroadcastOperator(
-          this.adapter,
-          rooms,
-          this.exceptRooms,
-          this.flags,
-        );
+        return new _BroadcastOperator(this.adapter, rooms, this.exceptRooms, this.flags);
       }
       /**
        * Targets a room when emitting. Similar to `to()`, but might feel clearer in some cases:
@@ -23783,12 +22912,7 @@ var require_broadcast_operator = __commonJS({
         } else {
           exceptRooms.add(room);
         }
-        return new _BroadcastOperator(
-          this.adapter,
-          this.rooms,
-          exceptRooms,
-          this.flags,
-        );
+        return new _BroadcastOperator(this.adapter, this.rooms, exceptRooms, this.flags);
       }
       /**
        * Sets the compress flag.
@@ -23801,12 +22925,7 @@ var require_broadcast_operator = __commonJS({
        */
       compress(compress) {
         const flags = Object.assign({}, this.flags, { compress });
-        return new _BroadcastOperator(
-          this.adapter,
-          this.rooms,
-          this.exceptRooms,
-          flags,
-        );
+        return new _BroadcastOperator(this.adapter, this.rooms, this.exceptRooms, flags);
       }
       /**
        * Sets a modifier for a subsequent event emission that the event data may be lost if the client is not ready to
@@ -23820,12 +22939,7 @@ var require_broadcast_operator = __commonJS({
        */
       get volatile() {
         const flags = Object.assign({}, this.flags, { volatile: true });
-        return new _BroadcastOperator(
-          this.adapter,
-          this.rooms,
-          this.exceptRooms,
-          flags,
-        );
+        return new _BroadcastOperator(this.adapter, this.rooms, this.exceptRooms, flags);
       }
       /**
        * Sets a modifier for a subsequent event emission that the event data will only be broadcast to the current node.
@@ -23838,12 +22952,7 @@ var require_broadcast_operator = __commonJS({
        */
       get local() {
         const flags = Object.assign({}, this.flags, { local: true });
-        return new _BroadcastOperator(
-          this.adapter,
-          this.rooms,
-          this.exceptRooms,
-          flags,
-        );
+        return new _BroadcastOperator(this.adapter, this.rooms, this.exceptRooms, flags);
       }
       /**
        * Adds a timeout in milliseconds for the next operation
@@ -23861,12 +22970,7 @@ var require_broadcast_operator = __commonJS({
        */
       timeout(timeout) {
         const flags = Object.assign({}, this.flags, { timeout });
-        return new _BroadcastOperator(
-          this.adapter,
-          this.rooms,
-          this.exceptRooms,
-          flags,
-        );
+        return new _BroadcastOperator(this.adapter, this.rooms, this.exceptRooms, flags);
       }
       /**
        * Emits to all clients.
@@ -23896,14 +23000,14 @@ var require_broadcast_operator = __commonJS({
         const data = [ev, ...args];
         const packet = {
           type: socket_io_parser_1.PacketType.EVENT,
-          data,
+          data
         };
         const withAck = typeof data[data.length - 1] === "function";
         if (!withAck) {
           this.adapter.broadcast(packet, {
             rooms: this.rooms,
             except: this.exceptRooms,
-            flags: this.flags,
+            flags: this.flags
           });
           return true;
         }
@@ -23914,42 +23018,33 @@ var require_broadcast_operator = __commonJS({
           timedOut = true;
           ack.apply(this, [
             new Error("operation has timed out"),
-            this.flags.expectSingleResponse ? null : responses,
+            this.flags.expectSingleResponse ? null : responses
           ]);
         }, this.flags.timeout);
         let expectedServerCount = -1;
         let actualServerCount = 0;
         let expectedClientCount = 0;
         const checkCompleteness = () => {
-          if (
-            !timedOut &&
-            expectedServerCount === actualServerCount &&
-            responses.length === expectedClientCount
-          ) {
+          if (!timedOut && expectedServerCount === actualServerCount && responses.length === expectedClientCount) {
             clearTimeout(timer);
             ack.apply(this, [
               null,
-              this.flags.expectSingleResponse ? responses[0] : responses,
+              this.flags.expectSingleResponse ? responses[0] : responses
             ]);
           }
         };
-        this.adapter.broadcastWithAck(
-          packet,
-          {
-            rooms: this.rooms,
-            except: this.exceptRooms,
-            flags: this.flags,
-          },
-          (clientCount) => {
-            expectedClientCount += clientCount;
-            actualServerCount++;
-            checkCompleteness();
-          },
-          (clientResponse) => {
-            responses.push(clientResponse);
-            checkCompleteness();
-          },
-        );
+        this.adapter.broadcastWithAck(packet, {
+          rooms: this.rooms,
+          except: this.exceptRooms,
+          flags: this.flags
+        }, (clientCount) => {
+          expectedClientCount += clientCount;
+          actualServerCount++;
+          checkCompleteness();
+        }, (clientResponse) => {
+          responses.push(clientResponse);
+          checkCompleteness();
+        });
         this.adapter.serverCount().then((serverCount) => {
           expectedServerCount = serverCount;
           checkCompleteness();
@@ -23990,9 +23085,7 @@ var require_broadcast_operator = __commonJS({
        */
       allSockets() {
         if (!this.adapter) {
-          throw new Error(
-            "No adapter for this namespace, are you trying to get the list of clients of a dynamic namespace?",
-          );
+          throw new Error("No adapter for this namespace, are you trying to get the list of clients of a dynamic namespace?");
         }
         return this.adapter.sockets(this.rooms);
       }
@@ -24021,21 +23114,19 @@ var require_broadcast_operator = __commonJS({
        * }
        */
       fetchSockets() {
-        return this.adapter
-          .fetchSockets({
-            rooms: this.rooms,
-            except: this.exceptRooms,
-            flags: this.flags,
-          })
-          .then((sockets) => {
-            return sockets.map((socket) => {
-              if (socket.server) {
-                return socket;
-              } else {
-                return new RemoteSocket(this.adapter, socket);
-              }
-            });
+        return this.adapter.fetchSockets({
+          rooms: this.rooms,
+          except: this.exceptRooms,
+          flags: this.flags
+        }).then((sockets) => {
+          return sockets.map((socket) => {
+            if (socket.server) {
+              return socket;
+            } else {
+              return new RemoteSocket(this.adapter, socket);
+            }
           });
+        });
       }
       /**
        * Makes the matching socket instances join the specified rooms.
@@ -24053,14 +23144,11 @@ var require_broadcast_operator = __commonJS({
        * @param room - a room, or an array of rooms
        */
       socketsJoin(room) {
-        this.adapter.addSockets(
-          {
-            rooms: this.rooms,
-            except: this.exceptRooms,
-            flags: this.flags,
-          },
-          Array.isArray(room) ? room : [room],
-        );
+        this.adapter.addSockets({
+          rooms: this.rooms,
+          except: this.exceptRooms,
+          flags: this.flags
+        }, Array.isArray(room) ? room : [room]);
       }
       /**
        * Makes the matching socket instances leave the specified rooms.
@@ -24077,14 +23165,11 @@ var require_broadcast_operator = __commonJS({
        * @param room - a room, or an array of rooms
        */
       socketsLeave(room) {
-        this.adapter.delSockets(
-          {
-            rooms: this.rooms,
-            except: this.exceptRooms,
-            flags: this.flags,
-          },
-          Array.isArray(room) ? room : [room],
-        );
+        this.adapter.delSockets({
+          rooms: this.rooms,
+          except: this.exceptRooms,
+          flags: this.flags
+        }, Array.isArray(room) ? room : [room]);
       }
       /**
        * Makes the matching socket instances disconnect.
@@ -24101,14 +23186,11 @@ var require_broadcast_operator = __commonJS({
        * @param close - whether to close the underlying connection
        */
       disconnectSockets(close = false) {
-        this.adapter.disconnectSockets(
-          {
-            rooms: this.rooms,
-            except: this.exceptRooms,
-            flags: this.flags,
-          },
-          close,
-        );
+        this.adapter.disconnectSockets({
+          rooms: this.rooms,
+          except: this.exceptRooms,
+          flags: this.flags
+        }, close);
       }
     };
     exports2.BroadcastOperator = BroadcastOperator;
@@ -24118,15 +23200,10 @@ var require_broadcast_operator = __commonJS({
         this.handshake = details.handshake;
         this.rooms = new Set(details.rooms);
         this.data = details.data;
-        this.operator = new BroadcastOperator(
-          adapter,
-          /* @__PURE__ */ new Set([this.id]),
-          /* @__PURE__ */ new Set(),
-          {
-            expectSingleResponse: true,
-            // so that remoteSocket.emit() with acknowledgement behaves like socket.emit()
-          },
-        );
+        this.operator = new BroadcastOperator(adapter, /* @__PURE__ */ new Set([this.id]), /* @__PURE__ */ new Set(), {
+          expectSingleResponse: true
+          // so that remoteSocket.emit() with acknowledgement behaves like socket.emit()
+        });
       }
       /**
        * Adds a timeout in milliseconds for the next operation.
@@ -24185,18 +23262,16 @@ var require_broadcast_operator = __commonJS({
       }
     };
     exports2.RemoteSocket = RemoteSocket;
-  },
+  }
 });
 
 // node_modules/socket.io/dist/socket.js
 var require_socket4 = __commonJS({
   "node_modules/socket.io/dist/socket.js"(exports2) {
     "use strict";
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Socket = void 0;
     var socket_io_parser_1 = require_cjs4();
@@ -24212,9 +23287,10 @@ var require_socket4 = __commonJS({
       "forced close",
       "ping timeout",
       "server shutting down",
-      "forced server close",
+      "forced server close"
     ]);
-    function noop() {}
+    function noop() {
+    }
     var Socket = class extends typed_events_1.StrictEventEmitter {
       /**
        * Interface to a `Client` for a given `Namespace`.
@@ -24244,7 +23320,7 @@ var require_socket4 = __commonJS({
           previousSession.missedPackets.forEach((packet) => {
             this.packet({
               type: socket_io_parser_1.PacketType.EVENT,
-              data: packet,
+              data: packet
             });
           });
           this.recovered = true;
@@ -24269,25 +23345,17 @@ var require_socket4 = __commonJS({
       buildHandshake(auth) {
         var _a, _b, _c, _d;
         return {
-          headers:
-            ((_a = this.request) === null || _a === void 0
-              ? void 0
-              : _a.headers) || {},
+          headers: ((_a = this.request) === null || _a === void 0 ? void 0 : _a.headers) || {},
           time: /* @__PURE__ */ new Date() + "",
           address: this.conn.remoteAddress,
-          xdomain: !!((_b = this.request) === null || _b === void 0
-            ? void 0
-            : _b.headers.origin),
+          xdomain: !!((_b = this.request) === null || _b === void 0 ? void 0 : _b.headers.origin),
           // @ts-ignore
           secure: !this.request || !!this.request.connection.encrypted,
-          issued: +(/* @__PURE__ */ new Date()),
+          issued: +/* @__PURE__ */ new Date(),
           url: (_c = this.request) === null || _c === void 0 ? void 0 : _c.url,
           // @ts-ignore
-          query:
-            ((_d = this.request) === null || _d === void 0
-              ? void 0
-              : _d._query) || {},
-          auth,
+          query: ((_d = this.request) === null || _d === void 0 ? void 0 : _d._query) || {},
+          auth
         };
       }
       /**
@@ -24315,7 +23383,7 @@ var require_socket4 = __commonJS({
         const data = [ev, ...args];
         const packet = {
           type: socket_io_parser_1.PacketType.EVENT,
-          data,
+          data
         };
         if (typeof data[data.length - 1] === "function") {
           const id = this.nsp._ids++;
@@ -24329,7 +23397,7 @@ var require_socket4 = __commonJS({
           this.adapter.broadcast(packet, {
             rooms: /* @__PURE__ */ new Set([this.id]),
             except: /* @__PURE__ */ new Set(),
-            flags,
+            flags
           });
         } else {
           this.notifyOutgoingListeners(packet);
@@ -24507,10 +23575,7 @@ var require_socket4 = __commonJS({
        */
       join(rooms) {
         debug("join room %s", rooms);
-        return this.adapter.addAll(
-          this.id,
-          new Set(Array.isArray(rooms) ? rooms : [rooms]),
-        );
+        return this.adapter.addAll(this.id, new Set(Array.isArray(rooms) ? rooms : [rooms]));
       }
       /**
        * Leaves a room.
@@ -24556,7 +23621,7 @@ var require_socket4 = __commonJS({
         } else {
           this.packet({
             type: socket_io_parser_1.PacketType.CONNECT,
-            data: { sid: this.id, pid: this.pid },
+            data: { sid: this.id, pid: this.pid }
           });
         }
       }
@@ -24616,14 +23681,15 @@ var require_socket4 = __commonJS({
       ack(id) {
         const self = this;
         let sent = false;
-        return function () {
-          if (sent) return;
+        return function() {
+          if (sent)
+            return;
           const args = Array.prototype.slice.call(arguments);
           debug("sending ack %j", args);
           self.packet({
             id,
             type: socket_io_parser_1.PacketType.ACK,
-            data: args,
+            data: args
           });
           sent = true;
         };
@@ -24670,19 +23736,17 @@ var require_socket4 = __commonJS({
        * @private
        */
       _onclose(reason, description) {
-        if (!this.connected) return this;
+        if (!this.connected)
+          return this;
         debug("closing socket - reason %s", reason);
         this.emitReserved("disconnecting", reason, description);
-        if (
-          this.server._opts.connectionStateRecovery &&
-          RECOVERABLE_DISCONNECT_REASONS.has(reason)
-        ) {
+        if (this.server._opts.connectionStateRecovery && RECOVERABLE_DISCONNECT_REASONS.has(reason)) {
           debug("connection state recovery is enabled for sid %s", this.id);
           this.adapter.persistSession({
             sid: this.id,
             pid: this.pid,
             rooms: [...this.rooms],
-            data: this.data,
+            data: this.data
           });
         }
         this._cleanup();
@@ -24709,10 +23773,7 @@ var require_socket4 = __commonJS({
        * @private
        */
       _error(err) {
-        this.packet({
-          type: socket_io_parser_1.PacketType.CONNECT_ERROR,
-          data: err,
-        });
+        this.packet({ type: socket_io_parser_1.PacketType.CONNECT_ERROR, data: err });
       }
       /**
        * Disconnects this client.
@@ -24730,7 +23791,8 @@ var require_socket4 = __commonJS({
        * @return self
        */
       disconnect(close = false) {
-        if (!this.connected) return this;
+        if (!this.connected)
+          return this;
         if (close) {
           this.client._disconnect();
         } else {
@@ -24874,12 +23936,15 @@ var require_socket4 = __commonJS({
        * @private
        */
       run(event, fn) {
-        if (!this.fns.length) return fn();
+        if (!this.fns.length)
+          return fn();
         const fns = this.fns.slice(0);
         function run(i) {
           fns[i](event, (err) => {
-            if (err) return fn(err);
-            if (!fns[i + 1]) return fn();
+            if (err)
+              return fn(err);
+            if (!fns[i + 1])
+              return fn();
             run(i + 1);
           });
         }
@@ -25100,27 +24165,20 @@ var require_socket4 = __commonJS({
       newBroadcastOperator() {
         const flags = Object.assign({}, this.flags);
         this.flags = {};
-        return new broadcast_operator_1.BroadcastOperator(
-          this.adapter,
-          /* @__PURE__ */ new Set(),
-          /* @__PURE__ */ new Set([this.id]),
-          flags,
-        );
+        return new broadcast_operator_1.BroadcastOperator(this.adapter, /* @__PURE__ */ new Set(), /* @__PURE__ */ new Set([this.id]), flags);
       }
     };
     exports2.Socket = Socket;
-  },
+  }
 });
 
 // node_modules/socket.io/dist/namespace.js
 var require_namespace = __commonJS({
   "node_modules/socket.io/dist/namespace.js"(exports2) {
     "use strict";
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Namespace = exports2.RESERVED_EVENTS = void 0;
     var socket_1 = require_socket4();
@@ -25128,11 +24186,7 @@ var require_namespace = __commonJS({
     var debug_1 = __importDefault(require_src());
     var broadcast_operator_1 = require_broadcast_operator();
     var debug = (0, debug_1.default)("socket.io:namespace");
-    exports2.RESERVED_EVENTS = /* @__PURE__ */ new Set([
-      "connect",
-      "connection",
-      "new_namespace",
-    ]);
+    exports2.RESERVED_EVENTS = /* @__PURE__ */ new Set(["connect", "connection", "new_namespace"]);
     var Namespace = class extends typed_events_1.StrictEventEmitter {
       /**
        * Namespace constructor.
@@ -25188,12 +24242,15 @@ var require_namespace = __commonJS({
        * @private
        */
       run(socket, fn) {
-        if (!this._fns.length) return fn();
+        if (!this._fns.length)
+          return fn();
         const fns = this._fns.slice(0);
         function run(i) {
           fns[i](socket, (err) => {
-            if (err) return fn(err);
-            if (!fns[i + 1]) return fn();
+            if (err)
+              return fn(err);
+            if (!fns[i + 1])
+              return fn();
             run(i + 1);
           });
         }
@@ -25218,9 +24275,7 @@ var require_namespace = __commonJS({
        * @return a new {@link BroadcastOperator} instance for chaining
        */
       to(room) {
-        return new broadcast_operator_1.BroadcastOperator(this.adapter).to(
-          room,
-        );
+        return new broadcast_operator_1.BroadcastOperator(this.adapter).to(room);
       }
       /**
        * Targets a room when emitting. Similar to `to()`, but might feel clearer in some cases:
@@ -25235,9 +24290,7 @@ var require_namespace = __commonJS({
        * @return a new {@link BroadcastOperator} instance for chaining
        */
       in(room) {
-        return new broadcast_operator_1.BroadcastOperator(this.adapter).in(
-          room,
-        );
+        return new broadcast_operator_1.BroadcastOperator(this.adapter).in(room);
       }
       /**
        * Excludes a room when emitting.
@@ -25258,9 +24311,7 @@ var require_namespace = __commonJS({
        * @return a new {@link BroadcastOperator} instance for chaining
        */
       except(room) {
-        return new broadcast_operator_1.BroadcastOperator(this.adapter).except(
-          room,
-        );
+        return new broadcast_operator_1.BroadcastOperator(this.adapter).except(room);
       }
       /**
        * Adds a new client.
@@ -25275,12 +24326,7 @@ var require_namespace = __commonJS({
         this._preConnectSockets.set(socket.id, socket);
         if (
           // @ts-ignore
-          ((_a = this.server.opts.connectionStateRecovery) === null ||
-          _a === void 0
-            ? void 0
-            : _a.skipMiddlewares) &&
-          socket.recovered &&
-          client.conn.readyState === "open"
+          ((_a = this.server.opts.connectionStateRecovery) === null || _a === void 0 ? void 0 : _a.skipMiddlewares) && socket.recovered && client.conn.readyState === "open"
         ) {
           return this._doConnect(socket, fn);
         }
@@ -25292,16 +24338,14 @@ var require_namespace = __commonJS({
               return;
             }
             if (err) {
-              debug(
-                "middleware error, sending CONNECT_ERROR packet to the client",
-              );
+              debug("middleware error, sending CONNECT_ERROR packet to the client");
               socket._cleanup();
               if (client.conn.protocol === 3) {
                 return socket._error(err.data || err.message);
               } else {
                 return socket._error({
                   message: err.message,
-                  data: err.data,
+                  data: err.data
                 });
               }
             }
@@ -25314,9 +24358,7 @@ var require_namespace = __commonJS({
         const offset = auth.offset;
         if (
           // @ts-ignore
-          this.server.opts.connectionStateRecovery &&
-          typeof sessionId === "string" &&
-          typeof offset === "string"
+          this.server.opts.connectionStateRecovery && typeof sessionId === "string" && typeof offset === "string"
         ) {
           let session;
           try {
@@ -25335,7 +24377,8 @@ var require_namespace = __commonJS({
         this._preConnectSockets.delete(socket.id);
         this.sockets.set(socket.id, socket);
         socket._onconnect();
-        if (fn) fn(socket);
+        if (fn)
+          fn(socket);
         this.emitReserved("connect", socket);
         this.emitReserved("connection", socket);
       }
@@ -25345,8 +24388,7 @@ var require_namespace = __commonJS({
        * @private
        */
       _remove(socket) {
-        this.sockets.delete(socket.id) ||
-          this._preConnectSockets.delete(socket.id);
+        this.sockets.delete(socket.id) || this._preConnectSockets.delete(socket.id);
       }
       /**
        * Emits to all connected clients.
@@ -25371,10 +24413,7 @@ var require_namespace = __commonJS({
        * @return Always true
        */
       emit(ev, ...args) {
-        return new broadcast_operator_1.BroadcastOperator(this.adapter).emit(
-          ev,
-          ...args,
-        );
+        return new broadcast_operator_1.BroadcastOperator(this.adapter).emit(ev, ...args);
       }
       /**
        * Sends a `message` event to all clients.
@@ -25490,9 +24529,7 @@ var require_namespace = __commonJS({
        * {@link Namespace#fetchSockets} instead.
        */
       allSockets() {
-        return new broadcast_operator_1.BroadcastOperator(
-          this.adapter,
-        ).allSockets();
+        return new broadcast_operator_1.BroadcastOperator(this.adapter).allSockets();
       }
       /**
        * Sets the compress flag.
@@ -25506,9 +24543,7 @@ var require_namespace = __commonJS({
        * @return self
        */
       compress(compress) {
-        return new broadcast_operator_1.BroadcastOperator(
-          this.adapter,
-        ).compress(compress);
+        return new broadcast_operator_1.BroadcastOperator(this.adapter).compress(compress);
       }
       /**
        * Sets a modifier for a subsequent event emission that the event data may be lost if the client is not ready to
@@ -25523,8 +24558,7 @@ var require_namespace = __commonJS({
        * @return self
        */
       get volatile() {
-        return new broadcast_operator_1.BroadcastOperator(this.adapter)
-          .volatile;
+        return new broadcast_operator_1.BroadcastOperator(this.adapter).volatile;
       }
       /**
        * Sets a modifier for a subsequent event emission that the event data will only be broadcast to the current node.
@@ -25557,9 +24591,7 @@ var require_namespace = __commonJS({
        * @param timeout
        */
       timeout(timeout) {
-        return new broadcast_operator_1.BroadcastOperator(this.adapter).timeout(
-          timeout,
-        );
+        return new broadcast_operator_1.BroadcastOperator(this.adapter).timeout(timeout);
       }
       /**
        * Returns the matching socket instances.
@@ -25588,9 +24620,7 @@ var require_namespace = __commonJS({
        * }
        */
       fetchSockets() {
-        return new broadcast_operator_1.BroadcastOperator(
-          this.adapter,
-        ).fetchSockets();
+        return new broadcast_operator_1.BroadcastOperator(this.adapter).fetchSockets();
       }
       /**
        * Makes the matching socket instances join the specified rooms.
@@ -25609,9 +24639,7 @@ var require_namespace = __commonJS({
        * @param room - a room, or an array of rooms
        */
       socketsJoin(room) {
-        return new broadcast_operator_1.BroadcastOperator(
-          this.adapter,
-        ).socketsJoin(room);
+        return new broadcast_operator_1.BroadcastOperator(this.adapter).socketsJoin(room);
       }
       /**
        * Makes the matching socket instances leave the specified rooms.
@@ -25630,9 +24658,7 @@ var require_namespace = __commonJS({
        * @param room - a room, or an array of rooms
        */
       socketsLeave(room) {
-        return new broadcast_operator_1.BroadcastOperator(
-          this.adapter,
-        ).socketsLeave(room);
+        return new broadcast_operator_1.BroadcastOperator(this.adapter).socketsLeave(room);
       }
       /**
        * Makes the matching socket instances disconnect.
@@ -25651,13 +24677,11 @@ var require_namespace = __commonJS({
        * @param close - whether to close the underlying connection
        */
       disconnectSockets(close = false) {
-        return new broadcast_operator_1.BroadcastOperator(
-          this.adapter,
-        ).disconnectSockets(close);
+        return new broadcast_operator_1.BroadcastOperator(this.adapter).disconnectSockets(close);
       }
     };
     exports2.Namespace = Namespace;
-  },
+  }
 });
 
 // node_modules/socket.io-adapter/dist/contrib/yeast.js
@@ -25668,10 +24692,7 @@ var require_yeast = __commonJS({
     exports2.encode = encode;
     exports2.decode = decode;
     exports2.yeast = yeast;
-    var alphabet =
-      "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_".split(
-        "",
-      );
+    var alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_".split("");
     var length = 64;
     var map = {};
     var seed = 0;
@@ -25693,12 +24714,14 @@ var require_yeast = __commonJS({
       return decoded;
     }
     function yeast() {
-      const now = encode(+(/* @__PURE__ */ new Date()));
-      if (now !== prev) return ((seed = 0), (prev = now));
+      const now = encode(+/* @__PURE__ */ new Date());
+      if (now !== prev)
+        return seed = 0, prev = now;
       return now + "." + encode(seed++);
     }
-    for (; i < length; i++) map[alphabet[i]] = i;
-  },
+    for (; i < length; i++)
+      map[alphabet[i]] = i;
+  }
 });
 
 // node_modules/socket.io-adapter/dist/in-memory-adapter.js
@@ -25711,13 +24734,7 @@ var require_in_memory_adapter = __commonJS({
     var events_1 = require("events");
     var yeast_1 = require_yeast();
     var WebSocket = require_ws();
-    var canPreComputeFrame =
-      typeof ((_a =
-        WebSocket === null || WebSocket === void 0
-          ? void 0
-          : WebSocket.Sender) === null || _a === void 0
-        ? void 0
-        : _a.frame) === "function";
+    var canPreComputeFrame = typeof ((_a = WebSocket === null || WebSocket === void 0 ? void 0 : WebSocket.Sender) === null || _a === void 0 ? void 0 : _a.frame) === "function";
     var Adapter = class extends events_1.EventEmitter {
       /**
        * In-memory adapter constructor.
@@ -25734,11 +24751,13 @@ var require_in_memory_adapter = __commonJS({
       /**
        * To be overridden
        */
-      init() {}
+      init() {
+      }
       /**
        * To be overridden
        */
-      close() {}
+      close() {
+      }
       /**
        * Returns the number of Socket.IO servers in the cluster
        *
@@ -25825,7 +24844,7 @@ var require_in_memory_adapter = __commonJS({
         const packetOpts = {
           preEncoded: true,
           volatile: flags.volatile,
-          compress: flags.compress,
+          compress: flags.compress
         };
         packet.nsp = this.nsp.name;
         const encodedPackets = this._encode(packet, packetOpts);
@@ -25856,7 +24875,7 @@ var require_in_memory_adapter = __commonJS({
         const packetOpts = {
           preEncoded: true,
           volatile: flags.volatile,
-          compress: flags.compress,
+          compress: flags.compress
         };
         packet.nsp = this.nsp.name;
         packet.id = this.nsp._ids++;
@@ -25874,18 +24893,14 @@ var require_in_memory_adapter = __commonJS({
       }
       _encode(packet, packetOpts) {
         const encodedPackets = this.encoder.encode(packet);
-        if (
-          canPreComputeFrame &&
-          encodedPackets.length === 1 &&
-          typeof encodedPackets[0] === "string"
-        ) {
+        if (canPreComputeFrame && encodedPackets.length === 1 && typeof encodedPackets[0] === "string") {
           const data = Buffer.from("4" + encodedPackets[0]);
           packetOpts.wsPreEncodedFrame = WebSocket.Sender.frame(data, {
             readOnly: false,
             mask: false,
             rsv1: false,
             opcode: 1,
-            fin: true,
+            fin: true
           });
         }
         return encodedPackets;
@@ -25961,9 +24976,11 @@ var require_in_memory_adapter = __commonJS({
         if (rooms.size) {
           const ids = /* @__PURE__ */ new Set();
           for (const room of rooms) {
-            if (!this.rooms.has(room)) continue;
+            if (!this.rooms.has(room))
+              continue;
             for (const id of this.rooms.get(room)) {
-              if (ids.has(id) || except.has(id)) continue;
+              if (ids.has(id) || except.has(id))
+                continue;
               const socket = this.nsp.sockets.get(id);
               if (socket) {
                 callback(socket);
@@ -25973,9 +24990,11 @@ var require_in_memory_adapter = __commonJS({
           }
         } else {
           for (const [id] of this.sids) {
-            if (except.has(id)) continue;
+            if (except.has(id))
+              continue;
             const socket = this.nsp.sockets.get(id);
-            if (socket) callback(socket);
+            if (socket)
+              callback(socket);
           }
         }
       }
@@ -25995,14 +25014,13 @@ var require_in_memory_adapter = __commonJS({
        * @param packet - an array of arguments, which may include an acknowledgement callback at the end
        */
       serverSideEmit(packet) {
-        console.warn(
-          "this adapter does not support the serverSideEmit() functionality",
-        );
+        console.warn("this adapter does not support the serverSideEmit() functionality");
       }
       /**
        * Save the client session in order to restore it upon reconnection.
        */
-      persistSession(session) {}
+      persistSession(session) {
+      }
       /**
        * Restore the session and find the packets that were missed by the client.
        * @param pid
@@ -26019,8 +25037,7 @@ var require_in_memory_adapter = __commonJS({
         this.nsp = nsp;
         this.sessions = /* @__PURE__ */ new Map();
         this.packets = [];
-        this.maxDisconnectionDuration =
-          nsp.server.opts.connectionStateRecovery.maxDisconnectionDuration;
+        this.maxDisconnectionDuration = nsp.server.opts.connectionStateRecovery.maxDisconnectionDuration;
         const timer = setInterval(() => {
           const threshold = Date.now() - this.maxDisconnectionDuration;
           this.sessions.forEach((session, sessionId) => {
@@ -26048,8 +25065,7 @@ var require_in_memory_adapter = __commonJS({
         if (!session) {
           return null;
         }
-        const hasExpired =
-          session.disconnectedAt + this.maxDisconnectionDuration < Date.now();
+        const hasExpired = session.disconnectedAt + this.maxDisconnectionDuration < Date.now();
         if (hasExpired) {
           this.sessions.delete(pid);
           return null;
@@ -26065,18 +25081,13 @@ var require_in_memory_adapter = __commonJS({
             missedPackets.push(packet.data);
           }
         }
-        return Promise.resolve(
-          Object.assign(Object.assign({}, session), { missedPackets }),
-        );
+        return Promise.resolve(Object.assign(Object.assign({}, session), { missedPackets }));
       }
       broadcast(packet, opts) {
         var _a2;
         const isEventPacket = packet.type === 2;
         const withoutAcknowledgement = packet.id === void 0;
-        const notVolatile =
-          ((_a2 = opts.flags) === null || _a2 === void 0
-            ? void 0
-            : _a2.volatile) === void 0;
+        const notVolatile = ((_a2 = opts.flags) === null || _a2 === void 0 ? void 0 : _a2.volatile) === void 0;
         if (isEventPacket && withoutAcknowledgement && notVolatile) {
           const id = (0, yeast_1.yeast)();
           packet.data.push(id);
@@ -26084,7 +25095,7 @@ var require_in_memory_adapter = __commonJS({
             id,
             opts,
             data: packet.data,
-            emittedAt: Date.now(),
+            emittedAt: Date.now()
           });
         }
         super.broadcast(packet, opts);
@@ -26092,45 +25103,30 @@ var require_in_memory_adapter = __commonJS({
     };
     exports2.SessionAwareAdapter = SessionAwareAdapter;
     function shouldIncludePacket(sessionRooms, opts) {
-      const included =
-        opts.rooms.size === 0 ||
-        sessionRooms.some((room) => opts.rooms.has(room));
+      const included = opts.rooms.size === 0 || sessionRooms.some((room) => opts.rooms.has(room));
       const notExcluded = sessionRooms.every((room) => !opts.except.has(room));
       return included && notExcluded;
     }
-  },
+  }
 });
 
 // node_modules/socket.io-adapter/dist/cluster-adapter.js
 var require_cluster_adapter = __commonJS({
   "node_modules/socket.io-adapter/dist/cluster-adapter.js"(exports2) {
     "use strict";
-    var __rest =
-      (exports2 && exports2.__rest) ||
-      function (s, e) {
-        var t = {};
-        for (var p in s)
-          if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-            t[p] = s[p];
-        if (s != null && typeof Object.getOwnPropertySymbols === "function")
-          for (
-            var i = 0, p = Object.getOwnPropertySymbols(s);
-            i < p.length;
-            i++
-          ) {
-            if (
-              e.indexOf(p[i]) < 0 &&
-              Object.prototype.propertyIsEnumerable.call(s, p[i])
-            )
-              t[p[i]] = s[p[i]];
-          }
-        return t;
-      };
+    var __rest = exports2 && exports2.__rest || function(s, e) {
+      var t = {};
+      for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+      if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+          if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+            t[p[i]] = s[p[i]];
+        }
+      return t;
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.ClusterAdapterWithHeartbeat =
-      exports2.ClusterAdapter =
-      exports2.MessageType =
-        void 0;
+    exports2.ClusterAdapterWithHeartbeat = exports2.ClusterAdapter = exports2.MessageType = void 0;
     var in_memory_adapter_1 = require_in_memory_adapter();
     var debug_1 = require_src();
     var crypto_1 = require("crypto");
@@ -26141,38 +25137,33 @@ var require_cluster_adapter = __commonJS({
       return (0, crypto_1.randomBytes)(8).toString("hex");
     }
     var MessageType;
-    (function (MessageType2) {
-      MessageType2[(MessageType2["INITIAL_HEARTBEAT"] = 1)] =
-        "INITIAL_HEARTBEAT";
-      MessageType2[(MessageType2["HEARTBEAT"] = 2)] = "HEARTBEAT";
-      MessageType2[(MessageType2["BROADCAST"] = 3)] = "BROADCAST";
-      MessageType2[(MessageType2["SOCKETS_JOIN"] = 4)] = "SOCKETS_JOIN";
-      MessageType2[(MessageType2["SOCKETS_LEAVE"] = 5)] = "SOCKETS_LEAVE";
-      MessageType2[(MessageType2["DISCONNECT_SOCKETS"] = 6)] =
-        "DISCONNECT_SOCKETS";
-      MessageType2[(MessageType2["FETCH_SOCKETS"] = 7)] = "FETCH_SOCKETS";
-      MessageType2[(MessageType2["FETCH_SOCKETS_RESPONSE"] = 8)] =
-        "FETCH_SOCKETS_RESPONSE";
-      MessageType2[(MessageType2["SERVER_SIDE_EMIT"] = 9)] = "SERVER_SIDE_EMIT";
-      MessageType2[(MessageType2["SERVER_SIDE_EMIT_RESPONSE"] = 10)] =
-        "SERVER_SIDE_EMIT_RESPONSE";
-      MessageType2[(MessageType2["BROADCAST_CLIENT_COUNT"] = 11)] =
-        "BROADCAST_CLIENT_COUNT";
-      MessageType2[(MessageType2["BROADCAST_ACK"] = 12)] = "BROADCAST_ACK";
-      MessageType2[(MessageType2["ADAPTER_CLOSE"] = 13)] = "ADAPTER_CLOSE";
+    (function(MessageType2) {
+      MessageType2[MessageType2["INITIAL_HEARTBEAT"] = 1] = "INITIAL_HEARTBEAT";
+      MessageType2[MessageType2["HEARTBEAT"] = 2] = "HEARTBEAT";
+      MessageType2[MessageType2["BROADCAST"] = 3] = "BROADCAST";
+      MessageType2[MessageType2["SOCKETS_JOIN"] = 4] = "SOCKETS_JOIN";
+      MessageType2[MessageType2["SOCKETS_LEAVE"] = 5] = "SOCKETS_LEAVE";
+      MessageType2[MessageType2["DISCONNECT_SOCKETS"] = 6] = "DISCONNECT_SOCKETS";
+      MessageType2[MessageType2["FETCH_SOCKETS"] = 7] = "FETCH_SOCKETS";
+      MessageType2[MessageType2["FETCH_SOCKETS_RESPONSE"] = 8] = "FETCH_SOCKETS_RESPONSE";
+      MessageType2[MessageType2["SERVER_SIDE_EMIT"] = 9] = "SERVER_SIDE_EMIT";
+      MessageType2[MessageType2["SERVER_SIDE_EMIT_RESPONSE"] = 10] = "SERVER_SIDE_EMIT_RESPONSE";
+      MessageType2[MessageType2["BROADCAST_CLIENT_COUNT"] = 11] = "BROADCAST_CLIENT_COUNT";
+      MessageType2[MessageType2["BROADCAST_ACK"] = 12] = "BROADCAST_ACK";
+      MessageType2[MessageType2["ADAPTER_CLOSE"] = 13] = "ADAPTER_CLOSE";
     })(MessageType || (exports2.MessageType = MessageType = {}));
     function encodeOptions(opts) {
       return {
         rooms: [...opts.rooms],
         except: [...opts.except],
-        flags: opts.flags,
+        flags: opts.flags
       };
     }
     function decodeOptions(opts) {
       return {
         rooms: new Set(opts.rooms),
         except: new Set(opts.except),
-        flags: opts.flags,
+        flags: opts.flags
       };
     }
     var ClusterAdapter = class extends in_memory_adapter_1.Adapter {
@@ -26194,54 +25185,32 @@ var require_cluster_adapter = __commonJS({
           return debug("[%s] ignore message from self", this.uid);
         }
         if (message.nsp !== this.nsp.name) {
-          return debug(
-            "[%s] ignore message from another namespace (%s)",
-            this.uid,
-            message.nsp,
-          );
+          return debug("[%s] ignore message from another namespace (%s)", this.uid, message.nsp);
         }
-        debug(
-          "[%s] new event of type %d from %s",
-          this.uid,
-          message.type,
-          message.uid,
-        );
+        debug("[%s] new event of type %d from %s", this.uid, message.type, message.uid);
         switch (message.type) {
           case MessageType.BROADCAST: {
             const withAck = message.data.requestId !== void 0;
             if (withAck) {
-              super.broadcastWithAck(
-                message.data.packet,
-                decodeOptions(message.data.opts),
-                (clientCount) => {
-                  debug(
-                    "[%s] waiting for %d client acknowledgements",
-                    this.uid,
-                    clientCount,
-                  );
-                  this.publishResponse(message.uid, {
-                    type: MessageType.BROADCAST_CLIENT_COUNT,
-                    data: {
-                      requestId: message.data.requestId,
-                      clientCount,
-                    },
-                  });
-                },
-                (arg) => {
-                  debug(
-                    "[%s] received acknowledgement with value %j",
-                    this.uid,
-                    arg,
-                  );
-                  this.publishResponse(message.uid, {
-                    type: MessageType.BROADCAST_ACK,
-                    data: {
-                      requestId: message.data.requestId,
-                      packet: arg,
-                    },
-                  });
-                },
-              );
+              super.broadcastWithAck(message.data.packet, decodeOptions(message.data.opts), (clientCount) => {
+                debug("[%s] waiting for %d client acknowledgements", this.uid, clientCount);
+                this.publishResponse(message.uid, {
+                  type: MessageType.BROADCAST_CLIENT_COUNT,
+                  data: {
+                    requestId: message.data.requestId,
+                    clientCount
+                  }
+                });
+              }, (arg) => {
+                debug("[%s] received acknowledgement with value %j", this.uid, arg);
+                this.publishResponse(message.uid, {
+                  type: MessageType.BROADCAST_ACK,
+                  data: {
+                    requestId: message.data.requestId,
+                    packet: arg
+                  }
+                });
+              });
             } else {
               const packet = message.data.packet;
               const opts = decodeOptions(message.data.opts);
@@ -26251,50 +25220,33 @@ var require_cluster_adapter = __commonJS({
             break;
           }
           case MessageType.SOCKETS_JOIN:
-            super.addSockets(
-              decodeOptions(message.data.opts),
-              message.data.rooms,
-            );
+            super.addSockets(decodeOptions(message.data.opts), message.data.rooms);
             break;
           case MessageType.SOCKETS_LEAVE:
-            super.delSockets(
-              decodeOptions(message.data.opts),
-              message.data.rooms,
-            );
+            super.delSockets(decodeOptions(message.data.opts), message.data.rooms);
             break;
           case MessageType.DISCONNECT_SOCKETS:
-            super.disconnectSockets(
-              decodeOptions(message.data.opts),
-              message.data.close,
-            );
+            super.disconnectSockets(decodeOptions(message.data.opts), message.data.close);
             break;
           case MessageType.FETCH_SOCKETS: {
-            debug(
-              "[%s] calling fetchSockets with opts %j",
-              this.uid,
-              message.data.opts,
-            );
-            super
-              .fetchSockets(decodeOptions(message.data.opts))
-              .then((localSockets) => {
-                this.publishResponse(message.uid, {
-                  type: MessageType.FETCH_SOCKETS_RESPONSE,
-                  data: {
-                    requestId: message.data.requestId,
-                    sockets: localSockets.map((socket) => {
-                      const _a = socket.handshake,
-                        { sessionStore } = _a,
-                        handshake = __rest(_a, ["sessionStore"]);
-                      return {
-                        id: socket.id,
-                        handshake,
-                        rooms: [...socket.rooms],
-                        data: socket.data,
-                      };
-                    }),
-                  },
-                });
+            debug("[%s] calling fetchSockets with opts %j", this.uid, message.data.opts);
+            super.fetchSockets(decodeOptions(message.data.opts)).then((localSockets) => {
+              this.publishResponse(message.uid, {
+                type: MessageType.FETCH_SOCKETS_RESPONSE,
+                data: {
+                  requestId: message.data.requestId,
+                  sockets: localSockets.map((socket) => {
+                    const _a = socket.handshake, { sessionStore } = _a, handshake = __rest(_a, ["sessionStore"]);
+                    return {
+                      id: socket.id,
+                      handshake,
+                      rooms: [...socket.rooms],
+                      data: socket.data
+                    };
+                  })
+                }
               });
+            });
             break;
           }
           case MessageType.SERVER_SIDE_EMIT: {
@@ -26315,8 +25267,8 @@ var require_cluster_adapter = __commonJS({
                 type: MessageType.SERVER_SIDE_EMIT_RESPONSE,
                 data: {
                   requestId: message.data.requestId,
-                  packet: arg,
-                },
+                  packet: arg
+                }
               });
             };
             this.nsp._onServerSideEmit([...packet, callback]);
@@ -26345,23 +25297,14 @@ var require_cluster_adapter = __commonJS({
       onResponse(response) {
         var _a, _b;
         const requestId = response.data.requestId;
-        debug(
-          "[%s] received response %s to request %s",
-          this.uid,
-          response.type,
-          requestId,
-        );
+        debug("[%s] received response %s to request %s", this.uid, response.type, requestId);
         switch (response.type) {
           case MessageType.BROADCAST_CLIENT_COUNT: {
-            (_a = this.ackRequests.get(requestId)) === null || _a === void 0
-              ? void 0
-              : _a.clientCountCallback(response.data.clientCount);
+            (_a = this.ackRequests.get(requestId)) === null || _a === void 0 ? void 0 : _a.clientCountCallback(response.data.clientCount);
             break;
           }
           case MessageType.BROADCAST_ACK: {
-            (_b = this.ackRequests.get(requestId)) === null || _b === void 0
-              ? void 0
-              : _b.ack(response.data.packet);
+            (_b = this.ackRequests.get(requestId)) === null || _b === void 0 ? void 0 : _b.ack(response.data.packet);
             break;
           }
           case MessageType.FETCH_SOCKETS_RESPONSE: {
@@ -26370,9 +25313,7 @@ var require_cluster_adapter = __commonJS({
               return;
             }
             request.current++;
-            response.data.sockets.forEach((socket) =>
-              request.responses.push(socket),
-            );
+            response.data.sockets.forEach((socket) => request.responses.push(socket));
             if (request.current === request.expected) {
               clearTimeout(request.timeout);
               request.resolve(request.responses);
@@ -26400,24 +25341,19 @@ var require_cluster_adapter = __commonJS({
       }
       async broadcast(packet, opts) {
         var _a;
-        const onlyLocal =
-          (_a = opts.flags) === null || _a === void 0 ? void 0 : _a.local;
+        const onlyLocal = (_a = opts.flags) === null || _a === void 0 ? void 0 : _a.local;
         if (!onlyLocal) {
           try {
             const offset = await this.publishAndReturnOffset({
               type: MessageType.BROADCAST,
               data: {
                 packet,
-                opts: encodeOptions(opts),
-              },
+                opts: encodeOptions(opts)
+              }
             });
             this.addOffsetIfNecessary(packet, opts, offset);
           } catch (e) {
-            return debug(
-              "[%s] error while broadcasting message: %s",
-              this.uid,
-              e.message,
-            );
+            return debug("[%s] error while broadcasting message: %s", this.uid, e.message);
           }
         }
         super.broadcast(packet, opts);
@@ -26438,34 +25374,27 @@ var require_cluster_adapter = __commonJS({
         }
         const isEventPacket = packet.type === 2;
         const withoutAcknowledgement = packet.id === void 0;
-        const notVolatile =
-          ((_a = opts.flags) === null || _a === void 0
-            ? void 0
-            : _a.volatile) === void 0;
+        const notVolatile = ((_a = opts.flags) === null || _a === void 0 ? void 0 : _a.volatile) === void 0;
         if (isEventPacket && withoutAcknowledgement && notVolatile) {
           packet.data.push(offset);
         }
       }
       broadcastWithAck(packet, opts, clientCountCallback, ack) {
         var _a;
-        const onlyLocal =
-          (_a = opts === null || opts === void 0 ? void 0 : opts.flags) ===
-            null || _a === void 0
-            ? void 0
-            : _a.local;
+        const onlyLocal = (_a = opts === null || opts === void 0 ? void 0 : opts.flags) === null || _a === void 0 ? void 0 : _a.local;
         if (!onlyLocal) {
           const requestId = randomId();
           this.ackRequests.set(requestId, {
             clientCountCallback,
-            ack,
+            ack
           });
           this.publish({
             type: MessageType.BROADCAST,
             data: {
               packet,
               requestId,
-              opts: encodeOptions(opts),
-            },
+              opts: encodeOptions(opts)
+            }
           });
           setTimeout(() => {
             this.ackRequests.delete(requestId);
@@ -26475,69 +25404,54 @@ var require_cluster_adapter = __commonJS({
       }
       async addSockets(opts, rooms) {
         var _a;
-        const onlyLocal =
-          (_a = opts.flags) === null || _a === void 0 ? void 0 : _a.local;
+        const onlyLocal = (_a = opts.flags) === null || _a === void 0 ? void 0 : _a.local;
         if (!onlyLocal) {
           try {
             await this.publishAndReturnOffset({
               type: MessageType.SOCKETS_JOIN,
               data: {
                 opts: encodeOptions(opts),
-                rooms,
-              },
+                rooms
+              }
             });
           } catch (e) {
-            debug(
-              "[%s] error while publishing message: %s",
-              this.uid,
-              e.message,
-            );
+            debug("[%s] error while publishing message: %s", this.uid, e.message);
           }
         }
         super.addSockets(opts, rooms);
       }
       async delSockets(opts, rooms) {
         var _a;
-        const onlyLocal =
-          (_a = opts.flags) === null || _a === void 0 ? void 0 : _a.local;
+        const onlyLocal = (_a = opts.flags) === null || _a === void 0 ? void 0 : _a.local;
         if (!onlyLocal) {
           try {
             await this.publishAndReturnOffset({
               type: MessageType.SOCKETS_LEAVE,
               data: {
                 opts: encodeOptions(opts),
-                rooms,
-              },
+                rooms
+              }
             });
           } catch (e) {
-            debug(
-              "[%s] error while publishing message: %s",
-              this.uid,
-              e.message,
-            );
+            debug("[%s] error while publishing message: %s", this.uid, e.message);
           }
         }
         super.delSockets(opts, rooms);
       }
       async disconnectSockets(opts, close) {
         var _a;
-        const onlyLocal =
-          (_a = opts.flags) === null || _a === void 0 ? void 0 : _a.local;
+        const onlyLocal = (_a = opts.flags) === null || _a === void 0 ? void 0 : _a.local;
         if (!onlyLocal) {
           try {
             await this.publishAndReturnOffset({
               type: MessageType.DISCONNECT_SOCKETS,
               data: {
                 opts: encodeOptions(opts),
-                close,
-              },
+                close
+              }
             });
           } catch (e) {
-            debug(
-              "[%s] error while publishing message: %s",
-              this.uid,
-              e.message,
-            );
+            debug("[%s] error while publishing message: %s", this.uid, e.message);
           }
         }
         super.disconnectSockets(opts, close);
@@ -26546,13 +25460,10 @@ var require_cluster_adapter = __commonJS({
         var _a;
         const [localSockets, serverCount] = await Promise.all([
           super.fetchSockets(opts),
-          this.serverCount(),
+          this.serverCount()
         ]);
         const expectedResponseCount = serverCount - 1;
-        if (
-          ((_a = opts.flags) === null || _a === void 0 ? void 0 : _a.local) ||
-          expectedResponseCount <= 0
-        ) {
+        if (((_a = opts.flags) === null || _a === void 0 ? void 0 : _a.local) || expectedResponseCount <= 0) {
           return localSockets;
         }
         const requestId = randomId();
@@ -26560,11 +25471,7 @@ var require_cluster_adapter = __commonJS({
           const timeout = setTimeout(() => {
             const storedRequest2 = this.requests.get(requestId);
             if (storedRequest2) {
-              reject(
-                new Error(
-                  `timeout reached: only ${storedRequest2.current} responses received out of ${storedRequest2.expected}`,
-                ),
-              );
+              reject(new Error(`timeout reached: only ${storedRequest2.current} responses received out of ${storedRequest2.expected}`));
               this.requests.delete(requestId);
             }
           }, opts.flags.timeout || DEFAULT_TIMEOUT);
@@ -26574,15 +25481,15 @@ var require_cluster_adapter = __commonJS({
             timeout,
             current: 0,
             expected: expectedResponseCount,
-            responses: localSockets,
+            responses: localSockets
           };
           this.requests.set(requestId, storedRequest);
           this.publish({
             type: MessageType.FETCH_SOCKETS,
             data: {
               opts: encodeOptions(opts),
-              requestId,
-            },
+              requestId
+            }
           });
         });
       }
@@ -26592,17 +25499,13 @@ var require_cluster_adapter = __commonJS({
           return this.publish({
             type: MessageType.SERVER_SIDE_EMIT,
             data: {
-              packet,
-            },
+              packet
+            }
           });
         }
         const ack = packet.pop();
-        const expectedResponseCount = (await this.serverCount()) - 1;
-        debug(
-          '[%s] waiting for %d responses to "serverSideEmit" request',
-          this.uid,
-          expectedResponseCount,
-        );
+        const expectedResponseCount = await this.serverCount() - 1;
+        debug('[%s] waiting for %d responses to "serverSideEmit" request', this.uid, expectedResponseCount);
         if (expectedResponseCount <= 0) {
           return ack(null, []);
         }
@@ -26610,12 +25513,7 @@ var require_cluster_adapter = __commonJS({
         const timeout = setTimeout(() => {
           const storedRequest2 = this.requests.get(requestId);
           if (storedRequest2) {
-            ack(
-              new Error(
-                `timeout reached: only ${storedRequest2.current} responses received out of ${storedRequest2.expected}`,
-              ),
-              storedRequest2.responses,
-            );
+            ack(new Error(`timeout reached: only ${storedRequest2.current} responses received out of ${storedRequest2.expected}`), storedRequest2.responses);
             this.requests.delete(requestId);
           }
         }, DEFAULT_TIMEOUT);
@@ -26625,7 +25523,7 @@ var require_cluster_adapter = __commonJS({
           timeout,
           current: 0,
           expected: expectedResponseCount,
-          responses: [],
+          responses: []
         };
         this.requests.set(requestId, storedRequest);
         this.publish({
@@ -26633,8 +25531,8 @@ var require_cluster_adapter = __commonJS({
           data: {
             requestId,
             // the presence of this attribute defines whether an acknowledgement is needed
-            packet,
-          },
+            packet
+          }
         });
       }
       publish(message) {
@@ -26651,12 +25549,7 @@ var require_cluster_adapter = __commonJS({
       publishResponse(requesterUid, response) {
         response.uid = this.uid;
         response.nsp = this.nsp.name;
-        debug(
-          "[%s] sending response %s to %s",
-          this.uid,
-          response.type,
-          requesterUid,
-        );
+        debug("[%s] sending response %s to %s", this.uid, response.type, requesterUid);
         this.doPublishResponse(requesterUid, response).catch((err) => {
           debug("[%s] error while publishing response: %s", this.uid, err);
         });
@@ -26668,13 +25561,10 @@ var require_cluster_adapter = __commonJS({
         super(nsp);
         this.nodesMap = /* @__PURE__ */ new Map();
         this.customRequests = /* @__PURE__ */ new Map();
-        this._opts = Object.assign(
-          {
-            heartbeatInterval: 5e3,
-            heartbeatTimeout: 1e4,
-          },
-          opts,
-        );
+        this._opts = Object.assign({
+          heartbeatInterval: 5e3,
+          heartbeatTimeout: 1e4
+        }, opts);
         this.cleanupTimer = setInterval(() => {
           const now = Date.now();
           this.nodesMap.forEach((lastSeen, uid) => {
@@ -26688,7 +25578,7 @@ var require_cluster_adapter = __commonJS({
       }
       init() {
         this.publish({
-          type: MessageType.INITIAL_HEARTBEAT,
+          type: MessageType.INITIAL_HEARTBEAT
         });
       }
       scheduleHeartbeat() {
@@ -26697,14 +25587,14 @@ var require_cluster_adapter = __commonJS({
         } else {
           this.heartbeatTimer = setTimeout(() => {
             this.publish({
-              type: MessageType.HEARTBEAT,
+              type: MessageType.HEARTBEAT
             });
           }, this._opts.heartbeatInterval);
         }
       }
       close() {
         this.publish({
-          type: MessageType.ADAPTER_CLOSE,
+          type: MessageType.ADAPTER_CLOSE
         });
         clearTimeout(this.heartbeatTimer);
         if (this.cleanupTimer) {
@@ -26721,7 +25611,7 @@ var require_cluster_adapter = __commonJS({
         switch (message.type) {
           case MessageType.INITIAL_HEARTBEAT:
             this.publish({
-              type: MessageType.HEARTBEAT,
+              type: MessageType.HEARTBEAT
             });
             break;
           case MessageType.HEARTBEAT:
@@ -26746,17 +25636,13 @@ var require_cluster_adapter = __commonJS({
           return this.publish({
             type: MessageType.SERVER_SIDE_EMIT,
             data: {
-              packet,
-            },
+              packet
+            }
           });
         }
         const ack = packet.pop();
         const expectedResponseCount = this.nodesMap.size;
-        debug(
-          '[%s] waiting for %d responses to "serverSideEmit" request',
-          this.uid,
-          expectedResponseCount,
-        );
+        debug('[%s] waiting for %d responses to "serverSideEmit" request', this.uid, expectedResponseCount);
         if (expectedResponseCount <= 0) {
           return ack(null, []);
         }
@@ -26764,12 +25650,7 @@ var require_cluster_adapter = __commonJS({
         const timeout = setTimeout(() => {
           const storedRequest2 = this.customRequests.get(requestId);
           if (storedRequest2) {
-            ack(
-              new Error(
-                `timeout reached: missing ${storedRequest2.missingUids.size} responses`,
-              ),
-              storedRequest2.responses,
-            );
+            ack(new Error(`timeout reached: missing ${storedRequest2.missingUids.size} responses`), storedRequest2.responses);
             this.customRequests.delete(requestId);
           }
         }, DEFAULT_TIMEOUT);
@@ -26778,7 +25659,7 @@ var require_cluster_adapter = __commonJS({
           resolve: ack,
           timeout,
           missingUids: /* @__PURE__ */ new Set([...this.nodesMap.keys()]),
-          responses: [],
+          responses: []
         };
         this.customRequests.set(requestId, storedRequest);
         this.publish({
@@ -26786,8 +25667,8 @@ var require_cluster_adapter = __commonJS({
           data: {
             requestId,
             // the presence of this attribute defines whether an acknowledgement is needed
-            packet,
-          },
+            packet
+          }
         });
       }
       async fetchSockets(opts) {
@@ -26797,16 +25678,13 @@ var require_cluster_adapter = __commonJS({
             rooms: opts.rooms,
             except: opts.except,
             flags: {
-              local: true,
-            },
+              local: true
+            }
           }),
-          this.serverCount(),
+          this.serverCount()
         ]);
         const expectedResponseCount = serverCount - 1;
-        if (
-          ((_a = opts.flags) === null || _a === void 0 ? void 0 : _a.local) ||
-          expectedResponseCount <= 0
-        ) {
+        if (((_a = opts.flags) === null || _a === void 0 ? void 0 : _a.local) || expectedResponseCount <= 0) {
           return localSockets;
         }
         const requestId = randomId();
@@ -26814,11 +25692,7 @@ var require_cluster_adapter = __commonJS({
           const timeout = setTimeout(() => {
             const storedRequest2 = this.customRequests.get(requestId);
             if (storedRequest2) {
-              reject(
-                new Error(
-                  `timeout reached: missing ${storedRequest2.missingUids.size} responses`,
-                ),
-              );
+              reject(new Error(`timeout reached: missing ${storedRequest2.missingUids.size} responses`));
               this.customRequests.delete(requestId);
             }
           }, opts.flags.timeout || DEFAULT_TIMEOUT);
@@ -26827,35 +25701,28 @@ var require_cluster_adapter = __commonJS({
             resolve,
             timeout,
             missingUids: /* @__PURE__ */ new Set([...this.nodesMap.keys()]),
-            responses: localSockets,
+            responses: localSockets
           };
           this.customRequests.set(requestId, storedRequest);
           this.publish({
             type: MessageType.FETCH_SOCKETS,
             data: {
               opts: encodeOptions(opts),
-              requestId,
-            },
+              requestId
+            }
           });
         });
       }
       onResponse(response) {
         const requestId = response.data.requestId;
-        debug(
-          "[%s] received response %s to request %s",
-          this.uid,
-          response.type,
-          requestId,
-        );
+        debug("[%s] received response %s to request %s", this.uid, response.type, requestId);
         switch (response.type) {
           case MessageType.FETCH_SOCKETS_RESPONSE: {
             const request = this.customRequests.get(requestId);
             if (!request) {
               return;
             }
-            response.data.sockets.forEach((socket) =>
-              request.responses.push(socket),
-            );
+            response.data.sockets.forEach((socket) => request.responses.push(socket));
             request.missingUids.delete(response.uid);
             if (request.missingUids.size === 0) {
               clearTimeout(request.timeout);
@@ -26899,7 +25766,7 @@ var require_cluster_adapter = __commonJS({
       }
     };
     exports2.ClusterAdapterWithHeartbeat = ClusterAdapterWithHeartbeat;
-  },
+  }
 });
 
 // node_modules/socket.io-adapter/dist/index.js
@@ -26907,56 +25774,34 @@ var require_dist = __commonJS({
   "node_modules/socket.io-adapter/dist/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.MessageType =
-      exports2.ClusterAdapterWithHeartbeat =
-      exports2.ClusterAdapter =
-      exports2.SessionAwareAdapter =
-      exports2.Adapter =
-        void 0;
+    exports2.MessageType = exports2.ClusterAdapterWithHeartbeat = exports2.ClusterAdapter = exports2.SessionAwareAdapter = exports2.Adapter = void 0;
     var in_memory_adapter_1 = require_in_memory_adapter();
-    Object.defineProperty(exports2, "Adapter", {
-      enumerable: true,
-      get: function () {
-        return in_memory_adapter_1.Adapter;
-      },
-    });
-    Object.defineProperty(exports2, "SessionAwareAdapter", {
-      enumerable: true,
-      get: function () {
-        return in_memory_adapter_1.SessionAwareAdapter;
-      },
-    });
+    Object.defineProperty(exports2, "Adapter", { enumerable: true, get: function() {
+      return in_memory_adapter_1.Adapter;
+    } });
+    Object.defineProperty(exports2, "SessionAwareAdapter", { enumerable: true, get: function() {
+      return in_memory_adapter_1.SessionAwareAdapter;
+    } });
     var cluster_adapter_1 = require_cluster_adapter();
-    Object.defineProperty(exports2, "ClusterAdapter", {
-      enumerable: true,
-      get: function () {
-        return cluster_adapter_1.ClusterAdapter;
-      },
-    });
-    Object.defineProperty(exports2, "ClusterAdapterWithHeartbeat", {
-      enumerable: true,
-      get: function () {
-        return cluster_adapter_1.ClusterAdapterWithHeartbeat;
-      },
-    });
-    Object.defineProperty(exports2, "MessageType", {
-      enumerable: true,
-      get: function () {
-        return cluster_adapter_1.MessageType;
-      },
-    });
-  },
+    Object.defineProperty(exports2, "ClusterAdapter", { enumerable: true, get: function() {
+      return cluster_adapter_1.ClusterAdapter;
+    } });
+    Object.defineProperty(exports2, "ClusterAdapterWithHeartbeat", { enumerable: true, get: function() {
+      return cluster_adapter_1.ClusterAdapterWithHeartbeat;
+    } });
+    Object.defineProperty(exports2, "MessageType", { enumerable: true, get: function() {
+      return cluster_adapter_1.MessageType;
+    } });
+  }
 });
 
 // node_modules/socket.io/dist/parent-namespace.js
 var require_parent_namespace = __commonJS({
   "node_modules/socket.io/dist/parent-namespace.js"(exports2) {
     "use strict";
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.ParentNamespace = void 0;
     var namespace_1 = require_namespace();
@@ -26984,12 +25829,8 @@ var require_parent_namespace = __commonJS({
         debug("creating child namespace %s", name);
         const namespace = new namespace_1.Namespace(this.server, name);
         this["_fns"].forEach((fn) => namespace.use(fn));
-        this.listeners("connect").forEach((listener) =>
-          namespace.on("connect", listener),
-        );
-        this.listeners("connection").forEach((listener) =>
-          namespace.on("connection", listener),
-        );
+        this.listeners("connect").forEach((listener) => namespace.on("connect", listener));
+        this.listeners("connection").forEach((listener) => namespace.on("connection", listener));
         this.children.add(namespace);
         if (this.server._opts.cleanupEmptyChildNamespaces) {
           const remove = namespace._remove;
@@ -27020,18 +25861,16 @@ var require_parent_namespace = __commonJS({
         });
       }
     };
-  },
+  }
 });
 
 // node_modules/socket.io/dist/uws.js
 var require_uws = __commonJS({
   "node_modules/socket.io/dist/uws.js"(exports2) {
     "use strict";
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.patchAdapter = patchAdapter;
     exports2.restoreAdapter = restoreAdapter;
@@ -27043,11 +25882,10 @@ var require_uws = __commonJS({
     var SEPARATOR = "";
     var { addAll, del, broadcast } = socket_io_adapter_1.Adapter.prototype;
     function patchAdapter(app2) {
-      socket_io_adapter_1.Adapter.prototype.addAll = function (id, rooms) {
+      socket_io_adapter_1.Adapter.prototype.addAll = function(id, rooms) {
         const isNew = !this.sids.has(id);
         addAll.call(this, id, rooms);
-        const socket =
-          this.nsp.sockets.get(id) || this.nsp._preConnectSockets.get(id);
+        const socket = this.nsp.sockets.get(id) || this.nsp._preConnectSockets.get(id);
         if (!socket) {
           return;
         }
@@ -27064,10 +25902,9 @@ var require_uws = __commonJS({
           });
         }
       };
-      socket_io_adapter_1.Adapter.prototype.del = function (id, room) {
+      socket_io_adapter_1.Adapter.prototype.del = function(id, room) {
         del.call(this, id, room);
-        const socket =
-          this.nsp.sockets.get(id) || this.nsp._preConnectSockets.get(id);
+        const socket = this.nsp.sockets.get(id) || this.nsp._preConnectSockets.get(id);
         if (socket && socket.conn.transport.name === "websocket") {
           const sessionId = socket.conn.id;
           const websocket = socket.conn.transport.socket;
@@ -27076,10 +25913,7 @@ var require_uws = __commonJS({
           websocket.unsubscribe(topic);
         }
       };
-      socket_io_adapter_1.Adapter.prototype.broadcast = function (
-        packet,
-        opts,
-      ) {
+      socket_io_adapter_1.Adapter.prototype.broadcast = function(packet, opts) {
         const useFastPublish = opts.rooms.size <= 1 && opts.except.size === 0;
         if (!useFastPublish) {
           broadcast.call(this, packet, opts);
@@ -27089,22 +25923,15 @@ var require_uws = __commonJS({
         const basePacketOpts = {
           preEncoded: true,
           volatile: flags.volatile,
-          compress: flags.compress,
+          compress: flags.compress
         };
         packet.nsp = this.nsp.name;
         const encodedPackets = this.encoder.encode(packet);
-        const topic =
-          opts.rooms.size === 0
-            ? this.nsp.name
-            : `${this.nsp.name}${SEPARATOR}${opts.rooms.keys().next().value}`;
+        const topic = opts.rooms.size === 0 ? this.nsp.name : `${this.nsp.name}${SEPARATOR}${opts.rooms.keys().next().value}`;
         debug("fast publish to %s", topic);
         encodedPackets.forEach((encodedPacket) => {
           const isBinary = typeof encodedPacket !== "string";
-          app2.publish(
-            topic,
-            isBinary ? encodedPacket : "4" + encodedPacket,
-            isBinary,
-          );
+          app2.publish(topic, isBinary ? encodedPacket : "4" + encodedPacket, isBinary);
         });
         this.apply(opts, (socket) => {
           if (socket.conn.transport.name !== "websocket") {
@@ -27138,8 +25965,7 @@ var require_uws = __commonJS({
     function serveFile(res, filepath) {
       const { size } = (0, fs_1.statSync)(filepath);
       const readStream = (0, fs_1.createReadStream)(filepath);
-      const destroyReadStream = () =>
-        !readStream.destroyed && readStream.destroy();
+      const destroyReadStream = () => !readStream.destroyed && readStream.destroy();
       const onError = (error) => {
         destroyReadStream();
         throw error;
@@ -27152,10 +25978,7 @@ var require_uws = __commonJS({
           if (!done && !ok) {
             readStream.pause();
             res.onWritable((offset) => {
-              const [ok2, done2] = res.tryEnd(
-                arrayBufferChunk.slice(offset - lastOffset),
-                size,
-              );
+              const [ok2, done2] = res.tryEnd(arrayBufferChunk.slice(offset - lastOffset), size);
               if (!done2 && ok2) {
                 readStream.resume();
               }
@@ -27165,12 +25988,9 @@ var require_uws = __commonJS({
         });
       };
       res.onAborted(destroyReadStream);
-      readStream
-        .on("data", onDataChunk)
-        .on("error", onError)
-        .on("end", destroyReadStream);
+      readStream.on("data", onDataChunk).on("error", onError).on("end", destroyReadStream);
     }
-  },
+  }
 });
 
 // node_modules/socket.io/package.json
@@ -27187,14 +26007,19 @@ var require_package = __commonJS({
         "tcp",
         "events",
         "socket",
-        "io",
+        "io"
       ],
-      files: ["dist/", "client-dist/", "wrapper.mjs", "!**/*.tsbuildinfo"],
+      files: [
+        "dist/",
+        "client-dist/",
+        "wrapper.mjs",
+        "!**/*.tsbuildinfo"
+      ],
       directories: {
         doc: "docs/",
         example: "example/",
         lib: "lib/",
-        test: "test/",
+        test: "test/"
       },
       type: "commonjs",
       main: "./dist/index.js",
@@ -27202,30 +26027,28 @@ var require_package = __commonJS({
         ".": {
           types: "./dist/index.d.ts",
           import: "./wrapper.mjs",
-          require: "./dist/index.js",
+          require: "./dist/index.js"
         },
-        "./package.json": "./package.json",
+        "./package.json": "./package.json"
       },
       types: "./dist/index.d.ts",
       license: "MIT",
-      homepage:
-        "https://github.com/socketio/socket.io/tree/main/packages/socket.io#readme",
+      homepage: "https://github.com/socketio/socket.io/tree/main/packages/socket.io#readme",
       repository: {
         type: "git",
-        url: "git+https://github.com/socketio/socket.io.git",
+        url: "git+https://github.com/socketio/socket.io.git"
       },
       bugs: {
-        url: "https://github.com/socketio/socket.io/issues",
+        url: "https://github.com/socketio/socket.io/issues"
       },
       scripts: {
         compile: "rimraf ./dist && tsc",
         test: "npm run format:check && npm run compile && npm run test:types && npm run test:unit",
         "test:types": "tsd",
-        "test:unit":
-          "nyc mocha --import=tsx --reporter spec --slow 200 --bail --timeout 10000 test/index.ts",
+        "test:unit": "nyc mocha --import=tsx --reporter spec --slow 200 --bail --timeout 10000 test/index.ts",
         "format:check": 'prettier --check "lib/**/*.ts" "test/**/*.ts"',
         "format:fix": 'prettier --write "lib/**/*.ts" "test/**/*.ts"',
-        prepack: "npm run compile",
+        prepack: "npm run compile"
       },
       dependencies: {
         accepts: "~1.3.4",
@@ -27234,92 +26057,70 @@ var require_package = __commonJS({
         debug: "~4.4.1",
         "engine.io": "~6.6.0",
         "socket.io-adapter": "~2.5.2",
-        "socket.io-parser": "~4.2.4",
+        "socket.io-parser": "~4.2.4"
       },
       contributors: [
         {
           name: "Guillermo Rauch",
-          email: "rauchg@gmail.com",
+          email: "rauchg@gmail.com"
         },
         {
           name: "Arnout Kazemier",
-          email: "info@3rd-eden.com",
+          email: "info@3rd-eden.com"
         },
         {
           name: "Vladimir Dronnikov",
-          email: "dronnikov@gmail.com",
+          email: "dronnikov@gmail.com"
         },
         {
           name: "Einar Otto Stangvik",
-          email: "einaros@gmail.com",
-        },
+          email: "einaros@gmail.com"
+        }
       ],
       engines: {
-        node: ">=10.2.0",
+        node: ">=10.2.0"
       },
       tsd: {
-        directory: "test",
-      },
+        directory: "test"
+      }
     };
-  },
+  }
 });
 
 // node_modules/socket.io/dist/index.js
 var require_dist2 = __commonJS({
   "node_modules/socket.io/dist/index.js"(exports2, module2) {
     "use strict";
-    var __createBinding =
-      (exports2 && exports2.__createBinding) ||
-      (Object.create
-        ? function (o, m, k, k2) {
-            if (k2 === void 0) k2 = k;
-            var desc = Object.getOwnPropertyDescriptor(m, k);
-            if (
-              !desc ||
-              ("get" in desc
-                ? !m.__esModule
-                : desc.writable || desc.configurable)
-            ) {
-              desc = {
-                enumerable: true,
-                get: function () {
-                  return m[k];
-                },
-              };
-            }
-            Object.defineProperty(o, k2, desc);
-          }
-        : function (o, m, k, k2) {
-            if (k2 === void 0) k2 = k;
-            o[k2] = m[k];
-          });
-    var __setModuleDefault =
-      (exports2 && exports2.__setModuleDefault) ||
-      (Object.create
-        ? function (o, v) {
-            Object.defineProperty(o, "default", { enumerable: true, value: v });
-          }
-        : function (o, v) {
-            o["default"] = v;
-          });
-    var __importStar =
-      (exports2 && exports2.__importStar) ||
-      function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) {
-          for (var k in mod)
-            if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
-              __createBinding(result, mod, k);
-        }
-        __setModuleDefault(result, mod);
-        return result;
-      };
-    var __importDefault =
-      (exports2 && exports2.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
+      if (k2 === void 0) k2 = k;
+      var desc = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+        desc = { enumerable: true, get: function() {
+          return m[k];
+        } };
+      }
+      Object.defineProperty(o, k2, desc);
+    }) : (function(o, m, k, k2) {
+      if (k2 === void 0) k2 = k;
+      o[k2] = m[k];
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
+      Object.defineProperty(o, "default", { enumerable: true, value: v });
+    }) : function(o, v) {
+      o["default"] = v;
+    });
+    var __importStar = exports2 && exports2.__importStar || function(mod) {
+      if (mod && mod.__esModule) return mod;
+      var result = {};
+      if (mod != null) {
+        for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+      }
+      __setModuleDefault(result, mod);
+      return result;
+    };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Namespace = exports2.Socket = exports2.Server = void 0;
     var http_1 = __importDefault(require("http"));
@@ -27332,23 +26133,17 @@ var require_dist2 = __commonJS({
     var client_1 = require_client2();
     var events_1 = require("events");
     var namespace_1 = require_namespace();
-    Object.defineProperty(exports2, "Namespace", {
-      enumerable: true,
-      get: function () {
-        return namespace_1.Namespace;
-      },
-    });
+    Object.defineProperty(exports2, "Namespace", { enumerable: true, get: function() {
+      return namespace_1.Namespace;
+    } });
     var parent_namespace_1 = require_parent_namespace();
     var socket_io_adapter_1 = require_dist();
     var parser = __importStar(require_cjs4());
     var debug_1 = __importDefault(require_src());
     var socket_1 = require_socket4();
-    Object.defineProperty(exports2, "Socket", {
-      enumerable: true,
-      get: function () {
-        return socket_1.Socket;
-      },
-    });
+    Object.defineProperty(exports2, "Socket", { enumerable: true, get: function() {
+      return socket_1.Socket;
+    } });
     var typed_events_1 = require_typed_events();
     var uws_1 = require_uws();
     var cors_1 = __importDefault(require_lib());
@@ -27372,20 +26167,18 @@ var require_dist2 = __commonJS({
         this.encoder = new this._parser.Encoder();
         this.opts = opts;
         if (opts.connectionStateRecovery) {
-          opts.connectionStateRecovery = Object.assign(
-            {
-              maxDisconnectionDuration: 2 * 60 * 1e3,
-              skipMiddlewares: true,
-            },
-            opts.connectionStateRecovery,
-          );
+          opts.connectionStateRecovery = Object.assign({
+            maxDisconnectionDuration: 2 * 60 * 1e3,
+            skipMiddlewares: true
+          }, opts.connectionStateRecovery);
           this.adapter(opts.adapter || socket_io_adapter_1.SessionAwareAdapter);
         } else {
           this.adapter(opts.adapter || socket_io_adapter_1.Adapter);
         }
         opts.cleanupEmptyChildNamespaces = !!opts.cleanupEmptyChildNamespaces;
         this.sockets = this.of("/");
-        if (srv || typeof srv == "number") this.attach(srv);
+        if (srv || typeof srv == "number")
+          this.attach(srv);
         if (this.opts.cors) {
           this._corsMiddleware = (0, cors_1.default)(this.opts.cors);
         }
@@ -27394,7 +26187,8 @@ var require_dist2 = __commonJS({
         return this.opts;
       }
       serveClient(v) {
-        if (!arguments.length) return this._serveClient;
+        if (!arguments.length)
+          return this._serveClient;
         this._serveClient = v;
         return this;
       }
@@ -27408,7 +26202,8 @@ var require_dist2 = __commonJS({
        * @private
        */
       _checkNamespace(name, auth, fn) {
-        if (this.parentNsps.size === 0) return fn(false);
+        if (this.parentNsps.size === 0)
+          return fn(false);
         const keysIterator = this.parentNsps.keys();
         const run = () => {
           const nextFn = keysIterator.next();
@@ -27423,9 +26218,7 @@ var require_dist2 = __commonJS({
               debug("dynamic namespace %s already exists", name);
               return fn(this._nsps.get(name));
             }
-            const namespace = this.parentNsps
-              .get(nextFn.value)
-              .createChild(name);
+            const namespace = this.parentNsps.get(nextFn.value).createChild(name);
             debug("dynamic namespace %s was created", name);
             fn(namespace);
           });
@@ -27433,26 +26226,22 @@ var require_dist2 = __commonJS({
         run();
       }
       path(v) {
-        if (!arguments.length) return this._path;
+        if (!arguments.length)
+          return this._path;
         this._path = v.replace(/\/$/, "");
-        const escapedPath = this._path.replace(
-          /[-\/\\^$*+?.()|[\]{}]/g,
-          "\\$&",
-        );
-        this.clientPathRegex = new RegExp(
-          "^" +
-            escapedPath +
-            "/socket\\.io(\\.msgpack|\\.esm)?(\\.min)?\\.js(\\.map)?(?:\\?|$)",
-        );
+        const escapedPath = this._path.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+        this.clientPathRegex = new RegExp("^" + escapedPath + "/socket\\.io(\\.msgpack|\\.esm)?(\\.min)?\\.js(\\.map)?(?:\\?|$)");
         return this;
       }
       connectTimeout(v) {
-        if (v === void 0) return this._connectTimeout;
+        if (v === void 0)
+          return this._connectTimeout;
         this._connectTimeout = v;
         return this;
       }
       adapter(v) {
-        if (!arguments.length) return this._adapter;
+        if (!arguments.length)
+          return this._adapter;
         this._adapter = v;
         for (const nsp of this._nsps.values()) {
           nsp._initAdapter();
@@ -27478,8 +26267,7 @@ var require_dist2 = __commonJS({
        */
       attach(srv, opts = {}) {
         if ("function" == typeof srv) {
-          const msg =
-            "You are trying to attach socket.io to an express request handler function. Please pass a http.Server instance.";
+          const msg = "You are trying to attach socket.io to an express request handler function. Please pass a http.Server instance.";
           throw new Error(msg);
         }
         if (Number(srv) == srv) {
@@ -27517,11 +26305,7 @@ var require_dist2 = __commonJS({
               req.setYield(true);
               return;
             }
-            const filename = req
-              .getUrl()
-              .replace(this._path, "")
-              .replace(/\?.*$/, "")
-              .replace(/^\//, "");
+            const filename = req.getUrl().replace(this._path, "").replace(/\?.*$/, "").replace(/^\//, "");
             const isMap = dotMapRegex.test(filename);
             const type2 = isMap ? "map" : "source";
             const expectedEtag = '"' + clientVersion + '"';
@@ -27537,12 +26321,7 @@ var require_dist2 = __commonJS({
             }
             debug("serve client %s", type2);
             res.writeHeader("cache-control", "public, max-age=0");
-            res.writeHeader(
-              "content-type",
-              "application/" +
-                (isMap ? "json" : "javascript") +
-                "; charset=utf-8",
-            );
+            res.writeHeader("content-type", "application/" + (isMap ? "json" : "javascript") + "; charset=utf-8");
             res.writeHeader("etag", expectedEtag);
             const filepath = path.join(__dirname, "../client-dist/", filename);
             (0, uws_1.serveFile)(res, filepath);
@@ -27560,7 +26339,8 @@ var require_dist2 = __commonJS({
       initEngine(srv, opts) {
         debug("creating engine.io instance with opts %j", opts);
         this.eio = (0, engine_io_1.attach)(srv, opts);
-        if (this._serveClient) this.attachServe(srv);
+        if (this._serveClient)
+          this.attachServe(srv);
         this.httpServer = srv;
         this.bind(this.eio);
       }
@@ -27614,10 +26394,7 @@ var require_dist2 = __commonJS({
         }
         debug("serve client %s", type2);
         res.setHeader("Cache-Control", "public, max-age=0");
-        res.setHeader(
-          "Content-Type",
-          "application/" + (isMap ? "json" : "javascript") + "; charset=utf-8",
-        );
+        res.setHeader("Content-Type", "application/" + (isMap ? "json" : "javascript") + "; charset=utf-8");
         res.setHeader("ETag", expectedEtag);
         _Server.sendFile(filename, req, res);
       }
@@ -27628,9 +26405,7 @@ var require_dist2 = __commonJS({
        * @private
        */
       static sendFile(filename, req, res) {
-        const readStream = (0, fs_1.createReadStream)(
-          path.join(__dirname, "../client-dist/", filename),
-        );
+        const readStream = (0, fs_1.createReadStream)(path.join(__dirname, "../client-dist/", filename));
         const encoding = accepts(req).encodings(["br", "gzip", "deflate"]);
         const onError = (err) => {
           if (err) {
@@ -27640,30 +26415,15 @@ var require_dist2 = __commonJS({
         switch (encoding) {
           case "br":
             res.writeHead(200, { "content-encoding": "br" });
-            (0, stream_1.pipeline)(
-              readStream,
-              (0, zlib_1.createBrotliCompress)(),
-              res,
-              onError,
-            );
+            (0, stream_1.pipeline)(readStream, (0, zlib_1.createBrotliCompress)(), res, onError);
             break;
           case "gzip":
             res.writeHead(200, { "content-encoding": "gzip" });
-            (0, stream_1.pipeline)(
-              readStream,
-              (0, zlib_1.createGzip)(),
-              res,
-              onError,
-            );
+            (0, stream_1.pipeline)(readStream, (0, zlib_1.createGzip)(), res, onError);
             break;
           case "deflate":
             res.writeHead(200, { "content-encoding": "deflate" });
-            (0, stream_1.pipeline)(
-              readStream,
-              (0, zlib_1.createDeflate)(),
-              res,
-              onError,
-            );
+            (0, stream_1.pipeline)(readStream, (0, zlib_1.createDeflate)(), res, onError);
             break;
           default:
             res.writeHead(200);
@@ -27721,10 +26481,7 @@ var require_dist2 = __commonJS({
           if (typeof name === "function") {
             this.parentNsps.set(name, parentNsp);
           } else {
-            this.parentNsps.set(
-              (nsp2, conn, next) => next(null, name.test(nsp2)),
-              parentNsp,
-            );
+            this.parentNsps.set((nsp2, conn, next) => next(null, name.test(nsp2)), parentNsp);
             this.parentNamespacesFromRegExp.set(name, parentNsp);
           }
           if (fn) {
@@ -27732,17 +26489,13 @@ var require_dist2 = __commonJS({
           }
           return parentNsp;
         }
-        if (String(name)[0] !== "/") name = "/" + name;
+        if (String(name)[0] !== "/")
+          name = "/" + name;
         let nsp = this._nsps.get(name);
         if (!nsp) {
-          for (const [regex, parentNamespace] of this
-            .parentNamespacesFromRegExp) {
+          for (const [regex, parentNamespace] of this.parentNamespacesFromRegExp) {
             if (regex.test(name)) {
-              debug(
-                "attaching namespace %s to parent namespace %s",
-                name,
-                regex,
-              );
+              debug("attaching namespace %s to parent namespace %s", name, regex);
               return parentNamespace.createChild(name);
             }
           }
@@ -27753,7 +26506,8 @@ var require_dist2 = __commonJS({
             this.sockets.emitReserved("new_namespace", nsp);
           }
         }
-        if (fn) nsp.on("connect", fn);
+        if (fn)
+          nsp.on("connect", fn);
         return nsp;
       }
       /**
@@ -27762,14 +26516,12 @@ var require_dist2 = __commonJS({
        * @param [fn] optional, called as `fn([err])` on error OR all conns closed
        */
       async close(fn) {
-        await Promise.allSettled(
-          [...this._nsps.values()].map(async (nsp) => {
-            nsp.sockets.forEach((socket) => {
-              socket._onclose("server shutting down");
-            });
-            await nsp.adapter.close();
-          }),
-        );
+        await Promise.allSettled([...this._nsps.values()].map(async (nsp) => {
+          nsp.sockets.forEach((socket) => {
+            socket._onclose("server shutting down");
+          });
+          await nsp.adapter.close();
+        }));
         this.engine.close();
         (0, uws_1.restoreAdapter)();
         if (this.httpServer) {
@@ -28072,13 +26824,11 @@ var require_dist2 = __commonJS({
       }
     };
     exports2.Server = Server;
-    var emitterMethods = Object.keys(events_1.EventEmitter.prototype).filter(
-      function (key) {
-        return typeof events_1.EventEmitter.prototype[key] === "function";
-      },
-    );
-    emitterMethods.forEach(function (fn) {
-      Server.prototype[fn] = function () {
+    var emitterMethods = Object.keys(events_1.EventEmitter.prototype).filter(function(key) {
+      return typeof events_1.EventEmitter.prototype[key] === "function";
+    });
+    emitterMethods.forEach(function(fn) {
+      Server.prototype[fn] = function() {
         return this.sockets[fn].apply(this.sockets, arguments);
       };
     });
@@ -28086,7 +26836,7 @@ var require_dist2 = __commonJS({
     module2.exports.Server = Server;
     module2.exports.Namespace = namespace_1.Namespace;
     module2.exports.Socket = socket_1.Socket;
-  },
+  }
 });
 
 // js/get_ip.js
@@ -28108,9 +26858,9 @@ var require_get_ip = __commonJS({
       return "127.0.0.1";
     }
     module2.exports = {
-      get_ip: get_ipv4,
+      get_ip: get_ipv4
     };
-  },
+  }
 });
 
 // js/server.js
@@ -28136,35 +26886,27 @@ var require_server2 = __commonJS({
           cors: { origin: "*" },
           pingTimeout: 3e4,
           pingInterval: 1e4,
-          maxHttpBufferSize: 1e8,
+          maxHttpBufferSize: 1e8
         });
         this.io.on("connection", (socket) => {
           console.log("User connected:", socket.id);
           const isHost = Object.keys(this.users).length === 0;
           const username = socket.handshake.auth.username || "Anonymous";
-          const userColor =
-            "#" + Math.floor(Math.random() * 16777215).toString(16);
+          const userColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
           this.users[socket.id] = {
             id: socket.id,
             name: username,
             isHost,
-            color: userColor,
+            color: userColor
           };
           if (isHost) this.host_id = socket.id;
           socket.emit("is-host", isHost);
-          socket.broadcast.emit("user-joined", {
-            id: socket.id,
-            name: username,
-          });
+          socket.broadcast.emit("user-joined", { id: socket.id, name: username });
           if (!isHost && this.host_id) {
-            this.io
-              .to(this.host_id)
-              .emit("get-whole-document", { requesterId: socket.id });
+            this.io.to(this.host_id).emit("get-whole-document", { requesterId: socket.id });
           }
           socket.on("host-delivers-document", (data) => {
-            this.io
-              .to(data.to)
-              .emit("load-whole-document", { json: data.json });
+            this.io.to(data.to).emit("load-whole-document", { json: data.json });
           });
           socket.on("client-mouse-moved", (data) => {
             socket.broadcast.emit("update-mouse-pos", {
@@ -28172,8 +26914,11 @@ var require_server2 = __commonJS({
               x: data.x,
               y: data.y,
               diagram: data.diagram,
-              name: this.users[socket.id].name,
+              name: this.users[socket.id].name
             });
+          });
+          socket.on("request-doc", () => {
+            this.io.to(this.host_id).emit("get-whole-document", { requesterId: socket.id });
           });
           socket.on("sync-operation", (op) => {
             socket.broadcast.emit("remote-operation", op);
@@ -28191,7 +26936,7 @@ var require_server2 = __commonJS({
                 this.io.emit("element-locked", {
                   viewId: id,
                   ownerId: socket.id,
-                  color: this.users[socket.id].color,
+                  color: this.users[socket.id].color
                 });
               }
             });
@@ -28232,9 +26977,7 @@ var require_server2 = __commonJS({
         server.start(targetPort);
         server.server.on("error", (e) => {
           if (e.code === "EADDRINUSE") {
-            app.toast.error(
-              `Port ${targetPort} occupied. Close other instances.`,
-            );
+            app.toast.error(`Port ${targetPort} occupied. Close other instances.`);
           }
         });
       } catch (e) {
@@ -28258,9 +27001,9 @@ var require_server2 = __commonJS({
       stopServer,
       getServerAddress,
       getServer,
-      defaultPort,
+      defaultPort
     };
-  },
+  }
 });
 
 // js/net.js
@@ -28274,7 +27017,7 @@ var require_net = __commonJS({
       am_i_hosting = server.startServer(server.defaultPort);
       am_i_connected = await client.connectToServer(
         server.getServerAddress(),
-        name,
+        name
       );
       return am_i_connected && am_i_hosting;
     }
@@ -28297,13 +27040,18 @@ var require_net = __commonJS({
       if (am_i_hosting) return server.getServerAddress();
       if (am_i_hosting) return client.getConnectedAddress();
     }
+    function syncDoc() {
+      if (!am_i_connected) return;
+      client.requestDocument();
+    }
     module2.exports = {
       startSession: startSession2,
       joinSession: joinSession2,
       endSession: endSession2,
       getSessionLink,
+      syncDoc
     };
-  },
+  }
 });
 
 // main_src.js
@@ -28323,15 +27071,16 @@ async function startSession() {
       ls_js: false,
       ls_es: true,
       ls_cs: true,
+      ls_sd: true
     },
     null,
-    null,
+    null
   );
 }
 async function joinSession() {
   const data = await fachada.showJS();
   if (!data) return;
-  if (!(await net.joinSession(data.name, data.address))) {
+  if (!await net.joinSession(data.name, data.address)) {
     fachada.WARN("Couldnt join session");
     return;
   }
@@ -28342,9 +27091,10 @@ async function joinSession() {
       ls_js: false,
       ls_es: true,
       ls_cs: true,
+      ls_sd: true
     },
     null,
-    null,
+    null
   );
 }
 function endSession() {
@@ -28356,29 +27106,31 @@ function endSession() {
       ls_js: true,
       ls_es: false,
       ls_cs: false,
+      ls_sd: false
     },
     null,
-    null,
+    null
   );
 }
 function copySessionLink() {
   let link = net.getSessionLink();
-  navigator.clipboard
-    .writeText(link)
-    .then(() => {
-      fachada.INFO("Session link copied!");
-    })
-    .catch((err) => {
-      console.error("Error copying with navigator:", err);
-      console.log("Couldnt copy. The link is: " + link);
-      fachada.ERR("Error. See console");
-    });
+  navigator.clipboard.writeText(link).then(() => {
+    fachada.INFO("Session link copied!");
+  }).catch((err) => {
+    console.error("Error copying with navigator:", err);
+    console.log("Couldnt copy. The link is: " + link);
+    fachada.ERR("Error. See console");
+  });
+}
+function syncDocument() {
+  net.syncDoc();
 }
 function init() {
   app.commands.register("liveshare:ss", startSession);
   app.commands.register("liveshare:js", joinSession);
   app.commands.register("liveshare:cs", copySessionLink);
   app.commands.register("liveshare:es", endSession);
+  app.commands.register("liveshare:sd", syncDocument);
   app.commands.register("liveshare:pa", () => {
     console.log(app);
     console.log(app.project.getProject());
