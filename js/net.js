@@ -43,11 +43,17 @@ function getSessionLink() {
   let baseUrl = am_i_hosting
     ? server.getServerAddress()
     : client.getConnectedAddress();
+
   if (!baseUrl) return "";
 
-  // Si soy el host, mi ID de socket suele ser el ID de la sala inicial
-  // pero lo ideal es que el servidor te confirme el room_id exacto.
-  // Por ahora, si la URL no tiene la sala, podrías concatenarla.
+  const roomId = client.getCurrentRoom();
+
+  if (roomId) {
+    const urlObj = new URL(baseUrl);
+    urlObj.searchParams.set("room", roomId);
+    return urlObj.toString();
+  }
+
   return baseUrl;
 }
 

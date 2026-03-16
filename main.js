@@ -9246,6 +9246,9 @@ var require_client = __commonJS({
           if (am_i_host) fachada2.hideLoadingOverlay();
           if (am_i_host) fachada2.INFO("You're the host");
         });
+        socket.on("room-assigned", (id) => {
+          current_room = id;
+        });
         socket.on("update-mouse-pos", (data) => {
           if (data.id == socket.id) return;
           mm_view.updateMousePosition(data);
@@ -9440,6 +9443,9 @@ var require_client = __commonJS({
       fachada2.showLoadingOverlay();
       socket.emit("request-doc");
     }
+    function getCurrentRoom() {
+      return current_room;
+    }
     function disconnect() {
       if (socket) {
         socket.disconnect();
@@ -9457,7 +9463,8 @@ var require_client = __commonJS({
       sendMousePosition,
       disconnect,
       getConnectedAddress,
-      requestDocument
+      requestDocument,
+      getCurrentRoom
     };
   }
 });
@@ -26912,6 +26919,7 @@ var require_server2 = __commonJS({
             // Color aleatorio para locks
           };
           socket.emit("is-host", isHost);
+          socket.emit("room-assigned", room_id);
           socket.to(room_id).emit("user-joined", { id: socket.id, name: username });
           if (!isHost && this.rooms[room_id].host_id) {
             this.io.to(this.rooms[room_id].host_id).emit("get-whole-document", { requesterId: socket.id });
@@ -27069,6 +27077,12 @@ var require_net = __commonJS({
     function getSessionLink() {
       let baseUrl = am_i_hosting ? server.getServerAddress() : client.getConnectedAddress();
       if (!baseUrl) return "";
+      const roomId = client.getCurrentRoom();
+      if (roomId) {
+        const urlObj = new URL(baseUrl);
+        urlObj.searchParams.set("room", roomId);
+        return urlObj.toString();
+      }
       return baseUrl;
     }
     function syncDoc() {

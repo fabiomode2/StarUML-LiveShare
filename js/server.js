@@ -48,6 +48,7 @@ class LiveShareServer {
       };
 
       socket.emit("is-host", isHost);
+      socket.emit("room-assigned", room_id);
       socket.to(room_id).emit("user-joined", { id: socket.id, name: username });
 
       if (!isHost && this.rooms[room_id].host_id) {

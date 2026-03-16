@@ -36,6 +36,10 @@ async function connectToServer(url, name, roomid) {
       if (am_i_host) fachada.INFO("You're the host");
     });
 
+    socket.on("room-assigned", (id) => {
+      current_room = id;
+    });
+
     socket.on("update-mouse-pos", (data) => {
       if (data.id == socket.id) return;
       mm_view.updateMousePosition(data);
@@ -267,6 +271,10 @@ function requestDocument() {
   socket.emit("request-doc");
 }
 
+function getCurrentRoom() {
+  return current_room;
+}
+
 function disconnect() {
   if (socket) {
     socket.disconnect();
@@ -286,4 +294,5 @@ module.exports = {
   disconnect,
   getConnectedAddress,
   requestDocument,
+  getCurrentRoom,
 };
