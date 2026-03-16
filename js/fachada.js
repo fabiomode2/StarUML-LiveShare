@@ -30,7 +30,7 @@ async function showSSDialog() {
       const data = {
         name: $el.find("#name").val(),
         type: $el.find("#type").val(),
-        network: $el.find("#network").val(),
+        server: $el.find("#server").val(),
       };
 
       if (data.name == "") {

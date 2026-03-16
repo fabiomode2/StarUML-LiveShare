@@ -5,9 +5,9 @@ const CONNECT_TIMEOUT = 500;
 let am_i_hosting = false;
 let am_i_connected = false;
 
-async function startSession(name, type, relay) {
-  //  TODO: TYPE AND RELAY. RIGHT NOW ONLY LANs WORK
-  am_i_hosting = server.startServer(server.defaultPort);
+async function startSession(name, type, server) {
+  if (server) am_i_hosting = client.connectToServer(server, name, -1);
+  else am_i_hosting = server.startServer(server.defaultPort);
   am_i_connected = await client.connectToServer(
     server.getServerAddress(),
     name,
@@ -17,8 +17,12 @@ async function startSession(name, type, relay) {
 }
 
 async function joinSession(name, url) {
+  const urlObj = new URL(url);
+  const roomId = urlObj.searchParams.get("room");
+  const serverUrl = urlObj.origin;
+
   am_i_hosting = false;
-  am_i_connected = await client.connectToServer(url, name);
+  am_i_connected = await client.connectToServer(serverUrl, name, roomId || -1);
 
   return am_i_connected;
 }
@@ -36,8 +40,15 @@ function endSession() {
 }
 
 function getSessionLink() {
-  if (am_i_hosting) return server.getServerAddress();
-  if (am_i_hosting) return client.getConnectedAddress();
+  let baseUrl = am_i_hosting
+    ? server.getServerAddress()
+    : client.getConnectedAddress();
+  if (!baseUrl) return "";
+
+  // Si soy el host, mi ID de socket suele ser el ID de la sala inicial
+  // pero lo ideal es que el servidor te confirme el room_id exacto.
+  // Por ahora, si la URL no tiene la sala, podrías concatenarla.
+  return baseUrl;
 }
 
 function syncDoc() {

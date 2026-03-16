@@ -5,22 +5,24 @@ const fachada = require("./fachada.js");
 const flatted = require("flatted");
 
 let socket = null;
+let current_room = null;
 let address = "";
 let users = {};
 let am_i_host = false;
 let isRemoteChange = false;
 
-// Registro de elementos visuales de bloqueo
 let activeHighlights = {};
 
-async function connectToServer(url, name) {
+async function connectToServer(url, name, roomid) {
   return new Promise((resolve, reject) => {
     socket = io(url, {
       transports: ["websocket"],
       reconnectionAttempts: 3,
       timeout: 5000,
-      auth: { username: name },
+      auth: { username: name, room: roomid },
     });
+
+    if (roomid) current_room = roomid;
 
     socket.on("user-joined", (data) => {
       if (!users[data.id]) users[data.id] = data.name;
@@ -31,6 +33,7 @@ async function connectToServer(url, name) {
       am_i_host = is_host;
       if (!am_i_host) fachada.disableHostOptions();
       if (am_i_host) fachada.hideLoadingOverlay();
+      if (am_i_host) fachada.INFO("You're the host");
     });
 
     socket.on("update-mouse-pos", (data) => {
@@ -138,37 +141,44 @@ async function connectToServer(url, name) {
   });
 }
 
+const handleOperation = (operation) => {
+  if (isRemoteChange || app.repository.bypassConfirmation) return;
+  if (socket && socket.connected) {
+    const str = flatted.stringify(operation);
+    socket.emit("sync-operation", str);
+  }
+};
+
+const handleSelection = (models, views) => {
+  if (!socket || !socket.connected) return;
+  if (views && views.length > 0) {
+    socket.emit(
+      "lock-element",
+      views.map((v) => v._id),
+    );
+  } else {
+    socket.emit("unlock-elements");
+  }
+};
+
+const handleCommands = (commandId) => {
+  if (isRemoteChange || !socket || !socket.connected) return;
+  if (commandId === "edit:undo") socket.emit("sync-undo");
+  else if (commandId === "edit:redo") socket.emit("sync-redo");
+};
+
 function addChangesHook() {
-  app.repository.on("operationExecuted", (operation) => {
-    if (isRemoteChange || app.repository.bypassConfirmation) return;
-    if (socket && socket.connected) {
-      const str = flatted.stringify(operation);
-      socket.emit("sync-operation", str);
-    }
-  });
+  removeChangesHook();
 
-  app.commands.on("afterExecute", (commandId) => {
-    if (isRemoteChange) return;
-    if (commandId === "edit:undo") socket.emit("sync-undo");
-    else if (commandId === "edit:redo") socket.emit("sync-redo");
-  });
-
-  app.selections.on("selectionChanged", (models, views) => {
-    if (views.length > 0) {
-      socket.emit(
-        "lock-element",
-        views.map((v) => v._id),
-      );
-    } else {
-      socket.emit("unlock-elements");
-    }
-  });
+  app.repository.on("operationExecuted", handleOperation);
+  app.commands.on("afterExecute", handleCommands);
+  app.selections.on("selectionChanged", handleSelection);
 }
 
 function removeChangesHook() {
-  app.repository.on("operationExecuted", () => {});
-  app.commands.on("afterExecute", () => {});
-  app.selections.on("selectionChanged", () => {});
+  app.repository.off("operationExecuted", handleOperation);
+  app.commands.off("afterExecute", handleCommands);
+  app.selections.off("selectionChanged", handleSelection);
 }
 
 // --- FUNCIONES DE HIGHLIGHT ---

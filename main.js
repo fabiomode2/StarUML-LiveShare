@@ -33,7 +33,7 @@ var require_fachada = __commonJS({
           const data = {
             name: $el.find("#name").val(),
             type: $el.find("#type").val(),
-            network: $el.find("#network").val()
+            server: $el.find("#server").val()
           };
           if (data.name == "") {
             ERR("Username cant be null.");
@@ -9221,19 +9221,21 @@ var require_client = __commonJS({
     var fachada2 = require_fachada();
     var flatted = require_cjs6();
     var socket = null;
+    var current_room = null;
     var address = "";
     var users = {};
     var am_i_host = false;
     var isRemoteChange = false;
     var activeHighlights = {};
-    async function connectToServer(url, name) {
+    async function connectToServer(url, name, roomid) {
       return new Promise((resolve, reject) => {
         socket = io(url, {
           transports: ["websocket"],
           reconnectionAttempts: 3,
           timeout: 5e3,
-          auth: { username: name }
+          auth: { username: name, room: roomid }
         });
+        if (roomid) current_room = roomid;
         socket.on("user-joined", (data) => {
           if (!users[data.id]) users[data.id] = data.name;
           fachada2.INFO(`${data.name} joined`);
@@ -9242,6 +9244,7 @@ var require_client = __commonJS({
           am_i_host = is_host;
           if (!am_i_host) fachada2.disableHostOptions();
           if (am_i_host) fachada2.hideLoadingOverlay();
+          if (am_i_host) fachada2.INFO("You're the host");
         });
         socket.on("update-mouse-pos", (data) => {
           if (data.id == socket.id) return;
@@ -9333,37 +9336,39 @@ var require_client = __commonJS({
         socket.on("connect_error", (err) => resolve(false));
       });
     }
+    var handleOperation = (operation) => {
+      if (isRemoteChange || app.repository.bypassConfirmation) return;
+      if (socket && socket.connected) {
+        const str = flatted.stringify(operation);
+        socket.emit("sync-operation", str);
+      }
+    };
+    var handleSelection = (models, views) => {
+      if (!socket || !socket.connected) return;
+      if (views && views.length > 0) {
+        socket.emit(
+          "lock-element",
+          views.map((v) => v._id)
+        );
+      } else {
+        socket.emit("unlock-elements");
+      }
+    };
+    var handleCommands = (commandId) => {
+      if (isRemoteChange || !socket || !socket.connected) return;
+      if (commandId === "edit:undo") socket.emit("sync-undo");
+      else if (commandId === "edit:redo") socket.emit("sync-redo");
+    };
     function addChangesHook() {
-      app.repository.on("operationExecuted", (operation) => {
-        if (isRemoteChange || app.repository.bypassConfirmation) return;
-        if (socket && socket.connected) {
-          const str = flatted.stringify(operation);
-          socket.emit("sync-operation", str);
-        }
-      });
-      app.commands.on("afterExecute", (commandId) => {
-        if (isRemoteChange) return;
-        if (commandId === "edit:undo") socket.emit("sync-undo");
-        else if (commandId === "edit:redo") socket.emit("sync-redo");
-      });
-      app.selections.on("selectionChanged", (models, views) => {
-        if (views.length > 0) {
-          socket.emit(
-            "lock-element",
-            views.map((v) => v._id)
-          );
-        } else {
-          socket.emit("unlock-elements");
-        }
-      });
+      removeChangesHook();
+      app.repository.on("operationExecuted", handleOperation);
+      app.commands.on("afterExecute", handleCommands);
+      app.selections.on("selectionChanged", handleSelection);
     }
     function removeChangesHook() {
-      app.repository.on("operationExecuted", () => {
-      });
-      app.commands.on("afterExecute", () => {
-      });
-      app.selections.on("selectionChanged", () => {
-      });
+      app.repository.off("operationExecuted", handleOperation);
+      app.commands.off("afterExecute", handleCommands);
+      app.selections.off("selectionChanged", handleSelection);
     }
     function highlightElement(viewId, color) {
       const view = app.repository.get(viewId);
@@ -26877,8 +26882,8 @@ var require_server2 = __commonJS({
         this.server = null;
         this.address = "";
         this.users = {};
-        this.host_id = null;
         this.locks = {};
+        this.rooms = {};
       }
       start(port = 3e3) {
         this.server = http.createServer();
@@ -26890,26 +26895,32 @@ var require_server2 = __commonJS({
         });
         this.io.on("connection", (socket) => {
           console.log("User connected:", socket.id);
-          const isHost = Object.keys(this.users).length === 0;
           const username = socket.handshake.auth.username || "Anonymous";
-          const userColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
+          let room_id = socket.handshake.auth.room;
+          if (room_id == -1 || !room_id) room_id = socket.id;
+          socket.join(room_id);
+          if (!this.rooms[room_id])
+            this.rooms[room_id] = { users: {}, host_id: socket.id };
+          const isHost = socket.id == this.rooms[room_id].host_id;
+          this.rooms[room_id].users[socket.id] = socket.id;
           this.users[socket.id] = {
             id: socket.id,
             name: username,
             isHost,
-            color: userColor
+            room: room_id,
+            color: "#" + Math.floor(Math.random() * 16777215).toString(16)
+            // Color aleatorio para locks
           };
-          if (isHost) this.host_id = socket.id;
           socket.emit("is-host", isHost);
-          socket.broadcast.emit("user-joined", { id: socket.id, name: username });
-          if (!isHost && this.host_id) {
-            this.io.to(this.host_id).emit("get-whole-document", { requesterId: socket.id });
+          socket.to(room_id).emit("user-joined", { id: socket.id, name: username });
+          if (!isHost && this.rooms[room_id].host_id) {
+            this.io.to(this.rooms[room_id].host_id).emit("get-whole-document", { requesterId: socket.id });
           }
           socket.on("host-delivers-document", (data) => {
             this.io.to(data.to).emit("load-whole-document", { json: data.json });
           });
           socket.on("client-mouse-moved", (data) => {
-            socket.broadcast.emit("update-mouse-pos", {
+            socket.to(this.users[socket.id].room).emit("update-mouse-pos", {
               id: socket.id,
               x: data.x,
               y: data.y,
@@ -26918,22 +26929,22 @@ var require_server2 = __commonJS({
             });
           });
           socket.on("request-doc", () => {
-            this.io.to(this.host_id).emit("get-whole-document", { requesterId: socket.id });
+            this.io.to(this.rooms[this.users[socket.id].room].host_id).emit("get-whole-document", { requesterId: socket.id });
           });
           socket.on("sync-operation", (op) => {
-            socket.broadcast.emit("remote-operation", op);
+            socket.to(this.users[socket.id].room).emit("remote-operation", op);
           });
           socket.on("sync-undo", () => {
-            socket.broadcast.emit("remote-undo");
+            socket.to(this.users[socket.id].room).emit("remote-undo");
           });
           socket.on("sync-redo", () => {
-            socket.broadcast.emit("remote-redo");
+            socket.to(this.users[socket.id].room).emit("remote-redo");
           });
           socket.on("lock-element", (viewIds) => {
             viewIds.forEach((id) => {
               if (!this.locks[id]) {
                 this.locks[id] = socket.id;
-                this.io.emit("element-locked", {
+                this.io.to(this.users[socket.id].room).emit("element-locked", {
                   viewId: id,
                   ownerId: socket.id,
                   color: this.users[socket.id].color
@@ -26945,19 +26956,34 @@ var require_server2 = __commonJS({
             for (let id in this.locks) {
               if (this.locks[id] === socket.id) {
                 delete this.locks[id];
-                this.io.emit("element-unlocked", { viewId: id });
+                this.io.to(this.users[socket.id].room).emit("element-unlocked", { viewId: id });
               }
             }
           });
           socket.on("disconnect", () => {
-            console.log("user disconnected: " + socket.id);
+            const userData = this.users[socket.id];
+            if (!userData) return;
+            const room_id2 = userData.room;
             for (let id in this.locks) {
               if (this.locks[id] === socket.id) {
                 delete this.locks[id];
-                this.io.emit("element-unlocked", { viewId: id });
+                this.io.to(room_id2).emit("element-unlocked", { viewId: id });
               }
             }
-            this.io.emit("user-left", socket.id);
+            this.io.to(room_id2).emit("user-left", socket.id);
+            if (this.rooms[room_id2]) {
+              delete this.rooms[room_id2].users[socket.id];
+              let remainingUsers = Object.keys(this.rooms[room_id2].users);
+              if (this.rooms[room_id2].host_id === socket.id && remainingUsers.length > 0) {
+                let new_host = remainingUsers[0];
+                this.rooms[room_id2].host_id = new_host;
+                this.io.to(new_host).emit("is-host", true);
+                if (this.users[new_host]) this.users[new_host].isHost = true;
+              }
+              if (remainingUsers.length === 0) {
+                delete this.rooms[room_id2];
+              }
+            }
             delete this.users[socket.id];
           });
         });
@@ -27013,17 +27039,21 @@ var require_net = __commonJS({
     var server = require_server2();
     var am_i_hosting = false;
     var am_i_connected = false;
-    async function startSession2(name, type2, relay) {
-      am_i_hosting = server.startServer(server.defaultPort);
+    async function startSession2(name, type2, server2) {
+      if (server2) am_i_hosting = client.connectToServer(server2, name, -1);
+      else am_i_hosting = server2.startServer(server2.defaultPort);
       am_i_connected = await client.connectToServer(
-        server.getServerAddress(),
+        server2.getServerAddress(),
         name
       );
       return am_i_connected && am_i_hosting;
     }
     async function joinSession2(name, url) {
+      const urlObj = new URL(url);
+      const roomId = urlObj.searchParams.get("room");
+      const serverUrl = urlObj.origin;
       am_i_hosting = false;
-      am_i_connected = await client.connectToServer(url, name);
+      am_i_connected = await client.connectToServer(serverUrl, name, roomId || -1);
       return am_i_connected;
     }
     function endSession2() {
@@ -27037,8 +27067,9 @@ var require_net = __commonJS({
       }
     }
     function getSessionLink() {
-      if (am_i_hosting) return server.getServerAddress();
-      if (am_i_hosting) return client.getConnectedAddress();
+      let baseUrl = am_i_hosting ? server.getServerAddress() : client.getConnectedAddress();
+      if (!baseUrl) return "";
+      return baseUrl;
     }
     function syncDoc() {
       if (!am_i_connected) return;
@@ -27060,7 +27091,7 @@ var net = require_net();
 async function startSession() {
   const data = await fachada.showSS();
   if (!data) return;
-  if (!net.startSession(data.name, data.type, data.network)) {
+  if (!net.startSession(data.name, data.type, data.server)) {
     fachada.WARN("Couldnt start session");
     return;
   }

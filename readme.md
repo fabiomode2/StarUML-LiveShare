@@ -5,13 +5,21 @@
 # Install
 
 Go to StarUML -> Tools -> Extension Manager -> Install from url and paste this repos link
-`https://github.com/fabiomode2/StarUML-LiveShare`
+
+    https://github.com/fabiomode2/StarUML-LiveShare
+
+# Hosting servers
+
+Clone this repo, install dependencies and run `start-server` script.
+
+    npm install
+    npm run start_server
 
 ### To do
 
+- [ ] Remote servers
+- [ ] Read only session
 - [ ] Lock element interaction
 - [ ] Follow host option (sync zoom and pos)
-- [ ] Read only session
-- [ ] Relay servers
 
 un saludo a gemini que ha carreado

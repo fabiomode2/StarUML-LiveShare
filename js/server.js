@@ -11,8 +11,8 @@ class LiveShareServer {
     this.server = null;
     this.address = "";
     this.users = {};
-    this.host_id = null;
     this.locks = {}; // { viewId: socketId }
+    this.rooms = {}; //{users; {}, address: "", host_id: null}
   }
 
   start(port = 3000) {
@@ -27,26 +27,32 @@ class LiveShareServer {
     this.io.on("connection", (socket) => {
       console.log("User connected:", socket.id);
 
-      const isHost = Object.keys(this.users).length === 0;
       const username = socket.handshake.auth.username || "Anonymous";
+      let room_id = socket.handshake.auth.room;
 
-      // Asignamos un color aleatorio o predefinido al usuario para el outline
-      const userColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
+      if (room_id == -1 || !room_id) room_id = socket.id;
+      socket.join(room_id);
+
+      if (!this.rooms[room_id])
+        this.rooms[room_id] = { users: {}, host_id: socket.id };
+
+      const isHost = socket.id == this.rooms[room_id].host_id;
+      this.rooms[room_id].users[socket.id] = socket.id;
 
       this.users[socket.id] = {
         id: socket.id,
         name: username,
         isHost: isHost,
-        color: userColor,
+        room: room_id,
+        color: "#" + Math.floor(Math.random() * 16777215).toString(16), // Color aleatorio para locks
       };
-      if (isHost) this.host_id = socket.id;
 
       socket.emit("is-host", isHost);
-      socket.broadcast.emit("user-joined", { id: socket.id, name: username });
+      socket.to(room_id).emit("user-joined", { id: socket.id, name: username });
 
-      if (!isHost && this.host_id) {
+      if (!isHost && this.rooms[room_id].host_id) {
         this.io
-          .to(this.host_id)
+          .to(this.rooms[room_id].host_id)
           .emit("get-whole-document", { requesterId: socket.id });
       }
 
@@ -55,7 +61,7 @@ class LiveShareServer {
       });
 
       socket.on("client-mouse-moved", (data) => {
-        socket.broadcast.emit("update-mouse-pos", {
+        socket.to(this.users[socket.id].room).emit("update-mouse-pos", {
           id: socket.id,
           x: data.x,
           y: data.y,
@@ -66,28 +72,27 @@ class LiveShareServer {
 
       socket.on("request-doc", () => {
         this.io
-          .to(this.host_id)
+          .to(this.rooms[this.users[socket.id].room].host_id)
           .emit("get-whole-document", { requesterId: socket.id });
       });
 
       socket.on("sync-operation", (op) => {
-        socket.broadcast.emit("remote-operation", op);
+        socket.to(this.users[socket.id].room).emit("remote-operation", op);
       });
 
       socket.on("sync-undo", () => {
-        socket.broadcast.emit("remote-undo");
+        socket.to(this.users[socket.id].room).emit("remote-undo");
       });
 
       socket.on("sync-redo", () => {
-        socket.broadcast.emit("remote-redo");
+        socket.to(this.users[socket.id].room).emit("remote-redo");
       });
 
-      // --- SISTEMA DE BLOQUEO ---
       socket.on("lock-element", (viewIds) => {
         viewIds.forEach((id) => {
           if (!this.locks[id]) {
             this.locks[id] = socket.id;
-            this.io.emit("element-locked", {
+            this.io.to(this.users[socket.id].room).emit("element-locked", {
               viewId: id,
               ownerId: socket.id,
               color: this.users[socket.id].color,
@@ -100,23 +105,52 @@ class LiveShareServer {
         for (let id in this.locks) {
           if (this.locks[id] === socket.id) {
             delete this.locks[id];
-            this.io.emit("element-unlocked", { viewId: id });
+            this.io
+              .to(this.users[socket.id].room)
+              .emit("element-unlocked", { viewId: id });
           }
         }
       });
 
       socket.on("disconnect", () => {
-        console.log("user disconnected: " + socket.id);
+        const userData = this.users[socket.id];
+        if (!userData) return;
 
-        // Liberar candados del usuario desconectado
+        const room_id = userData.room;
+
+        // 1. Liberar candados (usando la variable local room_id)
         for (let id in this.locks) {
           if (this.locks[id] === socket.id) {
             delete this.locks[id];
-            this.io.emit("element-unlocked", { viewId: id });
+            this.io.to(room_id).emit("element-unlocked", { viewId: id });
           }
         }
 
-        this.io.emit("user-left", socket.id);
+        // 2. Notificar salida
+        this.io.to(room_id).emit("user-left", socket.id);
+
+        // 3. Manejar lógica de sala
+        if (this.rooms[room_id]) {
+          delete this.rooms[room_id].users[socket.id];
+          let remainingUsers = Object.keys(this.rooms[room_id].users);
+
+          if (
+            this.rooms[room_id].host_id === socket.id &&
+            remainingUsers.length > 0
+          ) {
+            let new_host = remainingUsers[0];
+            this.rooms[room_id].host_id = new_host;
+            this.io.to(new_host).emit("is-host", true);
+            // Actualizar el flag en this.users del nuevo host
+            if (this.users[new_host]) this.users[new_host].isHost = true;
+          }
+
+          if (remainingUsers.length === 0) {
+            delete this.rooms[room_id];
+          }
+        }
+
+        // 4. BORRAR AL FINAL
         delete this.users[socket.id];
       });
     });
@@ -153,9 +187,11 @@ function startServer(port) {
 function stopServer() {
   if (server) server.stop();
 }
+
 function getServerAddress() {
   if (server) return server.address;
 }
+
 function getServer() {
   return server;
 }
