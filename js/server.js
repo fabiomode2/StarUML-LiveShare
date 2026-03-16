@@ -34,7 +34,7 @@ class LiveShareServer {
       socket.join(room_id);
 
       if (!this.rooms[room_id])
-        this.rooms[room_id] = { users: {}, host_id: socket.id };
+        this.rooms[room_id] = { users: {}, host_id: socket.id, locks: {} };
 
       const isHost = socket.id == this.rooms[room_id].host_id;
       this.rooms[room_id].users[socket.id] = socket.id;
@@ -90,9 +90,11 @@ class LiveShareServer {
       });
 
       socket.on("lock-element", (viewIds) => {
+        const room_id = this.users[socket.id].room;
+
         viewIds.forEach((id) => {
-          if (!this.locks[id]) {
-            this.locks[id] = socket.id;
+          if (!this.rooms[room_id].locks[id]) {
+            this.rooms[room_id].locks[id] = socket.id;
             this.io.to(this.users[socket.id].room).emit("element-locked", {
               viewId: id,
               ownerId: socket.id,
@@ -103,9 +105,11 @@ class LiveShareServer {
       });
 
       socket.on("unlock-elements", () => {
-        for (let id in this.locks) {
-          if (this.locks[id] === socket.id) {
-            delete this.locks[id];
+        const room_id = this.users[socket.id].room;
+
+        for (let id in this.rooms[room_id].locks) {
+          if (this.rooms[room_id].locks[id] === socket.id) {
+            delete this.rooms[room_id].locks[id];
             this.io
               .to(this.users[socket.id].room)
               .emit("element-unlocked", { viewId: id });
@@ -115,14 +119,15 @@ class LiveShareServer {
 
       socket.on("disconnect", () => {
         const userData = this.users[socket.id];
+
         if (!userData) return;
 
         const room_id = userData.room;
 
         // 1. Liberar candados (usando la variable local room_id)
-        for (let id in this.locks) {
-          if (this.locks[id] === socket.id) {
-            delete this.locks[id];
+        for (let id in this.rooms[room_id].locks) {
+          if (this.rooms[room_id].locks[id] === socket.id) {
+            delete this.rooms[room_id].locks[id];
             this.io.to(room_id).emit("element-unlocked", { viewId: id });
           }
         }

@@ -14,6 +14,8 @@ let isRemoteChange = false;
 let activeHighlights = {};
 
 async function connectToServer(url, name, roomid) {
+  removeChangesHook();
+
   return new Promise((resolve, reject) => {
     socket = io(url, {
       transports: ["websocket"],
@@ -22,7 +24,7 @@ async function connectToServer(url, name, roomid) {
       auth: { username: name, room: roomid },
     });
 
-    if (roomid) current_room = roomid;
+    if (roomid && roomid !== -1) current_room = roomid;
 
     socket.on("user-joined", (data) => {
       if (!users[data.id]) users[data.id] = data.name;

@@ -9228,6 +9228,7 @@ var require_client = __commonJS({
     var isRemoteChange = false;
     var activeHighlights = {};
     async function connectToServer(url, name, roomid) {
+      removeChangesHook();
       return new Promise((resolve, reject) => {
         socket = io(url, {
           transports: ["websocket"],
@@ -9235,7 +9236,7 @@ var require_client = __commonJS({
           timeout: 5e3,
           auth: { username: name, room: roomid }
         });
-        if (roomid) current_room = roomid;
+        if (roomid && roomid !== -1) current_room = roomid;
         socket.on("user-joined", (data) => {
           if (!users[data.id]) users[data.id] = data.name;
           fachada2.INFO(`${data.name} joined`);
@@ -26907,7 +26908,7 @@ var require_server2 = __commonJS({
           if (room_id == -1 || !room_id) room_id = socket.id;
           socket.join(room_id);
           if (!this.rooms[room_id])
-            this.rooms[room_id] = { users: {}, host_id: socket.id };
+            this.rooms[room_id] = { users: {}, host_id: socket.id, locks: {} };
           const isHost = socket.id == this.rooms[room_id].host_id;
           this.rooms[room_id].users[socket.id] = socket.id;
           this.users[socket.id] = {
@@ -26949,9 +26950,10 @@ var require_server2 = __commonJS({
             socket.to(this.users[socket.id].room).emit("remote-redo");
           });
           socket.on("lock-element", (viewIds) => {
+            const room_id2 = this.users[socket.id].room;
             viewIds.forEach((id) => {
-              if (!this.locks[id]) {
-                this.locks[id] = socket.id;
+              if (!this.rooms[room_id2].locks[id]) {
+                this.rooms[room_id2].locks[id] = socket.id;
                 this.io.to(this.users[socket.id].room).emit("element-locked", {
                   viewId: id,
                   ownerId: socket.id,
@@ -26961,9 +26963,10 @@ var require_server2 = __commonJS({
             });
           });
           socket.on("unlock-elements", () => {
-            for (let id in this.locks) {
-              if (this.locks[id] === socket.id) {
-                delete this.locks[id];
+            const room_id2 = this.users[socket.id].room;
+            for (let id in this.rooms[room_id2].locks) {
+              if (this.rooms[room_id2].locks[id] === socket.id) {
+                delete this.rooms[room_id2].locks[id];
                 this.io.to(this.users[socket.id].room).emit("element-unlocked", { viewId: id });
               }
             }
@@ -26972,9 +26975,9 @@ var require_server2 = __commonJS({
             const userData = this.users[socket.id];
             if (!userData) return;
             const room_id2 = userData.room;
-            for (let id in this.locks) {
-              if (this.locks[id] === socket.id) {
-                delete this.locks[id];
+            for (let id in this.rooms[room_id2].locks) {
+              if (this.rooms[room_id2].locks[id] === socket.id) {
+                delete this.rooms[room_id2].locks[id];
                 this.io.to(room_id2).emit("element-unlocked", { viewId: id });
               }
             }
@@ -27048,14 +27051,17 @@ var require_net = __commonJS({
     var am_i_hosting = false;
     var am_i_connected = false;
     async function startSession2(name, type2, remoteServer) {
-      if (remoteServer)
-        am_i_hosting = client.connectToServer(remoteServer, name, -1);
-      else am_i_hosting = server.startServer(server.defaultPort);
-      am_i_connected = await client.connectToServer(
-        server.getServerAddress(),
-        name
-      );
-      return am_i_connected && am_i_hosting;
+      if (remoteServer) {
+        am_i_hosting = false;
+        am_i_connected = client.connectToServer(remoteServer, name, -1);
+      } else {
+        am_i_hosting = server.startServer(server.defaultPort);
+        am_i_connected = await client.connectToServer(
+          server.getServerAddress(),
+          name
+        );
+      }
+      return am_i_connected;
     }
     async function joinSession2(name, url) {
       const urlObj = new URL(url);
@@ -27077,11 +27083,14 @@ var require_net = __commonJS({
     }
     function getSessionLink() {
       let baseUrl = am_i_hosting ? server.getServerAddress() : client.getConnectedAddress();
+      console.log(`Generando enlace. Base: ${baseUrl}`);
       if (!baseUrl) return "";
       const roomId = client.getCurrentRoom();
+      console.log(`Generando enlace. Room ID: ${roomId}`);
       if (roomId) {
         const urlObj = new URL(baseUrl);
         urlObj.searchParams.set("room", roomId);
+        console.log(`Generando enlace. Enlace final: ${urlObj.toString()}`);
         return urlObj.toString();
       }
       return baseUrl;

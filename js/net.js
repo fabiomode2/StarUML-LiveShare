@@ -6,15 +6,18 @@ let am_i_hosting = false;
 let am_i_connected = false;
 
 async function startSession(name, type, remoteServer) {
-  if (remoteServer)
-    am_i_hosting = client.connectToServer(remoteServer, name, -1);
-  else am_i_hosting = server.startServer(server.defaultPort);
-  am_i_connected = await client.connectToServer(
-    server.getServerAddress(),
-    name,
-  );
+  if (remoteServer) {
+    am_i_hosting = false;
+    am_i_connected = client.connectToServer(remoteServer, name, -1);
+  } else {
+    am_i_hosting = server.startServer(server.defaultPort);
+    am_i_connected = await client.connectToServer(
+      server.getServerAddress(),
+      name,
+    );
+  }
 
-  return am_i_connected && am_i_hosting;
+  return am_i_connected;
 }
 
 async function joinSession(name, url) {
@@ -45,13 +48,18 @@ function getSessionLink() {
     ? server.getServerAddress()
     : client.getConnectedAddress();
 
+  console.log(`Generando enlace. Base: ${baseUrl}`);
+
   if (!baseUrl) return "";
 
   const roomId = client.getCurrentRoom();
+  console.log(`Generando enlace. Room ID: ${roomId}`);
 
   if (roomId) {
     const urlObj = new URL(baseUrl);
     urlObj.searchParams.set("room", roomId);
+    console.log(`Generando enlace. Enlace final: ${urlObj.toString()}`);
+
     return urlObj.toString();
   }
 
