@@ -27047,11 +27047,12 @@ var require_net = __commonJS({
     var server = require_server2();
     var am_i_hosting = false;
     var am_i_connected = false;
-    async function startSession2(name, type2, server2) {
-      if (server2) am_i_hosting = client.connectToServer(server2, name, -1);
-      else am_i_hosting = server2.startServer(server2.defaultPort);
+    async function startSession2(name, type2, remoteServer) {
+      if (remoteServer)
+        am_i_hosting = client.connectToServer(remoteServer, name, -1);
+      else am_i_hosting = server.startServer(server.defaultPort);
       am_i_connected = await client.connectToServer(
-        server2.getServerAddress(),
+        server.getServerAddress(),
         name
       );
       return am_i_connected && am_i_hosting;

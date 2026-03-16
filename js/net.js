@@ -5,8 +5,9 @@ const CONNECT_TIMEOUT = 500;
 let am_i_hosting = false;
 let am_i_connected = false;
 
-async function startSession(name, type, server) {
-  if (server) am_i_hosting = client.connectToServer(server, name, -1);
+async function startSession(name, type, remoteServer) {
+  if (remoteServer)
+    am_i_hosting = client.connectToServer(remoteServer, name, -1);
   else am_i_hosting = server.startServer(server.defaultPort);
   am_i_connected = await client.connectToServer(
     server.getServerAddress(),
