@@ -2,14 +2,17 @@ const fs = require("fs");
 const path = require("path");
 
 function INFO(mensaje) {
+  console.log(`[LS] ${mensaje}`);
   app.toast.info(mensaje);
 }
 
 function WARN(mensaje) {
+  console.warn(`[LS] ${mensaje}`);
   app.toast.warning(mensaje);
 }
 
 function ERR(mensaje) {
+  console.error(`[LS] ${mensaje}`);
   app.toast.error(mensaje);
 }
 
@@ -105,7 +108,7 @@ function changeKeyBindings(host) {
       //disable for clients
       app.commands.commands[cmdId] = () => {
         WARN("Only host can manage files.");
-        console.log(`[LiveShare] Blocking: ${cmdId}`);
+        console.log(`[LS] Blocking: ${cmdId}`);
       };
     } else {
       //enable for host
@@ -135,16 +138,6 @@ function changeHostOptions(state) {
   } catch (e) {
     console.error("[LiveShare] Error updating menu states:", e);
   }
-}
-
-function restoreHostOptions() {
-  for (let cmdId in originalHandlers) {
-    app.commands.commands[cmdId] = originalHandlers[cmdId];
-  }
-  originalHandlers = {};
-
-  // Ponemos los menús otra vez en true
-  app.menu.updateStates(null, null, null); // Un update vacío suele refrescar al estado original
 }
 
 function disableHostOptions() {

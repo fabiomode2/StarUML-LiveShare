@@ -77,8 +77,8 @@ function copySessionLink() {
       fachada.INFO("Session link copied!");
     })
     .catch((err) => {
-      console.error("Error copying with navigator:", err);
-      console.log("Couldnt copy. The link is: " + link);
+      console.error("[LS] Error copying with navigator:", err);
+      console.log("[LS] Couldnt copy. The link is: " + link);
       fachada.ERR("Error. See console");
     });
 }
@@ -93,6 +93,8 @@ function init() {
   app.commands.register("liveshare:cs", copySessionLink);
   app.commands.register("liveshare:es", endSession);
   app.commands.register("liveshare:sd", syncDocument);
+
+  // debug print
   app.commands.register("liveshare:pa", () => {
     console.log(app);
     console.log(app.project.getProject());

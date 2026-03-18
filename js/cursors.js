@@ -2,18 +2,19 @@ function LERP(start, dest, speed) {
   return start + speed * (dest - start);
 }
 
+const LERP_SPEED = 0.25;
+const SEND_INTERVAL = 100; //ms
+
 class CursorsHandler {
   constructor() {
     // mouses_net
-    this.SEND_INTERVAL = 100; //ms
 
     this.lastTimeMMsended = 0;
     this.lastMPsent = { x: 0, y: 0 };
     this.currentHandler = null;
 
     // mouses_view
-    this.LERP_SPEED = 0.25;
-    this.this.cursors = {};
+    this.cursors = {};
     this.animationFrame = null;
   }
 
@@ -81,25 +82,6 @@ class CursorsHandler {
   }
 
   // mouses_view
-  updateMousePosition({ id, x, y, diagram, name }) {
-    if (!this.cursors[id]) {
-      addCursor(id, name || "Anonymous");
-    }
-
-    // Guardamos el destino. El LERP se encargará de moverlo en el loop
-    this.cursors[id].targetX = x;
-    this.cursors[id].targetY = y;
-    this.cursors[id].diagram = diagram;
-
-    // Solo mostrar si está en el mismo diagrama que nosotros
-    const currentDiagram = app.diagrams.getCurrentDiagram();
-    if (currentDiagram && currentDiagram._id === diagram) {
-      this.cursors[id].element.style.display = "block";
-    } else {
-      this.cursors[id].element.style.display = "none";
-    }
-  }
-
   addCursor(id, name) {
     const container = app.diagrams.$diagramArea[0];
     const colors = [
@@ -164,6 +146,25 @@ class CursorsHandler {
     }
   }
 
+  updateMousePosition({ id, x, y, diagram, name }) {
+    if (!this.cursors[id]) {
+      this.addCursor(id, name || "Anonymous");
+    }
+
+    // Guardamos el destino. El LERP se encargará de moverlo en el loop
+    this.cursors[id].targetX = x;
+    this.cursors[id].targetY = y;
+    this.cursors[id].diagram = diagram;
+
+    // Solo mostrar si está en el mismo diagrama que nosotros
+    const currentDiagram = app.diagrams.getCurrentDiagram();
+    if (currentDiagram && currentDiagram._id === diagram) {
+      this.cursors[id].element.style.display = "block";
+    } else {
+      this.cursors[id].element.style.display = "none";
+    }
+  }
+
   animate() {
     const scale = app.diagrams.getZoomLevel();
 
@@ -191,7 +192,7 @@ class CursorsHandler {
 
   removeAllCursors() {
     for (const [key, value] of Object.entries(this.cursors)) {
-      removeCursor(key);
+      this.removeCursor(key);
     }
   }
 }

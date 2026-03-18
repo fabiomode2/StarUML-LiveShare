@@ -6,7 +6,7 @@
   "version": "1.0.0",
   "scripts": {
     "build": "esbuild main_src.js --bundle --platform=node --target=node16 --outfile=main.js --external:electron",
-    "start_server": "node js/start_server.js"
+    "start_server": "node scripts/start_server.js"
   },
   "keywords": [
     "liveshare"

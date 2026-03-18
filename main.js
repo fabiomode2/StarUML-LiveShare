@@ -9,12 +9,15 @@ var require_fachada = __commonJS({
     var fs = require("fs");
     var path = require("path");
     function INFO(mensaje) {
+      console.log(`[LS] ${mensaje}`);
       app.toast.info(mensaje);
     }
     function WARN(mensaje) {
+      console.warn(`[LS] ${mensaje}`);
       app.toast.warning(mensaje);
     }
     function ERR(mensaje) {
+      console.error(`[LS] ${mensaje}`);
       app.toast.error(mensaje);
     }
     function _createDialog(templateName) {
@@ -92,7 +95,7 @@ var require_fachada = __commonJS({
         if (host == false) {
           app.commands.commands[cmdId] = () => {
             WARN("Only host can manage files.");
-            console.log(`[LiveShare] Blocking: ${cmdId}`);
+            console.log(`[LS] Blocking: ${cmdId}`);
           };
         } else {
           app.commands.commands[cmdId] = originalHandlers[cmdId];
@@ -8947,184 +8950,6 @@ var require_cjs5 = __commonJS({
   }
 });
 
-// js/mouses_view.js
-var require_mouses_view = __commonJS({
-  "js/mouses_view.js"(exports2, module2) {
-    var cursors = {};
-    var LERP_SPEED = 0.25;
-    function LERP(start, dest, speed) {
-      return start + speed * (dest - start);
-    }
-    function updateMousePosition({ id, x, y, diagram, name }) {
-      if (!cursors[id]) {
-        addCursor(id, name || "Anonymous");
-      }
-      cursors[id].targetX = x;
-      cursors[id].targetY = y;
-      cursors[id].diagram = diagram;
-      const currentDiagram = app.diagrams.getCurrentDiagram();
-      if (currentDiagram && currentDiagram._id === diagram) {
-        cursors[id].element.style.display = "block";
-      } else {
-        cursors[id].element.style.display = "none";
-      }
-    }
-    function addCursor(id, name) {
-      const container = app.diagrams.$diagramArea[0];
-      const colors = [
-        "#FF5733",
-        // rojo-naranja
-        "#33FF57",
-        // verde
-        "#3357FF",
-        // azul
-        "#F333FF",
-        // magenta
-        "#FFB833",
-        // naranja
-        "#33FFF3",
-        // cian
-        "#8E44AD",
-        // púrpura
-        "#2ECC71",
-        // verde oscuro
-        "#1ABC9C"
-        // turquesa
-      ];
-      const foregroundColors = [
-        "#000000",
-        // para #FF5733
-        "#000000",
-        // para #33FF57
-        "#FFFFFF",
-        // para #3357FF
-        "#000000",
-        // para #F333FF
-        "#000000",
-        // para #FFB833
-        "#000000",
-        // para #33FFF3
-        "#FFFFFF",
-        // para #8E44AD
-        "#000000",
-        // para #2ECC71
-        "#000000"
-        // para #1ABC9C
-      ];
-      const i = Math.floor(Math.random() * colors.length);
-      const color = colors[i];
-      const fg = foregroundColors[i];
-      const el = document.createElement("div");
-      el.id = `cursor-${id}`;
-      el.className = "live-share-cursor";
-      el.innerHTML = `
-    <svg style="fill: ${color}; width: 20px; filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.4));" viewBox="0 0 24 24">
-      <path d="M7,2l12,11.2l-5.8,0.5l3.3,7.3l-2.2,1l-3.2-7.4L7,19V2z"/>
-    </svg>
-    <div class="cursor-label" style="background: ${color}; color: ${fg};">${name}</div>
-  `;
-      container.appendChild(el);
-      cursors[id] = {
-        id,
-        name,
-        x: 0,
-        y: 0,
-        targetX: 0,
-        targetY: 0,
-        element: el
-      };
-    }
-    function removeCursor(id) {
-      if (cursors[id]) {
-        if (cursors[id].element) {
-          cursors[id].element.style.display = "none";
-          cursors[id].element.remove();
-        }
-        delete cursors[id];
-      }
-    }
-    function animate() {
-      const scale = app.diagrams.getZoomLevel();
-      for (let id in cursors) {
-        const c = cursors[id];
-        c.x = LERP(c.x, c.targetX, LERP_SPEED);
-        c.y = LERP(c.y, c.targetY, LERP_SPEED);
-        if (c.element) {
-          c.element.style.transform = `translate(${c.x * scale}px, ${c.y * scale}px)`;
-        }
-      }
-      requestAnimationFrame(animate);
-    }
-    function removeAllCursors() {
-      for (const [key, value] of Object.entries(cursors)) {
-        removeCursor(key);
-      }
-    }
-    animate();
-    module2.exports = {
-      updateMousePosition,
-      addCursor,
-      removeCursor,
-      removeAllCursors
-    };
-  }
-});
-
-// js/mouses_net.js
-var require_mouses_net = __commonJS({
-  "js/mouses_net.js"(exports2, module2) {
-    var lastTimeMMsended = 0;
-    var lastMPsent = { x: 0, y: 0 };
-    var SEND_INTERVAL = 100;
-    var currentHandler = null;
-    function addMouseMovementSharing(sendFunction) {
-      const diagramArea = app.diagrams.$diagramArea[0];
-      if (!diagramArea) {
-        console.error("Couldnt find diagram area! aMMS");
-        return;
-      }
-      currentHandler = (event) => {
-        const now = Date.now();
-        if (now - lastTimeMMsended >= SEND_INTERVAL) {
-          const activeDiagram = app.diagrams.getCurrentDiagram();
-          if (!activeDiagram) return;
-          const editor = app.diagrams;
-          if (editor) {
-            const diagramX = activeDiagram._originX;
-            const diagramY = activeDiagram._originY;
-            const scale = app.diagrams.getZoomLevel();
-            const rect = diagramArea.getBoundingClientRect();
-            let diagram = activeDiagram._id;
-            const dataToSend = {
-              x: (event.clientX - rect.left) / scale - diagramX,
-              y: (event.clientY - rect.top) / scale - diagramY,
-              diagram
-            };
-            if (lastMPsent.x == dataToSend.x && lastMPsent.y == dataToSend.y)
-              return;
-            sendFunction(dataToSend);
-            lastTimeMMsended = now;
-            lastMPsent.x = dataToSend.x;
-            lastMPsent.y = dataToSend.y;
-          }
-        }
-      };
-      diagramArea.addEventListener("mousemove", currentHandler);
-    }
-    function removeMouseMovementSharing() {
-      const diagramArea = app.diagrams.$diagramArea[0];
-      if (diagramArea && currentHandler) {
-        diagramArea.removeEventListener("mousemove", currentHandler);
-        currentHandler = null;
-      }
-    }
-    module2.exports = {
-      addMouseMovementSharing,
-      removeMouseMovementSharing
-    };
-  }
-});
-
 // node_modules/flatted/cjs/index.js
 var require_cjs6 = __commonJS({
   "node_modules/flatted/cjs/index.js"(exports2) {
@@ -9212,14 +9037,191 @@ var require_cjs6 = __commonJS({
   }
 });
 
+// js/cursors.js
+var require_cursors = __commonJS({
+  "js/cursors.js"(exports2, module2) {
+    function LERP(start, dest, speed) {
+      return start + speed * (dest - start);
+    }
+    var LERP_SPEED = 0.25;
+    var SEND_INTERVAL = 100;
+    var CursorsHandler = class {
+      constructor() {
+        this.lastTimeMMsended = 0;
+        this.lastMPsent = { x: 0, y: 0 };
+        this.currentHandler = null;
+        this.cursors = {};
+        this.animationFrame = null;
+      }
+      // mouses_net
+      addMouseMovementSharing(sendFunction) {
+        const diagramArea = app.diagrams.$diagramArea[0];
+        if (!diagramArea) {
+          console.error("Couldnt find diagram area! aMMS");
+          return;
+        }
+        this.currentHandler = (event) => {
+          const now = Date.now();
+          if (now - this.lastTimeMMsended >= SEND_INTERVAL) {
+            const activeDiagram = app.diagrams.getCurrentDiagram();
+            if (!activeDiagram) return;
+            const editor = app.diagrams;
+            if (editor) {
+              const diagramX = activeDiagram._originX;
+              const diagramY = activeDiagram._originY;
+              const scale = app.diagrams.getZoomLevel();
+              const rect = diagramArea.getBoundingClientRect();
+              let diagram = activeDiagram._id;
+              const dataToSend = {
+                x: (event.clientX - rect.left) / scale - diagramX,
+                y: (event.clientY - rect.top) / scale - diagramY,
+                diagram
+              };
+              if (this.lastMPsent.x == dataToSend.x && this.lastMPsent.y == dataToSend.y)
+                return;
+              sendFunction(dataToSend);
+              this.lastTimeMMsended = now;
+              this.lastMPsent.x = dataToSend.x;
+              this.lastMPsent.y = dataToSend.y;
+            }
+          }
+        };
+        diagramArea.addEventListener("mousemove", this.currentHandler);
+        this.animate();
+      }
+      removeMouseMovementSharing() {
+        const diagramArea = app.diagrams.$diagramArea[0];
+        if (diagramArea && this.currentHandler) {
+          diagramArea.removeEventListener("mousemove", this.currentHandler);
+          this.currentHandler = null;
+        }
+        this.stopAnimation();
+      }
+      // mouses_view
+      addCursor(id, name) {
+        const container = app.diagrams.$diagramArea[0];
+        const colors = [
+          "#FF5733",
+          // rojo-naranja
+          "#33FF57",
+          // verde
+          "#3357FF",
+          // azul
+          "#F333FF",
+          // magenta
+          "#FFB833",
+          // naranja
+          "#33FFF3",
+          // cian
+          "#8E44AD",
+          // púrpura
+          "#2ECC71",
+          // verde oscuro
+          "#1ABC9C"
+          // turquesa
+        ];
+        const foregroundColors = [
+          "#000000",
+          // para #FF5733
+          "#000000",
+          // para #33FF57
+          "#FFFFFF",
+          // para #3357FF
+          "#000000",
+          // para #F333FF
+          "#000000",
+          // para #FFB833
+          "#000000",
+          // para #33FFF3
+          "#FFFFFF",
+          // para #8E44AD
+          "#000000",
+          // para #2ECC71
+          "#000000"
+          // para #1ABC9C
+        ];
+        const i = Math.floor(Math.random() * colors.length);
+        const color = colors[i];
+        const fg = foregroundColors[i];
+        const el = document.createElement("div");
+        el.id = `cursor-${id}`;
+        el.className = "live-share-cursor";
+        el.innerHTML = `
+      <svg style="fill: ${color}; width: 20px; filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.4));" viewBox="0 0 24 24">
+        <path d="M7,2l12,11.2l-5.8,0.5l3.3,7.3l-2.2,1l-3.2-7.4L7,19V2z"/>
+      </svg>
+      <div class="cursor-label" style="background: ${color}; color: ${fg};">${name}</div>
+    `;
+        container.appendChild(el);
+        this.cursors[id] = {
+          id,
+          name,
+          x: 0,
+          y: 0,
+          targetX: 0,
+          targetY: 0,
+          element: el
+        };
+      }
+      removeCursor(id) {
+        if (this.cursors[id]) {
+          if (this.cursors[id].element) {
+            this.cursors[id].element.style.display = "none";
+            this.cursors[id].element.remove();
+          }
+          delete this.cursors[id];
+        }
+      }
+      updateMousePosition({ id, x, y, diagram, name }) {
+        if (!this.cursors[id]) {
+          this.addCursor(id, name || "Anonymous");
+        }
+        this.cursors[id].targetX = x;
+        this.cursors[id].targetY = y;
+        this.cursors[id].diagram = diagram;
+        const currentDiagram = app.diagrams.getCurrentDiagram();
+        if (currentDiagram && currentDiagram._id === diagram) {
+          this.cursors[id].element.style.display = "block";
+        } else {
+          this.cursors[id].element.style.display = "none";
+        }
+      }
+      animate() {
+        const scale = app.diagrams.getZoomLevel();
+        for (let id in this.cursors) {
+          const c = this.cursors[id];
+          c.x = LERP(c.x, c.targetX, LERP_SPEED);
+          c.y = LERP(c.y, c.targetY, LERP_SPEED);
+          if (c.element) {
+            c.element.style.transform = `translate(${c.x * scale}px, ${c.y * scale}px)`;
+          }
+        }
+        this.animationFrame = requestAnimationFrame(() => this.animate());
+      }
+      stopAnimation() {
+        if (this.animationFrame) {
+          cancelAnimationFrame(this.animationFrame);
+          this.animationFrame = null;
+        }
+      }
+      removeAllCursors() {
+        for (const [key, value] of Object.entries(this.cursors)) {
+          this.removeCursor(key);
+        }
+      }
+    };
+    module2.exports = { CursorsHandler };
+  }
+});
+
 // js/client.js
 var require_client = __commonJS({
   "js/client.js"(exports2, module2) {
     var io = require_cjs5();
-    var mm_view = require_mouses_view();
-    var mm_net = require_mouses_net();
     var fachada2 = require_fachada();
     var flatted = require_cjs6();
+    var cursors_js = require_cursors();
+    var cursors = new cursors_js.CursorsHandler();
     var socket = null;
     var current_room = null;
     var address = "";
@@ -9248,15 +9250,15 @@ var require_client = __commonJS({
           if (am_i_host) fachada2.INFO("You're the host");
         });
         socket.on("room-assigned", async (id) => {
+          console.log("[LS] Room assigned: " + current_room);
           current_room = id;
-          console.log("Room asignada y lista: " + current_room);
           addChangesHook();
           fachada2.hideLoadingOverlay();
           resolve(true);
         });
         socket.on("update-mouse-pos", (data) => {
           if (data.id == socket.id) return;
-          mm_view.updateMousePosition(data);
+          cursors.updateMousePosition(data);
         });
         socket.on("get-whole-document", (data) => {
           try {
@@ -9268,7 +9270,7 @@ var require_client = __commonJS({
               json: str
             });
           } catch (err) {
-            app.toast.error("Error al enviar el proyecto al invitado.");
+            fachada2.ERR("Error sending whole document.");
           }
         });
         socket.on("load-whole-document", (data) => {
@@ -9278,20 +9280,20 @@ var require_client = __commonJS({
             app.project.loadFromJson(projectObj);
             app.repository.bypassConfirmation = false;
           } catch (err) {
-            console.error("Error loading remote project:", err);
+            fachada2.ERR("Error loading remote document:", err);
+          } finally {
+            fachada2.hideLoadingOverlay();
           }
-          fachada2.hideLoadingOverlay();
         });
         socket.on("remote-operation", (opData) => {
           isRemoteChange = true;
-          console.log(`Recibida operacion de ${socket.id}`);
           try {
             const operation = flatted.parse(opData);
             app.repository.doOperation(operation);
             app.diagrams.repaint();
             updateAllHighlights();
           } catch (err) {
-            console.error("[LiveShare] Operation Error:", err);
+            console.error("[LS] Operation Error:", err);
           } finally {
             setTimeout(() => {
               isRemoteChange = false;
@@ -9333,11 +9335,11 @@ var require_client = __commonJS({
         socket.on("user-left", (id) => {
           fachada2.INFO(`${users[id]} left`);
           delete users[id];
-          mm_view.removeCursor(id);
+          cursors.removeCursor(id);
         });
         socket.on("connect", () => {
           address = url;
-          mm_net.addMouseMovementSharing(sendMousePosition);
+          cursors.addMouseMovementSharing(sendMousePosition);
           fachada2.showLoadingOverlay();
         });
         socket.on("connect_error", (err) => resolve(false));
@@ -9439,16 +9441,10 @@ var require_client = __commonJS({
         diagram
       });
     }
-    function getConnectedAddress() {
-      return address;
-    }
     function requestDocument() {
       if (!(socket && socket.connected)) return;
       fachada2.showLoadingOverlay();
       socket.emit("request-doc");
-    }
-    function getCurrentRoom() {
-      return current_room;
     }
     function disconnect() {
       if (socket) {
@@ -9457,10 +9453,16 @@ var require_client = __commonJS({
       }
       address = "";
       removeAllHighlights();
-      mm_net.removeMouseMovementSharing();
-      mm_view.removeAllCursors();
+      cursors.removeMouseMovementSharing();
+      cursors.removeAllCursors();
       fachada2.enableHostOptions();
       removeChangesHook();
+    }
+    function getConnectedAddress() {
+      return address;
+    }
+    function getCurrentRoom() {
+      return current_room;
     }
     module2.exports = {
       connectToServer,
@@ -26855,36 +26857,12 @@ var require_dist2 = __commonJS({
   }
 });
 
-// js/get_ip.js
-var require_get_ip = __commonJS({
-  "js/get_ip.js"(exports2, module2) {
-    "use strict";
-    var { networkInterfaces } = require("os");
-    function get_ipv4() {
-      const nets = networkInterfaces();
-      for (const name of Object.keys(nets)) {
-        for (const net2 of nets[name]) {
-          if (net2.internal) continue;
-          const isIPv4 = net2.family === "IPv4" || net2.family === 4;
-          if (isIPv4) {
-            return net2.address;
-          }
-        }
-      }
-      return "127.0.0.1";
-    }
-    module2.exports = {
-      get_ip: get_ipv4
-    };
-  }
-});
-
 // js/server.js
 var require_server2 = __commonJS({
   "js/server.js"(exports2, module2) {
     var { Server } = require_dist2();
     var http = require("http");
-    var util = require_get_ip();
+    var { networkInterfaces } = require("os");
     var server = null;
     var defaultPort = 6789;
     var LiveShareServer = class {
@@ -26905,14 +26883,12 @@ var require_server2 = __commonJS({
           maxHttpBufferSize: 1e8
         });
         this.io.on("connection", async (socket) => {
-          console.log("User connected:", socket.id);
           const username = socket.handshake.auth.username || "Anonymous";
           let room_id = socket.handshake.auth.room;
+          console.log(`[LS] User connected:${username}, ${socket.id}`);
           if (!room_id || room_id == -1 || room_id === "-1" || room_id === "null") {
             room_id = "room_" + Math.random().toString(36).substring(2, 10);
-            console.log(
-              `Se ha recibido un room_id invalido de ${socket.id}, creando sala para el.`
-            );
+            console.log(`[LS] Room created :${room_id}`);
           }
           await socket.join(room_id);
           if (!this.rooms[room_id])
@@ -26925,7 +26901,7 @@ var require_server2 = __commonJS({
             isHost,
             room: room_id,
             color: "#" + Math.floor(Math.random() * 16777215).toString(16)
-            // Color aleatorio para locks
+            // color for locks
           };
           socket.emit("is-host", isHost);
           socket.emit("room-assigned", room_id);
@@ -26946,21 +26922,16 @@ var require_server2 = __commonJS({
             });
           });
           socket.on("request-doc", () => {
+            console.log(
+              `[LS] ${this.users[socket.id].name} requested the whole doc.`
+            );
             this.io.to(this.rooms[this.users[socket.id].room].host_id).emit("get-whole-document", { requesterId: socket.id });
           });
           socket.on("sync-operation", (op) => {
             const userData = this.users[socket.id];
-            console.log(
-              `se ha recibido un cambio de ${userData.name}, id:  ${socket.id}`
-            );
             if (userData && userData.room) {
-              console.log(`[OP] De: ${userData.name} a sala: ${userData.room}`);
-              const clientsInRoom = this.io.sockets.adapter.rooms.get(
-                userData.room
-              );
               console.log(
-                `Clientes en sala ${userData.room}:`,
-                clientsInRoom ? clientsInRoom.size : 0
+                `[LS] ${userData.name} sent operation to room ${userData.room}`
               );
               socket.to(userData.room).emit("remote-operation", op);
             }
@@ -27009,6 +26980,7 @@ var require_server2 = __commonJS({
                 this.io.to(room_id2).emit("element-unlocked", { viewId: id });
               }
             }
+            console.log(`[LS] ${this.users[socket.id].name}, ${socket.id} left.`);
             this.io.to(room_id2).emit("user-left", socket.id);
             if (this.rooms[room_id2]) {
               delete this.rooms[room_id2].users[socket.id];
@@ -27027,7 +26999,7 @@ var require_server2 = __commonJS({
           });
         });
         this.server.listen(port, () => {
-          console.log(`Servidor LiveShare running on port ${port}`);
+          console.log(`[LS] LiveShare server running on port ${port}`);
         });
       }
       stop() {
@@ -27042,13 +27014,13 @@ var require_server2 = __commonJS({
         server.start(targetPort);
         server.server.on("error", (e) => {
           if (e.code === "EADDRINUSE") {
-            app.toast.error(`Port ${targetPort} occupied. Close other instances.`);
+            console.error(`Port ${targetPort} occupied. Close other instances.`);
           }
         });
       } catch (e) {
         return false;
       }
-      server.address = `http://${util.get_ip()}:${targetPort}`;
+      server.address = `http://${get_ip()}:${targetPort}`;
       return true;
     }
     function stopServer() {
@@ -27059,6 +27031,19 @@ var require_server2 = __commonJS({
     }
     function getServer() {
       return server;
+    }
+    function get_ip() {
+      const nets = networkInterfaces();
+      for (const name of Object.keys(nets)) {
+        for (const net2 of nets[name]) {
+          if (net2.internal) continue;
+          const isIPv4 = net2.family === "IPv4" || net2.family === 4;
+          if (isIPv4) {
+            return net2.address;
+          }
+        }
+      }
+      return "127.0.0.1";
     }
     module2.exports = {
       LiveShareServer,
@@ -27111,14 +27096,14 @@ var require_net = __commonJS({
     }
     function getSessionLink() {
       let baseUrl = am_i_hosting ? server.getServerAddress() : client.getConnectedAddress();
-      console.log(`Generando enlace. Base: ${baseUrl}`);
+      console.log(`[LS] Generating link. base: ${baseUrl}`);
       if (!baseUrl) return "";
       const roomId = client.getCurrentRoom();
-      console.log(`Generando enlace. Room ID: ${roomId}`);
+      console.log(`[LS] Generating link. room id: ${roomId}`);
       if (roomId !== null && roomId !== void 0) {
         const urlObj = new URL(baseUrl);
         urlObj.searchParams.set("room", roomId);
-        console.log(`Generando enlace. Enlace final: ${urlObj.toString()}`);
+        console.log(`[LS] Generating link. final link: ${urlObj.toString()}`);
         return urlObj.toString();
       }
       return baseUrl;
@@ -27200,8 +27185,8 @@ function copySessionLink() {
   navigator.clipboard.writeText(link).then(() => {
     fachada.INFO("Session link copied!");
   }).catch((err) => {
-    console.error("Error copying with navigator:", err);
-    console.log("Couldnt copy. The link is: " + link);
+    console.error("[LS] Error copying with navigator:", err);
+    console.log("[LS] Couldnt copy. The link is: " + link);
     fachada.ERR("Error. See console");
   });
 }

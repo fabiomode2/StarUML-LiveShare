@@ -48,17 +48,17 @@ function getSessionLink() {
     ? server.getServerAddress()
     : client.getConnectedAddress();
 
-  console.log(`Generando enlace. Base: ${baseUrl}`);
+  console.log(`[LS] Generating link. base: ${baseUrl}`);
 
   if (!baseUrl) return "";
 
   const roomId = client.getCurrentRoom();
-  console.log(`Generando enlace. Room ID: ${roomId}`);
+  console.log(`[LS] Generating link. room id: ${roomId}`);
 
   if (roomId !== null && roomId !== undefined) {
     const urlObj = new URL(baseUrl);
     urlObj.searchParams.set("room", roomId);
-    console.log(`Generando enlace. Enlace final: ${urlObj.toString()}`);
+    console.log(`[LS] Generating link. final link: ${urlObj.toString()}`);
 
     return urlObj.toString();
   }

@@ -1,6 +1,6 @@
 const { Server } = require("socket.io");
 const http = require("http");
-const util = require("./get_ip.js");
+const { networkInterfaces } = require("os"); // for getting self ip
 
 let server = null;
 const defaultPort = 6789;
@@ -25,20 +25,19 @@ class LiveShareServer {
     });
 
     this.io.on("connection", async (socket) => {
-      console.log("User connected:", socket.id);
+      const username = socket.handshake.auth.username || "Anonymous"; //get name
+      let room_id = socket.handshake.auth.room; // get room_id
 
-      const username = socket.handshake.auth.username || "Anonymous";
-      let room_id = socket.handshake.auth.room;
+      console.log(`[LS] User connected:${username}, ${socket.id}`);
 
       if (!room_id || room_id == -1 || room_id === "-1" || room_id === "null") {
-        room_id = "room_" + Math.random().toString(36).substring(2, 10);
-        console.log(
-          `Se ha recibido un room_id invalido de ${socket.id}, creando sala para el.`,
-        );
+        room_id = "room_" + Math.random().toString(36).substring(2, 10); //generate random room id
+        console.log(`[LS] Room created :${room_id}`);
       }
 
       await socket.join(room_id);
 
+      // if room does not exist, create it
       if (!this.rooms[room_id])
         this.rooms[room_id] = { users: {}, host_id: socket.id, locks: {} };
 
@@ -50,7 +49,7 @@ class LiveShareServer {
         name: username,
         isHost: isHost,
         room: room_id,
-        color: "#" + Math.floor(Math.random() * 16777215).toString(16), // Color aleatorio para locks
+        color: "#" + Math.floor(Math.random() * 16777215).toString(16), // color for locks
       };
 
       socket.emit("is-host", isHost);
@@ -78,6 +77,10 @@ class LiveShareServer {
       });
 
       socket.on("request-doc", () => {
+        console.log(
+          `[LS] ${this.users[socket.id].name} requested the whole doc.`,
+        );
+
         this.io
           .to(this.rooms[this.users[socket.id].room].host_id)
           .emit("get-whole-document", { requesterId: socket.id });
@@ -85,17 +88,10 @@ class LiveShareServer {
 
       socket.on("sync-operation", (op) => {
         const userData = this.users[socket.id];
-        console.log(
-          `se ha recibido un cambio de ${userData.name}, id:  ${socket.id}`,
-        );
+
         if (userData && userData.room) {
-          console.log(`[OP] De: ${userData.name} a sala: ${userData.room}`);
-          const clientsInRoom = this.io.sockets.adapter.rooms.get(
-            userData.room,
-          );
           console.log(
-            `Clientes en sala ${userData.room}:`,
-            clientsInRoom ? clientsInRoom.size : 0,
+            `[LS] ${userData.name} sent operation to room ${userData.room}`,
           );
           socket.to(userData.room).emit("remote-operation", op);
         }
@@ -150,7 +146,7 @@ class LiveShareServer {
 
         const room_id = userData.room;
 
-        // 1. Liberar candados (usando la variable local room_id)
+        // remove locks
         for (let id in this.rooms[room_id].locks) {
           if (this.rooms[room_id].locks[id] === socket.id) {
             delete this.rooms[room_id].locks[id];
@@ -158,10 +154,11 @@ class LiveShareServer {
           }
         }
 
-        // 2. Notificar salida
+        // notify
+        console.log(`[LS] ${this.users[socket.id].name}, ${socket.id} left.`);
         this.io.to(room_id).emit("user-left", socket.id);
 
-        // 3. Manejar lógica de sala
+        // room logic
         if (this.rooms[room_id]) {
           delete this.rooms[room_id].users[socket.id];
           let remainingUsers = Object.keys(this.rooms[room_id].users);
@@ -173,7 +170,7 @@ class LiveShareServer {
             let new_host = remainingUsers[0];
             this.rooms[room_id].host_id = new_host;
             this.io.to(new_host).emit("is-host", true);
-            // Actualizar el flag en this.users del nuevo host
+
             if (this.users[new_host]) this.users[new_host].isHost = true;
           }
 
@@ -182,13 +179,13 @@ class LiveShareServer {
           }
         }
 
-        // 4. BORRAR AL FINAL
+        // delete user
         delete this.users[socket.id];
       });
     });
 
     this.server.listen(port, () => {
-      console.log(`Servidor LiveShare running on port ${port}`);
+      console.log(`[LS] LiveShare server running on port ${port}`);
     });
   }
 
@@ -206,13 +203,13 @@ function startServer(port) {
     server.start(targetPort);
     server.server.on("error", (e) => {
       if (e.code === "EADDRINUSE") {
-        app.toast.error(`Port ${targetPort} occupied. Close other instances.`);
+        console.error(`Port ${targetPort} occupied. Close other instances.`);
       }
     });
   } catch (e) {
     return false;
   }
-  server.address = `http://${util.get_ip()}:${targetPort}`;
+  server.address = `http://${get_ip()}:${targetPort}`;
   return true;
 }
 
@@ -226,6 +223,23 @@ function getServerAddress() {
 
 function getServer() {
   return server;
+}
+
+function get_ip() {
+  const nets = networkInterfaces();
+
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.internal) continue;
+
+      const isIPv4 = net.family === "IPv4" || net.family === 4;
+
+      if (isIPv4) {
+        return net.address;
+      }
+    }
+  }
+  return "127.0.0.1"; // fallback
 }
 
 module.exports = {
