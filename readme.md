@@ -17,7 +17,7 @@ Clone this repo, install dependencies and run `start-server` script.
 
 ### To do
 
-- [ ] Remote servers
+- [x] Remote servers
 - [ ] Read only session
 - [ ] Lock element interaction
 - [ ] Follow host option (sync zoom and pos)
