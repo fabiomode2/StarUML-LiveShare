@@ -27053,7 +27053,7 @@ var require_net = __commonJS({
     async function startSession2(name, type2, remoteServer) {
       if (remoteServer) {
         am_i_hosting = false;
-        am_i_connected = client.connectToServer(remoteServer, name, -1);
+        am_i_connected = await client.connectToServer(remoteServer, name, -1);
       } else {
         am_i_hosting = server.startServer(server.defaultPort);
         am_i_connected = await client.connectToServer(
@@ -27115,7 +27115,7 @@ var net = require_net();
 async function startSession() {
   const data = await fachada.showSS();
   if (!data) return;
-  if (!net.startSession(data.name, data.type, data.server)) {
+  if (!await net.startSession(data.name, data.type, data.server)) {
     fachada.WARN("Couldnt start session");
     return;
   }
