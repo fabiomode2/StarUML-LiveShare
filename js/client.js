@@ -38,8 +38,14 @@ async function connectToServer(url, name, roomid) {
       if (am_i_host) fachada.INFO("You're the host");
     });
 
-    socket.on("room-assigned", (id) => {
+    socket.on("room-assigned", async (id) => {
       current_room = id;
+      console.log("Room asignada y lista: " + current_room);
+
+      addChangesHook();
+      fachada.hideLoadingOverlay();
+
+      resolve(true);
     });
 
     socket.on("update-mouse-pos", (data) => {
@@ -75,6 +81,7 @@ async function connectToServer(url, name, roomid) {
 
     socket.on("remote-operation", (opData) => {
       isRemoteChange = true;
+      console.log(`Recibida operacion de ${socket.id}`);
       try {
         const operation = flatted.parse(opData);
         app.repository.doOperation(operation);
@@ -139,8 +146,8 @@ async function connectToServer(url, name, roomid) {
       address = url;
       mm_net.addMouseMovementSharing(sendMousePosition);
       fachada.showLoadingOverlay();
-      addChangesHook();
-      resolve(true);
+      // addChangesHook();
+      // resolve(true);
     });
 
     socket.on("connect_error", (err) => resolve(false));
@@ -149,8 +156,9 @@ async function connectToServer(url, name, roomid) {
 
 const handleOperation = (operation) => {
   if (isRemoteChange || app.repository.bypassConfirmation) return;
-  if (socket && socket.connected) {
+  if (socket && socket.connected && current_room) {
     const str = flatted.stringify(operation);
+    //console.log(`Enviando operacion a sala ${current_room}`);
     socket.emit("sync-operation", str);
   }
 };

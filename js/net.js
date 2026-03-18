@@ -55,7 +55,7 @@ function getSessionLink() {
   const roomId = client.getCurrentRoom();
   console.log(`Generando enlace. Room ID: ${roomId}`);
 
-  if (roomId) {
+  if (roomId !== null && roomId !== undefined) {
     const urlObj = new URL(baseUrl);
     urlObj.searchParams.set("room", roomId);
     console.log(`Generando enlace. Enlace final: ${urlObj.toString()}`);

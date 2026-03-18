@@ -24,14 +24,20 @@ class LiveShareServer {
       maxHttpBufferSize: 1e8,
     });
 
-    this.io.on("connection", (socket) => {
+    this.io.on("connection", async (socket) => {
       console.log("User connected:", socket.id);
 
       const username = socket.handshake.auth.username || "Anonymous";
       let room_id = socket.handshake.auth.room;
 
-      if (room_id == -1 || !room_id) room_id = socket.id;
-      socket.join(room_id);
+      if (!room_id || room_id == -1 || room_id === "-1" || room_id === "null") {
+        room_id = "room_" + Math.random().toString(36).substring(2, 10);
+        console.log(
+          `Se ha recibido un room_id invalido de ${socket.id}, creando sala para el.`,
+        );
+      }
+
+      await socket.join(room_id);
 
       if (!this.rooms[room_id])
         this.rooms[room_id] = { users: {}, host_id: socket.id, locks: {} };
@@ -78,15 +84,35 @@ class LiveShareServer {
       });
 
       socket.on("sync-operation", (op) => {
-        socket.to(this.users[socket.id].room).emit("remote-operation", op);
+        const userData = this.users[socket.id];
+        console.log(
+          `se ha recibido un cambio de ${userData.name}, id:  ${socket.id}`,
+        );
+        if (userData && userData.room) {
+          console.log(`[OP] De: ${userData.name} a sala: ${userData.room}`);
+          const clientsInRoom = this.io.sockets.adapter.rooms.get(
+            userData.room,
+          );
+          console.log(
+            `Clientes en sala ${userData.room}:`,
+            clientsInRoom ? clientsInRoom.size : 0,
+          );
+          socket.to(userData.room).emit("remote-operation", op);
+        }
       });
 
       socket.on("sync-undo", () => {
-        socket.to(this.users[socket.id].room).emit("remote-undo");
+        const userData = this.users[socket.id];
+        if (userData && userData.room) {
+          socket.to(userData.room).emit("remote-undo");
+        }
       });
 
       socket.on("sync-redo", () => {
-        socket.to(this.users[socket.id].room).emit("remote-redo");
+        const userData = this.users[socket.id];
+        if (userData && userData.room) {
+          socket.to(userData.room).emit("remote-redo");
+        }
       });
 
       socket.on("lock-element", (viewIds) => {
