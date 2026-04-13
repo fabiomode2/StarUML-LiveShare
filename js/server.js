@@ -19,8 +19,8 @@ class LiveShareServer {
     this.server = http.createServer();
     this.io = new Server(this.server, {
       cors: { origin: "*" },
-      pingTimeout: 30000,
-      pingInterval: 10000,
+      pingTimeout: 60000,
+      pingInterval: 25000,
       maxHttpBufferSize: 1e8,
     });
 

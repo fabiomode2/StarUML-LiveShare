@@ -47,8 +47,8 @@ class CursorsHandler {
           let diagram = activeDiagram._id;
 
           const dataToSend = {
-            x: (event.clientX - rect.left) / scale - diagramX,
-            y: (event.clientY - rect.top) / scale - diagramY,
+            x: (event.clientX - rect.left) / scale - activeDiagram._originX,
+            y: (event.clientY - rect.top) / scale - activeDiagram._originY,
             diagram: diagram,
           };
 
@@ -177,7 +177,20 @@ class CursorsHandler {
 
       // Actualizamos la posición física (multiplicamos por escala para que encaje)
       if (c.element) {
-        c.element.style.transform = `translate(${c.x * scale}px, ${c.y * scale}px)`;
+        const currentDiagram = app.diagrams.getCurrentDiagram();
+        if (currentDiagram && currentDiagram._id === c.diagram) {
+          const localScale = app.diagrams.getZoomLevel();
+          const localOriginX = currentDiagram._originX;
+          const localOriginY = currentDiagram._originY;
+
+          const physicalX = (c.x + localOriginX) * localScale;
+          const physicalY = (c.y + localOriginY) * localScale;
+
+          c.element.style.transform = `translate(${physicalX}px, ${physicalY}px)`;
+          c.element.style.display = "block";
+        } else {
+          c.element.style.display = "none";
+        }
       }
     }
     this.animationFrame = requestAnimationFrame(() => this.animate());

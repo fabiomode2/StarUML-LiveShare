@@ -9073,8 +9073,8 @@ var require_cursors = __commonJS({
               const rect = diagramArea.getBoundingClientRect();
               let diagram = activeDiagram._id;
               const dataToSend = {
-                x: (event.clientX - rect.left) / scale - diagramX,
-                y: (event.clientY - rect.top) / scale - diagramY,
+                x: (event.clientX - rect.left) / scale - activeDiagram._originX,
+                y: (event.clientY - rect.top) / scale - activeDiagram._originY,
                 diagram
               };
               if (this.lastMPsent.x == dataToSend.x && this.lastMPsent.y == dataToSend.y)
@@ -9193,7 +9193,18 @@ var require_cursors = __commonJS({
           c.x = LERP(c.x, c.targetX, LERP_SPEED);
           c.y = LERP(c.y, c.targetY, LERP_SPEED);
           if (c.element) {
-            c.element.style.transform = `translate(${c.x * scale}px, ${c.y * scale}px)`;
+            const currentDiagram = app.diagrams.getCurrentDiagram();
+            if (currentDiagram && currentDiagram._id === c.diagram) {
+              const localScale = app.diagrams.getZoomLevel();
+              const localOriginX = currentDiagram._originX;
+              const localOriginY = currentDiagram._originY;
+              const physicalX = (c.x + localOriginX) * localScale;
+              const physicalY = (c.y + localOriginY) * localScale;
+              c.element.style.transform = `translate(${physicalX}px, ${physicalY}px)`;
+              c.element.style.display = "block";
+            } else {
+              c.element.style.display = "none";
+            }
           }
         }
         this.animationFrame = requestAnimationFrame(() => this.animate());
@@ -9228,14 +9239,18 @@ var require_client = __commonJS({
     var users = {};
     var am_i_host = false;
     var isRemoteChange = false;
+    var isLocalUndo = false;
     var activeHighlights = {};
     async function connectToServer(url, name, roomid) {
       removeChangesHook();
       return new Promise((resolve, reject) => {
         socket = io(url, {
           transports: ["websocket"],
-          reconnectionAttempts: 3,
-          timeout: 5e3,
+          reconnection: true,
+          reconnectionAttempts: 10,
+          reconnectionDelay: 1e3,
+          reconnectionDelayMax: 5e3,
+          timeout: 1e4,
           auth: { username: name, room: roomid }
         });
         if (roomid && roomid !== -1) current_room = roomid;
@@ -9276,11 +9291,41 @@ var require_client = __commonJS({
         socket.on("load-whole-document", (data) => {
           try {
             const projectObj = flatted.parse(data.json);
+            let openDiagramIds = [];
+            let activeDiagramId = null;
+            try {
+              if (app.diagrams.getWorkingDiagrams) {
+                openDiagramIds = app.diagrams.getWorkingDiagrams().map((d) => d._id);
+              }
+              if (app.diagrams.getCurrentDiagram()) {
+                activeDiagramId = app.diagrams.getCurrentDiagram()._id;
+              }
+            } catch (e) {
+              console.warn("[LS] Could not save workspace state", e);
+            }
             app.repository.bypassConfirmation = true;
             app.project.loadFromJson(projectObj);
             app.repository.bypassConfirmation = false;
+            try {
+              openDiagramIds.forEach((id) => {
+                const diag = app.repository.get(id);
+                if (diag && diag instanceof type.Diagram) {
+                  app.diagrams.openDiagram(diag);
+                }
+              });
+              if (activeDiagramId) {
+                const diag = app.repository.get(activeDiagramId);
+                if (diag && diag instanceof type.Diagram) {
+                  app.diagrams.setCurrentDiagram(diag);
+                }
+              }
+            } catch (e) {
+              console.warn("[LS] Could not restore workspace state", e);
+            }
+            fachada2.INFO("Document synchronized.");
           } catch (err) {
             fachada2.ERR("Error loading remote document:", err);
+            console.error(err);
           } finally {
             fachada2.hideLoadingOverlay();
           }
@@ -9295,35 +9340,45 @@ var require_client = __commonJS({
           } catch (err) {
             console.error("[LS] Operation Error:", err);
           } finally {
-            setTimeout(() => {
-              isRemoteChange = false;
-            }, 50);
+            isRemoteChange = false;
           }
         });
         socket.on("remote-undo", async () => {
           isRemoteChange = true;
           try {
             await app.commands.execute("edit:undo");
+            app.diagrams.repaint();
+            updateAllHighlights();
           } catch (e) {
             console.error(e);
           } finally {
-            setTimeout(() => {
-              isRemoteChange = false;
-            }, 50);
+            isRemoteChange = false;
           }
         });
         socket.on("remote-redo", async () => {
           isRemoteChange = true;
           try {
             await app.commands.execute("edit:redo");
+            app.diagrams.repaint();
+            updateAllHighlights();
           } catch (e) {
             console.error(e);
           } finally {
-            setTimeout(() => {
-              isRemoteChange = false;
-            }, 50);
+            isRemoteChange = false;
           }
         });
+        const originalExecute = app.commands.execute;
+        app.commands.execute = function(id, ...args) {
+          if (id === "edit:undo" || id === "edit:redo") {
+            isLocalUndo = true;
+            try {
+              return originalExecute.apply(app.commands, [id, ...args]);
+            } finally {
+              isLocalUndo = false;
+            }
+          }
+          return originalExecute.apply(app.commands, [id, ...args]);
+        };
         socket.on("element-locked", ({ viewId, ownerId, color }) => {
           if (ownerId !== socket.id) {
             highlightElement(viewId, color);
@@ -9341,12 +9396,35 @@ var require_client = __commonJS({
           address = url;
           cursors.addMouseMovementSharing(sendMousePosition);
           fachada2.showLoadingOverlay();
+          if (socket.recovered) {
+            fachada2.INFO("Connection recovered!");
+          }
         });
-        socket.on("connect_error", (err) => resolve(false));
+        socket.on("disconnect", (reason) => {
+          fachada2.WARN("Disconnected: " + reason);
+          if (reason === "io server disconnect") {
+            socket.connect();
+          }
+          removeAllHighlights();
+          cursors.removeAllCursors();
+        });
+        socket.on("reconnect", (attempt) => {
+          fachada2.INFO("Reconnected after " + attempt + " attempts.");
+        });
+        socket.on("connect_error", (err) => {
+          console.error("Connect Error:", err);
+          resolve(false);
+        });
+        document.addEventListener("visibilitychange", () => {
+          if (!document.hidden && socket && socket.connected) {
+            socket.emit("client-ping", { timestamp: Date.now() });
+          }
+        });
       });
     }
     var handleOperation = (operation) => {
-      if (isRemoteChange || app.repository.bypassConfirmation) return;
+      if (isRemoteChange || isLocalUndo || app.repository.bypassConfirmation)
+        return;
       if (socket && socket.connected && current_room) {
         const str = flatted.stringify(operation);
         socket.emit("sync-operation", str);
@@ -9373,62 +9451,97 @@ var require_client = __commonJS({
       app.repository.on("operationExecuted", handleOperation);
       app.commands.on("afterExecute", handleCommands);
       app.selections.on("selectionChanged", handleSelection);
+      app.diagrams.on("currentDiagramChanged", updateAllHighlights);
+      const diagramArea = app.diagrams.$diagramArea[0];
+      if (diagramArea) {
+        diagramArea.addEventListener("wheel", updateAllHighlights, { passive: true });
+        diagramArea.addEventListener("mousedown", onDiagramMouseDown);
+      }
     }
     function removeChangesHook() {
       app.repository.off("operationExecuted", handleOperation);
       app.commands.off("afterExecute", handleCommands);
       app.selections.off("selectionChanged", handleSelection);
+      app.diagrams.off("currentDiagramChanged", updateAllHighlights);
+      const diagramArea = app.diagrams.$diagramArea[0];
+      if (diagramArea) {
+        diagramArea.removeEventListener("wheel", updateAllHighlights);
+        diagramArea.removeEventListener("mousedown", onDiagramMouseDown);
+      }
+    }
+    var isPanning = false;
+    function onDiagramMouseDown() {
+      isPanning = true;
+      const onMouseMove = () => {
+        if (isPanning) updateAllHighlights();
+      };
+      const onMouseUp = () => {
+        isPanning = false;
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+      };
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
     }
     function highlightElement(viewId, color) {
       const view = app.repository.get(viewId);
       const diagramArea = app.diagrams.$diagramArea[0];
       if (view && view instanceof type.View) {
         removeHighlight(viewId);
-        const rect = {
-          left: view.left,
-          top: view.top,
-          width: view.width,
-          height: view.height
-        };
         const hl = document.createElement("div");
         hl.className = "element-lock-highlight";
         hl.style.cssText = `
       position: absolute;
       border: 3px solid ${color};
-      left: ${rect.left}px;
-      top: ${rect.top}px;
-      width: ${rect.width}px;
-      height: ${rect.height}px;
       pointer-events: none;
       z-index: 5;
+      box-sizing: border-box;
+      display: none;
     `;
         diagramArea.appendChild(hl);
-        activeHighlights[viewId] = hl;
+        activeHighlights[viewId] = { element: hl, color };
+        updateAllHighlights();
       }
     }
     function removeHighlight(viewId) {
       if (activeHighlights[viewId]) {
-        activeHighlights[viewId].remove();
+        activeHighlights[viewId].element.remove();
         delete activeHighlights[viewId];
       }
     }
     function removeAllHighlights() {
       for (let viewId in activeHighlights) {
-        activeHighlights[viewId].remove();
+        activeHighlights[viewId].element.remove();
       }
       activeHighlights = {};
     }
     function updateAllHighlights() {
+      const currentDiagram = app.diagrams.getCurrentDiagram();
+      if (!currentDiagram) {
+        for (let viewId in activeHighlights) {
+          activeHighlights[viewId].element.style.display = "none";
+        }
+        return;
+      }
+      const zoom = app.diagrams.getZoomLevel();
+      const originX = currentDiagram._originX;
+      const originY = currentDiagram._originY;
       for (let viewId in activeHighlights) {
         const view = app.repository.get(viewId);
-        if (view && view instanceof type.View) {
-          const hl = activeHighlights[viewId];
-          hl.style.left = `${view.left}px`;
-          hl.style.top = `${view.top}px`;
-          hl.style.width = `${view.width}px`;
-          hl.style.height = `${view.height}px`;
+        if (view && view instanceof type.View && view._parent === currentDiagram) {
+          const hlObj = activeHighlights[viewId];
+          const hl = hlObj.element;
+          const physicalX = (view.left + originX) * zoom;
+          const physicalY = (view.top + originY) * zoom;
+          const physicalW = view.width * zoom;
+          const physicalH = view.height * zoom;
+          hl.style.left = `${physicalX}px`;
+          hl.style.top = `${physicalY}px`;
+          hl.style.width = `${physicalW}px`;
+          hl.style.height = `${physicalH}px`;
+          hl.style.display = "block";
         } else {
-          removeHighlight(viewId);
+          activeHighlights[viewId].element.style.display = "none";
         }
       }
     }
@@ -26878,8 +26991,8 @@ var require_server2 = __commonJS({
         this.server = http.createServer();
         this.io = new Server(this.server, {
           cors: { origin: "*" },
-          pingTimeout: 3e4,
-          pingInterval: 1e4,
+          pingTimeout: 6e4,
+          pingInterval: 25e3,
           maxHttpBufferSize: 1e8
         });
         this.io.on("connection", async (socket) => {
