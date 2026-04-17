@@ -19,7 +19,7 @@
   "styles": [
     "stylesheets/cursors.css"
   ],
-  "license": "MIT",
+  "license": "GPL-3.0-only",
   "engines": {
     "staruml": ">=3.0.0"
   },

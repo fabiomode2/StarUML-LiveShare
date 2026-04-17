@@ -16,6 +16,7 @@ class CursorsHandler {
     // mouses_view
     this.cursors = {};
     this.animationFrame = null;
+    this.highlightedId = null;
   }
 
   // mouses_net
@@ -146,7 +147,7 @@ class CursorsHandler {
     }
   }
 
-  updateMousePosition({ id, x, y, diagram, name }) {
+  updateMousePosition({ id, x, y, diagram, name, zoom, originX, originY }) {
     if (!this.cursors[id]) {
       this.addCursor(id, name || "Anonymous");
     }
@@ -155,6 +156,9 @@ class CursorsHandler {
     this.cursors[id].targetX = x;
     this.cursors[id].targetY = y;
     this.cursors[id].diagram = diagram;
+    this.cursors[id].zoom = zoom;
+    this.cursors[id].originX = originX;
+    this.cursors[id].originY = originY;
 
     // Solo mostrar si está en el mismo diagrama que nosotros
     const currentDiagram = app.diagrams.getCurrentDiagram();
@@ -200,6 +204,27 @@ class CursorsHandler {
     if (this.animationFrame) {
       cancelAnimationFrame(this.animationFrame);
       this.animationFrame = null;
+    }
+  }
+
+  setHighlight(id) {
+    this.highlightedId = id;
+    // Clear other highlights
+    for (const [key, c] of Object.entries(this.cursors)) {
+      if (key !== id && c.element) {
+        c.element.style.zIndex = "100";
+        c.element.style.filter = "none";
+        const svg = c.element.querySelector("svg");
+        if (svg) svg.style.transform = "scale(1)";
+      }
+    }
+    // Set active highlight
+    if (id && this.cursors[id]) {
+      const c = this.cursors[id];
+      c.element.style.zIndex = "1000";
+      c.element.style.filter = "drop-shadow(0 0 5px rgba(241, 196, 15, 0.6))";
+      const svg = c.element.querySelector("svg");
+      if (svg) svg.style.transform = "scale(1.15)";
     }
   }
 

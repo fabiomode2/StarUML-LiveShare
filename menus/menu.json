@@ -31,6 +31,12 @@
           "label": "End session",
           "command": "liveshare:es",
           "visible": false
+        },
+        {
+          "id": "ls_pa",
+          "label": "print app",
+          "command": "liveshare:pa",
+          "visible": false
         }
       ]
     }

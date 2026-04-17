@@ -8963,7 +8963,7 @@ var require_cjs6 = __commonJS({
     var noop = (_, value) => value;
     var primitives = (value) => value instanceof Primitive ? Primitive(value) : value;
     var Primitives = (_, value) => typeof value === primitive ? new Primitive(value) : value;
-    var resolver = (input, lazy, parsed, $) => (output) => {
+    var resolver = (input, lazy, parsed, $2) => (output) => {
       for (let ke = keys(output), { length } = ke, y = 0; y < length; y++) {
         const k = ke[y];
         const value = output[k];
@@ -8974,9 +8974,9 @@ var require_cjs6 = __commonJS({
             output[k] = ignore;
             lazy.push({ o: output, k, r: tmp });
           } else
-            output[k] = $.call(output, k, tmp);
+            output[k] = $2.call(output, k, tmp);
         } else if (output[k] !== ignore)
-          output[k] = $.call(output, k, value);
+          output[k] = $2.call(output, k, value);
       }
       return output;
     };
@@ -8987,27 +8987,27 @@ var require_cjs6 = __commonJS({
     };
     var parse = (text, reviver) => {
       const input = $parse(text, Primitives).map(primitives);
-      const $ = reviver || noop;
+      const $2 = reviver || noop;
       let value = input[0];
       if (typeof value === object && value) {
         const lazy = [];
-        const revive = resolver(input, lazy, /* @__PURE__ */ new Set(), $);
+        const revive = resolver(input, lazy, /* @__PURE__ */ new Set(), $2);
         value = revive(value);
         let i = 0;
         while (i < lazy.length) {
           const { o, k, r } = lazy[i++];
-          o[k] = $.call(o, k, revive(r));
+          o[k] = $2.call(o, k, revive(r));
         }
       }
-      return $.call({ "": value }, "", value);
+      return $2.call({ "": value }, "", value);
     };
     exports2.parse = parse;
     var stringify = (value, replacer, space) => {
-      const $ = replacer && typeof replacer === object ? (k, v) => k === "" || -1 < replacer.indexOf(k) ? v : void 0 : replacer || noop;
+      const $2 = replacer && typeof replacer === object ? (k, v) => k === "" || -1 < replacer.indexOf(k) ? v : void 0 : replacer || noop;
       const known = /* @__PURE__ */ new Map();
       const input = [];
       const output = [];
-      let i = +set(known, input, $.call({ "": value }, "", value));
+      let i = +set(known, input, $2.call({ "": value }, "", value));
       let firstRun = !i;
       while (i < input.length) {
         firstRun = true;
@@ -9019,7 +9019,7 @@ var require_cjs6 = __commonJS({
           firstRun = !firstRun;
           return value2;
         }
-        const after = $.call(this, key, value2);
+        const after = $2.call(this, key, value2);
         switch (typeof after) {
           case object:
             if (after === null) return after;
@@ -9052,6 +9052,7 @@ var require_cursors = __commonJS({
         this.currentHandler = null;
         this.cursors = {};
         this.animationFrame = null;
+        this.highlightedId = null;
       }
       // mouses_net
       addMouseMovementSharing(sendFunction) {
@@ -9172,13 +9173,16 @@ var require_cursors = __commonJS({
           delete this.cursors[id];
         }
       }
-      updateMousePosition({ id, x, y, diagram, name }) {
+      updateMousePosition({ id, x, y, diagram, name, zoom, originX, originY }) {
         if (!this.cursors[id]) {
           this.addCursor(id, name || "Anonymous");
         }
         this.cursors[id].targetX = x;
         this.cursors[id].targetY = y;
         this.cursors[id].diagram = diagram;
+        this.cursors[id].zoom = zoom;
+        this.cursors[id].originX = originX;
+        this.cursors[id].originY = originY;
         const currentDiagram = app.diagrams.getCurrentDiagram();
         if (currentDiagram && currentDiagram._id === diagram) {
           this.cursors[id].element.style.display = "block";
@@ -9215,6 +9219,24 @@ var require_cursors = __commonJS({
           this.animationFrame = null;
         }
       }
+      setHighlight(id) {
+        this.highlightedId = id;
+        for (const [key, c] of Object.entries(this.cursors)) {
+          if (key !== id && c.element) {
+            c.element.style.zIndex = "100";
+            c.element.style.filter = "none";
+            const svg = c.element.querySelector("svg");
+            if (svg) svg.style.transform = "scale(1)";
+          }
+        }
+        if (id && this.cursors[id]) {
+          const c = this.cursors[id];
+          c.element.style.zIndex = "1000";
+          c.element.style.filter = "drop-shadow(0 0 5px rgba(241, 196, 15, 0.6))";
+          const svg = c.element.querySelector("svg");
+          if (svg) svg.style.transform = "scale(1.15)";
+        }
+      }
       removeAllCursors() {
         for (const [key, value] of Object.entries(this.cursors)) {
           this.removeCursor(key);
@@ -9230,7 +9252,7 @@ var require_client = __commonJS({
   "js/client.js"(exports2, module2) {
     var io = require_cjs5();
     var fachada2 = require_fachada();
-    var flatted = require_cjs6();
+    var flatted2 = require_cjs6();
     var cursors_js = require_cursors();
     var cursors = new cursors_js.CursorsHandler();
     var socket = null;
@@ -9241,6 +9263,22 @@ var require_client = __commonJS({
     var isRemoteChange = false;
     var isLocalUndo = false;
     var activeHighlights = {};
+    var followingUserId = null;
+    var userUpdateCallback = null;
+    var originalGridVisible = true;
+    var followOverlay = null;
+    var originalExecute = null;
+    var followStyleElement = null;
+    var lastKnownMouse = { x: 0, y: 0, diagram: null };
+    var lastSentViewport = { originX: 0, originY: 0, zoom: 0, diagram: null };
+    var lastViewportSyncTime = 0;
+    var viewportWatcherInterval = null;
+    var VIEWPORT_SYNC_THROTTLE = 30;
+    var VIEWPORT_CHECK_INTERVAL = 50;
+    var targetCamera = { x: 0, y: 0, zoom: 1, diagram: null };
+    var currentCamera = { x: 0, y: 0, zoom: 1 };
+    var followAnimationFrame = null;
+    var ZOOM_PRECISION = 1e-3;
     async function connectToServer(url, name, roomid) {
       removeChangesHook();
       return new Promise((resolve, reject) => {
@@ -9257,6 +9295,18 @@ var require_client = __commonJS({
         socket.on("user-joined", (data) => {
           if (!users[data.id]) users[data.id] = data.name;
           fachada2.INFO(`${data.name} joined`);
+          if (userUpdateCallback) userUpdateCallback();
+        });
+        socket.on("current-users", (data) => {
+          console.log("[LS] Received current-users:", data);
+          data.forEach((u) => {
+            if (!users[u.id]) users[u.id] = u.name;
+          });
+          console.log("[LS] Users object after current-users:", users);
+          if (userUpdateCallback) {
+            console.log("[LS] Calling userUpdateCallback");
+            userUpdateCallback();
+          }
         });
         socket.on("is-host", (is_host) => {
           am_i_host = is_host;
@@ -9264,22 +9314,60 @@ var require_client = __commonJS({
           if (am_i_host) fachada2.hideLoadingOverlay();
           if (am_i_host) fachada2.INFO("You're the host");
         });
+        socket.on("host-left", (data) => {
+          console.log("[LS] Host left the session");
+          fachada2.WARN("Host left the session");
+          disconnect();
+        });
         socket.on("room-assigned", async (id) => {
           console.log("[LS] Room assigned: " + current_room);
           current_room = id;
           addChangesHook();
+          startViewportWatcher();
           fachada2.hideLoadingOverlay();
           resolve(true);
         });
         socket.on("update-mouse-pos", (data) => {
           if (data.id == socket.id) return;
           cursors.updateMousePosition(data);
+          if (followingUserId) {
+            cursors.setHighlight(followingUserId);
+          } else {
+            cursors.setHighlight(null);
+          }
+          if (followingUserId === data.id) {
+            applyViewportSync(data);
+          }
+        });
+        socket.on("get-follow-sync", (data) => {
+          if (socket && socket.connected) {
+            const viewport = getCurrentViewportData();
+            socket.emit("response-follow-sync", {
+              requesterId: data.requesterId,
+              viewportData: viewport
+            });
+          }
+        });
+        socket.on("follower-sync-data", (data) => {
+          if (followingUserId === data.id) {
+            console.info("[LS] Applying initial follow sync from", data.id);
+            const viewportData = data.viewportData || data;
+            applyViewportSync({
+              id: data.id,
+              diagram: viewportData.diagram,
+              x: viewportData.x,
+              y: viewportData.y,
+              zoom: viewportData.zoom,
+              originX: viewportData.originX,
+              originY: viewportData.originY
+            }, true);
+          }
         });
         socket.on("get-whole-document", (data) => {
           try {
             const projectObj = app.project.getProject();
             const cleanObject = app.repository.writeObject(projectObj);
-            const str = flatted.stringify(cleanObject);
+            const str = flatted2.stringify(cleanObject);
             socket.emit("host-delivers-document", {
               to: data.requesterId,
               json: str
@@ -9290,7 +9378,7 @@ var require_client = __commonJS({
         });
         socket.on("load-whole-document", (data) => {
           try {
-            const projectObj = flatted.parse(data.json);
+            const projectObj = flatted2.parse(data.json);
             let openDiagramIds = [];
             let activeDiagramId = null;
             try {
@@ -9333,7 +9421,7 @@ var require_client = __commonJS({
         socket.on("remote-operation", (opData) => {
           isRemoteChange = true;
           try {
-            const operation = flatted.parse(opData);
+            const operation = flatted2.parse(opData);
             app.repository.doOperation(operation);
             app.diagrams.repaint();
             updateAllHighlights();
@@ -9346,11 +9434,21 @@ var require_client = __commonJS({
         socket.on("remote-undo", async () => {
           isRemoteChange = true;
           try {
-            await app.commands.execute("edit:undo");
-            app.diagrams.repaint();
-            updateAllHighlights();
+            const undoManager = app.repository._undoManager || app.repository._operationManager;
+            if (undoManager && typeof undoManager.undo === "function") {
+              await undoManager.undo();
+              app.diagrams.repaint();
+              updateAllHighlights();
+            } else if (app.repository._undoStack && app.repository._undoStack.length > 0) {
+              const lastOp = app.repository._undoStack[app.repository._undoStack.length - 1];
+              app.repository.rollback(lastOp);
+              app.diagrams.repaint();
+              updateAllHighlights();
+            } else {
+              console.log("[LS] Remote undo - no operations to undo");
+            }
           } catch (e) {
-            console.error(e);
+            console.error("[LS] Remote undo failed:", e);
           } finally {
             isRemoteChange = false;
           }
@@ -9358,27 +9456,39 @@ var require_client = __commonJS({
         socket.on("remote-redo", async () => {
           isRemoteChange = true;
           try {
-            await app.commands.execute("edit:redo");
-            app.diagrams.repaint();
-            updateAllHighlights();
+            const undoManager = app.repository._undoManager || app.repository._operationManager;
+            if (undoManager && typeof undoManager.redo === "function") {
+              await undoManager.redo();
+              app.diagrams.repaint();
+              updateAllHighlights();
+            } else if (app.repository._redoStack && app.repository._redoStack.length > 0) {
+              const lastOp = app.repository._redoStack[app.repository._redoStack.length - 1];
+              app.repository.commit(lastOp);
+              app.diagrams.repaint();
+              updateAllHighlights();
+            } else {
+              console.log("[LS] Remote redo - no operations to redo");
+            }
           } catch (e) {
-            console.error(e);
+            console.error("[LS] Remote redo failed:", e);
           } finally {
             isRemoteChange = false;
           }
         });
-        const originalExecute = app.commands.execute;
-        app.commands.execute = function(id, ...args) {
-          if (id === "edit:undo" || id === "edit:redo") {
-            isLocalUndo = true;
-            try {
-              return originalExecute.apply(app.commands, [id, ...args]);
-            } finally {
-              isLocalUndo = false;
+        if (!originalExecute) {
+          originalExecute = app.commands.execute;
+          app.commands.execute = function(id, ...args) {
+            if (id === "edit:undo" || id === "edit:redo") {
+              isLocalUndo = true;
+              try {
+                return originalExecute.apply(app.commands, [id, ...args]);
+              } finally {
+                isLocalUndo = false;
+              }
             }
-          }
-          return originalExecute.apply(app.commands, [id, ...args]);
-        };
+            return originalExecute.apply(app.commands, [id, ...args]);
+          };
+        }
         socket.on("element-locked", ({ viewId, ownerId, color }) => {
           if (ownerId !== socket.id) {
             highlightElement(viewId, color);
@@ -9388,9 +9498,15 @@ var require_client = __commonJS({
           removeHighlight(viewId);
         });
         socket.on("user-left", (id) => {
-          fachada2.INFO(`${users[id]} left`);
+          const userName = users[id] || "User";
+          fachada2.INFO(`${userName} left`);
           delete users[id];
           cursors.removeCursor(id);
+          if (followingUserId === id) {
+            removeFollowEffects();
+            followingUserId = null;
+          }
+          if (userUpdateCallback) userUpdateCallback();
         });
         socket.on("connect", () => {
           address = url;
@@ -9401,12 +9517,15 @@ var require_client = __commonJS({
           }
         });
         socket.on("disconnect", (reason) => {
-          fachada2.WARN("Disconnected: " + reason);
+          console.log("[LS] Socket disconnected, reason:", reason);
           if (reason === "io server disconnect") {
-            socket.connect();
+            disconnect();
+          } else if (reason === "transport close") {
+            disconnect();
+          } else {
+            removeAllHighlights();
+            cursors.removeAllCursors();
           }
-          removeAllHighlights();
-          cursors.removeAllCursors();
         });
         socket.on("reconnect", (attempt) => {
           fachada2.INFO("Reconnected after " + attempt + " attempts.");
@@ -9426,7 +9545,7 @@ var require_client = __commonJS({
       if (isRemoteChange || isLocalUndo || app.repository.bypassConfirmation)
         return;
       if (socket && socket.connected && current_room) {
-        const str = flatted.stringify(operation);
+        const str = flatted2.stringify(operation);
         socket.emit("sync-operation", str);
       }
     };
@@ -9451,11 +9570,66 @@ var require_client = __commonJS({
       app.repository.on("operationExecuted", handleOperation);
       app.commands.on("afterExecute", handleCommands);
       app.selections.on("selectionChanged", handleSelection);
-      app.diagrams.on("currentDiagramChanged", updateAllHighlights);
+      app.diagrams.on("currentDiagramChanged", () => {
+        updateAllHighlights();
+        syncViewportThrottled();
+      });
       const diagramArea = app.diagrams.$diagramArea[0];
       if (diagramArea) {
-        diagramArea.addEventListener("wheel", updateAllHighlights, { passive: true });
+        diagramArea.addEventListener("wheel", onDiagramWheel, { passive: true });
         diagramArea.addEventListener("mousedown", onDiagramMouseDown);
+      }
+    }
+    function onDiagramWheel() {
+      updateAllHighlights();
+      checkViewportChange();
+    }
+    function checkViewportChange() {
+      const currentDiagram = app.diagrams.getCurrentDiagram();
+      if (!currentDiagram) return;
+      const zoom = app.diagrams.getZoomLevel();
+      const originX = currentDiagram._originX;
+      const originY = currentDiagram._originY;
+      const diagId = currentDiagram._id;
+      const changed = Math.abs(lastSentViewport.originX - originX) > 0.1 || Math.abs(lastSentViewport.originY - originY) > 0.1 || Math.abs(lastSentViewport.zoom - zoom) > 1e-3 || lastSentViewport.diagram !== diagId;
+      if (changed) {
+        syncViewportThrottled();
+        lastSentViewport.originX = originX;
+        lastSentViewport.originY = originY;
+        lastSentViewport.zoom = zoom;
+        lastSentViewport.diagram = diagId;
+      }
+    }
+    function startViewportWatcher() {
+      stopViewportWatcher();
+      const currentDiagram = app.diagrams.getCurrentDiagram();
+      if (currentDiagram) {
+        const zoom = app.diagrams.getZoomLevel();
+        lastSentViewport = {
+          originX: currentDiagram._originX,
+          originY: currentDiagram._originY,
+          zoom,
+          diagram: currentDiagram._id
+        };
+        if (!lastKnownMouse.diagram) {
+          lastKnownMouse.diagram = currentDiagram._id;
+          lastKnownMouse.x = currentDiagram._originX;
+          lastKnownMouse.y = currentDiagram._originY;
+        }
+      }
+      viewportWatcherInterval = setInterval(checkViewportChange, VIEWPORT_CHECK_INTERVAL);
+    }
+    function stopViewportWatcher() {
+      if (viewportWatcherInterval) {
+        clearInterval(viewportWatcherInterval);
+        viewportWatcherInterval = null;
+      }
+    }
+    function syncViewportThrottled() {
+      const now = Date.now();
+      if (now - lastViewportSyncTime >= VIEWPORT_SYNC_THROTTLE) {
+        sendMousePosition(lastKnownMouse);
+        lastViewportSyncTime = now;
       }
     }
     function removeChangesHook() {
@@ -9473,7 +9647,10 @@ var require_client = __commonJS({
     function onDiagramMouseDown() {
       isPanning = true;
       const onMouseMove = () => {
-        if (isPanning) updateAllHighlights();
+        if (isPanning) {
+          updateAllHighlights();
+          syncViewportThrottled();
+        }
       };
       const onMouseUp = () => {
         isPanning = false;
@@ -9545,14 +9722,29 @@ var require_client = __commonJS({
         }
       }
     }
-    function sendMousePosition({ x, y, diagram }) {
+    function sendMousePosition(mouseData) {
       if (!(socket && socket.connected)) return;
-      socket.emit("client-mouse-moved", {
-        id: socket.id,
-        x,
-        y,
-        diagram
-      });
+      try {
+        const { x, y, diagram } = mouseData;
+        lastKnownMouse.x = x;
+        lastKnownMouse.y = y;
+        lastKnownMouse.diagram = diagram;
+        const zoom = app.diagrams.getZoomLevel();
+        const currentDiagram = app.diagrams.getCurrentDiagram();
+        const originX = currentDiagram ? currentDiagram._originX : 0;
+        const originY = currentDiagram ? currentDiagram._originY : 0;
+        socket.emit("client-mouse-moved", {
+          id: socket.id,
+          x,
+          y,
+          diagram,
+          zoom,
+          originX,
+          originY
+        });
+      } catch (e) {
+        console.error("[LS] Error sending mouse position:", e);
+      }
     }
     function requestDocument() {
       if (!(socket && socket.connected)) return;
@@ -9565,11 +9757,22 @@ var require_client = __commonJS({
         socket = null;
       }
       address = "";
+      current_room = null;
+      stopViewportWatcher();
       removeAllHighlights();
       cursors.removeMouseMovementSharing();
       cursors.removeAllCursors();
+      removeFollowEffects();
       fachada2.enableHostOptions();
       removeChangesHook();
+      users = {};
+      am_i_host = false;
+      followingUserId = null;
+      if (originalExecute) {
+        app.commands.execute = originalExecute;
+        originalExecute = null;
+      }
+      notifyDisconnect();
     }
     function getConnectedAddress() {
       return address;
@@ -9577,13 +9780,245 @@ var require_client = __commonJS({
     function getCurrentRoom() {
       return current_room;
     }
+    function getUsers() {
+      return users;
+    }
+    function getSocketId() {
+      return socket ? socket.id : null;
+    }
+    function getFollowingUserId() {
+      return followingUserId;
+    }
+    function setFollowingUserId(id) {
+      if (followingUserId && !id) {
+        try {
+          app.preferences.set("diagramEditor.showGrid", originalGridVisible);
+        } catch (e) {
+          console.warn("[LS] Could not restore grid preference");
+        }
+        removeFollowEffects();
+        stopFollowAnimation();
+      } else if (!followingUserId && id) {
+        try {
+          originalGridVisible = app.preferences.get("diagramEditor.showGrid");
+          app.preferences.set("diagramEditor.showGrid", true);
+        } catch (e) {
+          console.warn("[LS] Could not manage grid preference");
+        }
+        const diag = app.diagrams.getCurrentDiagram();
+        if (diag) {
+          currentCamera.x = diag._originX;
+          currentCamera.y = diag._originY;
+          currentCamera.zoom = app.diagrams.getZoomLevel();
+        }
+        applyFollowEffects(id);
+        if (socket && socket.connected) {
+          console.log("[LS] Requesting initial follow sync from:", id);
+          socket.emit("request-follow-sync", { targetId: id });
+        }
+      } else if (followingUserId && id && followingUserId !== id) {
+        applyFollowEffects(id);
+        if (socket && socket.connected) {
+          socket.emit("request-follow-sync", { targetId: id });
+        }
+      }
+      followingUserId = id;
+    }
+    function getCurrentViewportData() {
+      try {
+        const currentDiagram = app.diagrams.getCurrentDiagram();
+        const zoom = app.diagrams.getZoomLevel();
+        return {
+          x: lastKnownMouse.x,
+          y: lastKnownMouse.y,
+          diagram: currentDiagram ? currentDiagram._id : null,
+          zoom,
+          originX: currentDiagram ? currentDiagram._originX : 0,
+          originY: currentDiagram ? currentDiagram._originY : 0
+        };
+      } catch (e) {
+        console.error("[LS] Error getting current viewport data:", e);
+        return null;
+      }
+    }
+    var FOLLOW_SCROLL_THRESHOLD = 200;
+    function applyViewportSync(data, force = false) {
+      try {
+        const currentDiagram = app.diagrams.getCurrentDiagram();
+        const currentZoom = app.diagrams.getZoomLevel();
+        const zoom = data.zoom || currentZoom;
+        let mouseX, mouseY;
+        if (data.x !== void 0 && data.y !== void 0) {
+          mouseX = data.x;
+          mouseY = data.y;
+        } else if (data.originX !== void 0 && data.originY !== void 0) {
+          mouseX = data.originX + (data.x || 0);
+          mouseY = data.originY + (data.y || 0);
+        } else {
+          mouseX = 0;
+          mouseY = 0;
+        }
+        const diagramArea = app.diagrams.$diagramArea[0];
+        const canvas = diagramArea ? diagramArea.querySelector("svg") : null;
+        const viewWidth = canvas ? canvas.clientWidth : window.innerWidth - 220;
+        const viewHeight = canvas ? canvas.clientHeight : window.innerHeight;
+        const targetOriginX = mouseX - viewWidth / 2 / zoom;
+        const targetOriginY = mouseY - viewHeight / 2 / zoom;
+        if (data.diagram && (!currentDiagram || currentDiagram._id !== data.diagram)) {
+          const targetDiag = app.repository.get(data.diagram);
+          if (targetDiag && targetDiag instanceof type.Diagram) {
+            app.diagrams.setCurrentDiagram(targetDiag);
+            app.diagrams.repaint();
+            currentCamera.x = targetOriginX;
+            currentCamera.y = targetOriginY;
+            currentCamera.zoom = zoom;
+          }
+        }
+        targetCamera.x = targetOriginX;
+        targetCamera.y = targetOriginY;
+        targetCamera.zoom = zoom;
+        targetCamera.diagram = data.diagram;
+        const zoomDiff = Math.abs(targetCamera.zoom - currentZoom);
+        const scrollXDiff = Math.abs(targetCamera.x - (currentDiagram ? currentDiagram._originX : 0));
+        const scrollYDiff = Math.abs(targetCamera.y - (currentDiagram ? currentDiagram._originY : 0));
+        const shouldScroll = force || !isPanning && (zoomDiff > ZOOM_PRECISION || scrollXDiff > FOLLOW_SCROLL_THRESHOLD || scrollYDiff > FOLLOW_SCROLL_THRESHOLD);
+        if (shouldScroll) {
+          if (zoomDiff > ZOOM_PRECISION || force) {
+            app.diagrams.setZoomLevel(targetCamera.zoom);
+          }
+          app.diagrams.scrollTo(targetCamera.x, targetCamera.y);
+          currentCamera.x = targetCamera.x;
+          currentCamera.y = targetCamera.y;
+          currentCamera.zoom = targetCamera.zoom;
+          updateAllHighlights();
+        }
+      } catch (e) {
+        console.error("[LS] Error syncing viewport following user:", e);
+      }
+    }
+    function stopFollowAnimation() {
+      if (followAnimationFrame) {
+        cancelAnimationFrame(followAnimationFrame);
+        followAnimationFrame = null;
+      }
+    }
+    function applyFollowEffects(targetId) {
+      try {
+        const userName = users[targetId] || "User";
+        if (followOverlay) {
+          followOverlay.remove();
+        }
+        followOverlay = document.createElement("div");
+        followOverlay.id = "ls-follow-overlay";
+        followOverlay.style.cssText = `
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      padding: 6px 12px;
+      background: #252525;
+      border: 1px solid #444;
+      border-left: 3px solid #f1c40f;
+      border-radius: 2px;
+      color: #ebebeb;
+      font-family: 'Open Sans', sans-serif;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 1000;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      pointer-events: auto;
+      transition: all 0.3s ease;
+      animation: ls-slide-in 0.3s ease;
+    `;
+        followStyleElement = document.createElement("style");
+        followStyleElement.innerHTML = `
+      @keyframes ls-slide-in {
+        from { transform: translateX(20px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes ls-pulse {
+        0% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.3); opacity: 0.4; }
+        100% { transform: scale(1); opacity: 0.8; }
+      }
+    `;
+        document.head.appendChild(followStyleElement);
+        followOverlay.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 6px; height: 6px; background: #f1c40f; border-radius: 50%; animation: ls-pulse 2s infinite;"></div>
+        <span style="font-weight: 400; color: #888; text-transform: uppercase; font-size: 9px; letter-spacing: 1px;">Following</span>
+        <span style="font-weight: 400; color: #fff; font-size: 12px;">${userName}</span>
+      </div>
+      <div id="ls-stop-follow" style="
+        cursor: pointer;
+        padding: 2px 6px;
+        background: rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 2px;
+        font-size: 10px;
+        color: #888;
+        transition: all 0.2s;
+      " title="Stop following" onmouseover="this.style.color='#fff';this.style.background='rgba(255,0,0,0.2)'" onmouseout="this.style.color='#888';this.style.background='rgba(255,255,255,0.05)'">\u2715</div>
+    `;
+        const diagramArea = app.diagrams.$diagramArea[0];
+        if (diagramArea) {
+          diagramArea.appendChild(followOverlay);
+          document.getElementById("ls-stop-follow").onclick = (e) => {
+            e.stopPropagation();
+            setFollowingUserId(null);
+            if (userUpdateCallback) userUpdateCallback();
+          };
+        }
+      } catch (e) {
+        console.error("[LS] Error applying follow effects:", e);
+      }
+    }
+    function removeFollowEffects() {
+      try {
+        if (followOverlay) {
+          followOverlay.style.opacity = "0";
+          followOverlay.style.transform = "translateX(20px)";
+          setTimeout(() => {
+            if (followOverlay) {
+              followOverlay.remove();
+              followOverlay = null;
+            }
+          }, 300);
+        }
+        if (followStyleElement) {
+          followStyleElement.remove();
+          followStyleElement = null;
+        }
+      } catch (e) {
+        console.error("[LS] Error removing follow effects:", e);
+      }
+    }
+    var disconnectCallback = null;
+    function onUserUpdate(callback) {
+      userUpdateCallback = callback;
+    }
+    function onDisconnect(callback) {
+      disconnectCallback = callback;
+    }
+    function notifyDisconnect() {
+      if (disconnectCallback) disconnectCallback();
+    }
     module2.exports = {
       connectToServer,
       sendMousePosition,
       disconnect,
       getConnectedAddress,
       requestDocument,
-      getCurrentRoom
+      getCurrentRoom,
+      getUsers,
+      getSocketId,
+      getFollowingUserId,
+      setFollowingUserId,
+      onUserUpdate,
+      onDisconnect
     };
   }
 });
@@ -27018,6 +27453,12 @@ var require_server2 = __commonJS({
           };
           socket.emit("is-host", isHost);
           socket.emit("room-assigned", room_id);
+          const roomUsers = this.rooms[room_id].users;
+          const otherUsers = Object.keys(roomUsers).filter((uid) => uid !== socket.id).map((uid) => ({
+            id: uid,
+            name: this.users[uid] ? this.users[uid].name : "Anonymous"
+          }));
+          socket.emit("current-users", otherUsers);
           socket.to(room_id).emit("user-joined", { id: socket.id, name: username });
           if (!isHost && this.rooms[room_id].host_id) {
             this.io.to(this.rooms[room_id].host_id).emit("get-whole-document", { requesterId: socket.id });
@@ -27031,8 +27472,26 @@ var require_server2 = __commonJS({
               x: data.x,
               y: data.y,
               diagram: data.diagram,
+              zoom: data.zoom,
+              originX: data.originX,
+              originY: data.originY,
               name: this.users[socket.id].name
             });
+          });
+          socket.on("request-follow-sync", (data) => {
+            if (data.targetId && this.users[data.targetId]) {
+              this.io.to(data.targetId).emit("get-follow-sync", {
+                requesterId: socket.id
+              });
+            }
+          });
+          socket.on("response-follow-sync", (data) => {
+            if (data.requesterId && this.users[data.requesterId]) {
+              this.io.to(data.requesterId).emit("follower-sync-data", {
+                id: socket.id,
+                ...data.viewportData
+              });
+            }
           });
           socket.on("request-doc", () => {
             console.log(
@@ -27098,11 +27557,14 @@ var require_server2 = __commonJS({
             if (this.rooms[room_id2]) {
               delete this.rooms[room_id2].users[socket.id];
               let remainingUsers = Object.keys(this.rooms[room_id2].users);
-              if (this.rooms[room_id2].host_id === socket.id && remainingUsers.length > 0) {
-                let new_host = remainingUsers[0];
-                this.rooms[room_id2].host_id = new_host;
-                this.io.to(new_host).emit("is-host", true);
-                if (this.users[new_host]) this.users[new_host].isHost = true;
+              if (this.rooms[room_id2].host_id === socket.id) {
+                this.io.to(room_id2).emit("host-left", { oldHostId: socket.id });
+                if (remainingUsers.length > 0) {
+                  let new_host = remainingUsers[0];
+                  this.rooms[room_id2].host_id = new_host;
+                  this.io.to(new_host).emit("is-host", true);
+                  if (this.users[new_host]) this.users[new_host].isHost = true;
+                }
               }
               if (remainingUsers.length === 0) {
                 delete this.rooms[room_id2];
@@ -27176,6 +27638,26 @@ var require_net = __commonJS({
     var server = require_server2();
     var am_i_hosting = false;
     var am_i_connected = false;
+    var userPanel2 = null;
+    var updateMenuStatesFn = null;
+    function resetSessionState() {
+      if (userPanel2) userPanel2.hide();
+      if (updateMenuStatesFn) updateMenuStatesFn({
+        ls_ss: true,
+        ls_js: true,
+        ls_es: false,
+        ls_cs: false,
+        ls_sd: false
+      }, null, null);
+      am_i_connected = false;
+      am_i_hosting = false;
+    }
+    function setUserPanel(panel) {
+      userPanel2 = panel;
+    }
+    function setUpdateMenuStates(fn) {
+      updateMenuStatesFn = fn;
+    }
     async function startSession2(name, type2, remoteServer) {
       if (remoteServer) {
         am_i_hosting = false;
@@ -27187,6 +27669,17 @@ var require_net = __commonJS({
           name
         );
       }
+      if (am_i_connected) {
+        client.onDisconnect(handleClientDisconnect);
+        if (userPanel2) userPanel2.show();
+        if (updateMenuStatesFn) updateMenuStatesFn({
+          ls_ss: false,
+          ls_js: false,
+          ls_es: true,
+          ls_cs: true,
+          ls_sd: true
+        }, null, null);
+      }
       return am_i_connected;
     }
     async function joinSession2(name, url) {
@@ -27195,17 +27688,30 @@ var require_net = __commonJS({
       const serverUrl = urlObj.origin;
       am_i_hosting = false;
       am_i_connected = await client.connectToServer(serverUrl, name, roomId || -1);
+      if (am_i_connected) {
+        client.onDisconnect(handleClientDisconnect);
+        if (userPanel2) userPanel2.show();
+        if (updateMenuStatesFn) updateMenuStatesFn({
+          ls_ss: false,
+          ls_js: false,
+          ls_es: true,
+          ls_cs: true,
+          ls_sd: true
+        }, null, null);
+      }
       return am_i_connected;
+    }
+    function handleClientDisconnect() {
+      resetSessionState();
     }
     function endSession2() {
       if (am_i_connected) {
         client.disconnect();
-        am_i_connected = false;
       }
       if (am_i_hosting) {
         server.stopServer();
-        am_i_hosting = false;
       }
+      resetSessionState();
     }
     function getSessionLink() {
       let baseUrl = am_i_hosting ? server.getServerAddress() : client.getConnectedAddress();
@@ -27230,14 +27736,222 @@ var require_net = __commonJS({
       joinSession: joinSession2,
       endSession: endSession2,
       getSessionLink,
-      syncDoc
+      syncDoc,
+      setUserPanel,
+      setUpdateMenuStates
     };
+  }
+});
+
+// js/user-panel.js
+var require_user_panel = __commonJS({
+  "js/user-panel.js"(exports2, module2) {
+    var client = require_client();
+    var WorkspaceManager;
+    try {
+      WorkspaceManager = brackets.getModule("view/WorkspaceManager");
+    } catch (e) {
+      WorkspaceManager = null;
+    }
+    var UserPanel2 = class {
+      constructor() {
+        this.id = "liveshare.userpanel";
+        this.$panel = null;
+        this.panelVisible = false;
+        this.minimized = sessionStorage.getItem("liveshare.userpanel.minimized") === "true";
+        this.maxHeight = 250;
+        this.minHeight = 35;
+        this.savedHeight = Math.min(parseInt(sessionStorage.getItem("liveshare.userpanel.height")) || 160, this.maxHeight);
+        this.panel = null;
+        this._isResizing = false;
+        this._startY = 0;
+        this._startHeight = 0;
+      }
+      show() {
+        if (!this.$panel) {
+          this.$panel = $(`
+        <div id="liveshare-user-panel" style="
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          background: rgba(74, 76, 78);
+          color: #ccc;
+          font-size: 11px;
+          border-left: 1px solid rgba(58, 63, 65);
+        ">
+          <!-- Header (Always visible) -->
+          <div id="ls-panel-header" style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(58, 63, 65);
+            padding: 5px 10px;
+            border-bottom: 1px solid rgba(74, 76, 78);
+            user-select: none;
+            cursor: pointer;
+          ">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-weight: 600; font-size: 10px; color: #ccc; text-transform: uppercase; letter-spacing: 1.2px;">LiveShare</span>
+            </div>
+            <div id="ls-toggle-btn" style="
+              width: 18px;
+              height: 18px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+              font-size: 14px;
+              color: #999;
+              transition: color 0.2s;
+            " onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#999'">\u2212</div>
+          </div>
+
+          <!-- Content (Minimizable) -->
+          <div id="ls-panel-content" style="flex: 1; overflow-y: auto; padding: 2px 0;">
+            <div id="ls-user-list" style="display: flex; flex-direction: column;"></div>
+          </div>
+        </div>
+      `);
+          const initialHeight = this.minimized ? 35 : Math.min(this.savedHeight, this.maxHeight);
+          this.panel = app.panelManager.createBottomPanel(this.id, this.$panel, initialHeight);
+          this.$panel.find("#ls-toggle-btn").on("click", () => {
+            this.toggleMinimize();
+          });
+          this.$panel.find("#ls-panel-header").on("dblclick", () => {
+            this.toggleMinimize();
+          });
+          if (this.minimized) {
+            this.$panel.find("#ls-panel-content").hide();
+            this.$panel.find("#ls-toggle-btn").text("+");
+          }
+          this.panel.show();
+        } else {
+          const $content = this.$panel.find("#ls-panel-content");
+          if (this.minimized) {
+            $content.hide();
+          } else {
+            $content.show();
+          }
+        }
+        this.panel.show();
+        this.panelVisible = true;
+        this.render();
+        if (this.panel && typeof this.panel.setHeight === "function") {
+          const targetHeight = this.minimized ? 30 : Math.min(this.savedHeight, this.maxHeight);
+          this.panel.setHeight(targetHeight);
+        }
+        client.onUserUpdate(() => {
+          console.log("[LS] User panel: user update callback fired");
+          if (this.panelVisible) this.render();
+        });
+      }
+      toggleMinimize() {
+        this.minimized = !this.minimized;
+        const $content = this.$panel.find("#ls-panel-content");
+        const $btn = this.$panel.find("#ls-toggle-btn");
+        sessionStorage.setItem("liveshare.userpanel.minimized", this.minimized);
+        const targetHeight = this.minimized ? 28 : Math.min(Math.max(this.savedHeight, 35), this.maxHeight);
+        if (this.minimized) {
+          const currentHeight = this.$panel.height();
+          if (currentHeight > 35) {
+            this.savedHeight = Math.min(currentHeight, this.maxHeight);
+            sessionStorage.setItem("liveshare.userpanel.height", this.savedHeight);
+          }
+        }
+        this.$panel.css("height", targetHeight + "px");
+        $content.toggle(!this.minimized);
+        $btn.text(this.minimized ? "+" : "\u2212");
+        if (this.panel && typeof this.panel.setHeight === "function") {
+          this.panel.setHeight(targetHeight);
+        } else if (this.panel && typeof this.panel.resize === "function") {
+          this.panel.resize();
+        }
+        if (app.panelManager) {
+          if (app.panelManager.triggerEditorResize) {
+            app.panelManager.triggerEditorResize();
+          } else if (app.panelManager._notifyLayoutChange) {
+            app.panelManager._notifyLayoutChange();
+          }
+        }
+      }
+      hide() {
+        if (this.panel) {
+          this.panel.hide();
+        }
+        this.panelVisible = false;
+      }
+      render() {
+        if (!this.$panel) return;
+        const users = client.getUsers();
+        let followingId = client.getFollowingUserId();
+        if (followingId && !users[followingId]) {
+          client.setFollowingUserId(null);
+          followingId = null;
+        }
+        const $list = this.$panel.find("#ls-user-list");
+        $list.empty();
+        const ids = Object.keys(users);
+        let displayIds = ids;
+        const myId = client.getSocketId();
+        if (myId) {
+          displayIds = ids.filter((id) => id !== myId);
+        }
+        if (displayIds.length === 0) {
+          $list.append('<div style="font-style: italic; opacity: 0.5; padding: 8px; text-align: center; font-size: 11px; color: #999;">Waiting for peers...</div>');
+          return;
+        }
+        displayIds.forEach((id) => {
+          const isFollowing = followingId === id;
+          const $userItem = $(`
+        <div class="ls-user-item" style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 6px 12px;
+          margin: 0;
+          cursor: pointer;
+          transition: background 0.1s ease;
+          background: ${isFollowing ? "rgba(58, 63, 65)" : "transparent"};
+          color: #ccc;
+        ">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 5px; height: 5px; border-radius: 50%; background: ${isFollowing ? "#fff" : "#999"};"></div>
+            <span style="font-size: 11px; font-weight: ${isFollowing ? "700" : "400"}; line-height: 1;">${users[id]}</span>
+          </div>
+          ${isFollowing ? '<span style="font-size: 8px; color: #fff; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Following</span>' : ""}
+        </div>
+      `);
+          $userItem.hover(
+            function() {
+              if (!isFollowing) $(this).css({ "background": "rgba(58, 63,65,0.5)", "color": "#fff" });
+            },
+            function() {
+              if (!isFollowing) $(this).css({ "background": "transparent", "color": "#ccc" });
+            }
+          );
+          $userItem.on("click", (e) => {
+            e.preventDefault();
+            if (isFollowing) {
+              client.setFollowingUserId(null);
+            } else {
+              client.setFollowingUserId(id);
+            }
+            this.render();
+          });
+          $list.append($userItem);
+        });
+      }
+    };
+    module2.exports = UserPanel2;
   }
 });
 
 // main_src.js
 var fachada = require_fachada();
 var net = require_net();
+var flatted = require_cjs6();
+var UserPanel = require_user_panel();
+var userPanel = new UserPanel();
 async function startSession() {
   const data = await fachada.showSS();
   if (!data) return;
@@ -27257,6 +27971,7 @@ async function startSession() {
     null,
     null
   );
+  userPanel.show();
 }
 async function joinSession() {
   const data = await fachada.showJS();
@@ -27277,9 +27992,11 @@ async function joinSession() {
     null,
     null
   );
+  userPanel.show();
 }
 function endSession() {
   net.endSession();
+  userPanel.hide();
   fachada.INFO("Session ended");
   app.menu.updateStates(
     {
@@ -27316,6 +28033,13 @@ function init() {
     console.log(app);
     console.log(app.project.getProject());
   });
+  app.menu.updateStates(
+    {
+      ls_pa: false
+    },
+    null,
+    null
+  );
 }
 exports.init = init;
 /*! Bundled license information:

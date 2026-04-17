@@ -1,14 +1,15 @@
 # Live Share
 
-[StarUML](https://staruml.io/) extension that allows collaborative work inspired by the [homonymous extension](https://marketplace.visualstudio.com/items?itemName=MS-vsliveshare.vsliveshare) of vscode.
+Collaborative extension for [StarUML](https://staruml.io/) inspired by the [VSCode Live Share](https://marketplace.visualstudio.com/items?itemName=MS-vsliveshare.vsliveshare) extension.
 
-# Install
+## Installation
 
-Go to StarUML -> Tools -> Extension Manager -> Install from url and paste this repos link
+1. Open StarUML
+2. Go to **Tools → Extension Manager**
+3. Click **Install from URL**
+4. Paste: `https://github.com/fabiomode2/StarUML-LiveShare`
 
-    https://github.com/fabiomode2/StarUML-LiveShare
-
-# Hosting servers
+## Hosting the Server
 
 Clone this repo, install dependencies and run `start-server` script.
 
@@ -18,8 +19,12 @@ Clone this repo, install dependencies and run `start-server` script.
 ### To do
 
 - [x] Remote servers
+- [x] Follow host option (sync zoom and pos)
 - [ ] Read only session
 - [ ] Lock element interaction
-- [ ] Follow host option (sync zoom and pos)
 
-un saludo a gemini que ha carreado
+<br>
+<br>
+<br>
+
+License: GPLv3

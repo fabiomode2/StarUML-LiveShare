@@ -1,5 +1,10 @@
 const fachada = require("./js/fachada.js");
 const net = require("./js/net.js");
+const flatted = require("flatted"); //stringify json
+const UserPanel = require("./js/user-panel.js");
+
+const userPanel = new UserPanel();
+
 
 async function startSession() {
   const data = await fachada.showSS();
@@ -24,6 +29,8 @@ async function startSession() {
     null,
     null,
   );
+
+  userPanel.show();
 }
 
 async function joinSession() {
@@ -49,10 +56,13 @@ async function joinSession() {
     null,
     null,
   );
+
+  userPanel.show();
 }
 
 function endSession() {
   net.endSession();
+  userPanel.hide();
   fachada.INFO("Session ended");
 
   app.menu.updateStates(
@@ -98,7 +108,17 @@ function init() {
   app.commands.register("liveshare:pa", () => {
     console.log(app);
     console.log(app.project.getProject());
+    // console.log(flatted.stringify(app));
   });
+
+    app.menu.updateStates(
+    {
+      ls_pa: false,
+    },
+    null,
+    null,
+  );
+
 }
 
 exports.init = init;

@@ -54,6 +54,17 @@ class LiveShareServer {
 
       socket.emit("is-host", isHost);
       socket.emit("room-assigned", room_id);
+
+      // Send current users in room to the newly joined client
+      const roomUsers = this.rooms[room_id].users;
+      const otherUsers = Object.keys(roomUsers)
+        .filter((uid) => uid !== socket.id)
+        .map((uid) => ({
+          id: uid,
+          name: this.users[uid] ? this.users[uid].name : "Anonymous",
+        }));
+      socket.emit("current-users", otherUsers);
+
       socket.to(room_id).emit("user-joined", { id: socket.id, name: username });
 
       if (!isHost && this.rooms[room_id].host_id) {
@@ -72,8 +83,28 @@ class LiveShareServer {
           x: data.x,
           y: data.y,
           diagram: data.diagram,
+          zoom: data.zoom,
+          originX: data.originX,
+          originY: data.originY,
           name: this.users[socket.id].name,
         });
+      });
+
+      socket.on("request-follow-sync", (data) => {
+        if (data.targetId && this.users[data.targetId]) {
+          this.io.to(data.targetId).emit("get-follow-sync", {
+            requesterId: socket.id
+          });
+        }
+      });
+
+      socket.on("response-follow-sync", (data) => {
+        if (data.requesterId && this.users[data.requesterId]) {
+          this.io.to(data.requesterId).emit("follower-sync-data", {
+            id: socket.id,
+            ...data.viewportData
+          });
+        }
       });
 
       socket.on("request-doc", () => {
@@ -163,15 +194,16 @@ class LiveShareServer {
           delete this.rooms[room_id].users[socket.id];
           let remainingUsers = Object.keys(this.rooms[room_id].users);
 
-          if (
-            this.rooms[room_id].host_id === socket.id &&
-            remainingUsers.length > 0
-          ) {
-            let new_host = remainingUsers[0];
-            this.rooms[room_id].host_id = new_host;
-            this.io.to(new_host).emit("is-host", true);
+          if (this.rooms[room_id].host_id === socket.id) {
+            this.io.to(room_id).emit("host-left", { oldHostId: socket.id });
 
-            if (this.users[new_host]) this.users[new_host].isHost = true;
+            if (remainingUsers.length > 0) {
+              let new_host = remainingUsers[0];
+              this.rooms[room_id].host_id = new_host;
+              this.io.to(new_host).emit("is-host", true);
+
+              if (this.users[new_host]) this.users[new_host].isHost = true;
+            }
           }
 
           if (remainingUsers.length === 0) {

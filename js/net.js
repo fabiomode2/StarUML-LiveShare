@@ -5,6 +5,30 @@ const CONNECT_TIMEOUT = 500;
 let am_i_hosting = false;
 let am_i_connected = false;
 
+let userPanel = null;
+let updateMenuStatesFn = null;
+
+function resetSessionState() {
+  if (userPanel) userPanel.hide();
+  if (updateMenuStatesFn) updateMenuStatesFn({
+    ls_ss: true,
+    ls_js: true,
+    ls_es: false,
+    ls_cs: false,
+    ls_sd: false,
+  }, null, null);
+  am_i_connected = false;
+  am_i_hosting = false;
+}
+
+function setUserPanel(panel) {
+  userPanel = panel;
+}
+
+function setUpdateMenuStates(fn) {
+  updateMenuStatesFn = fn;
+}
+
 async function startSession(name, type, remoteServer) {
   if (remoteServer) {
     am_i_hosting = false;
@@ -15,6 +39,18 @@ async function startSession(name, type, remoteServer) {
       server.getServerAddress(),
       name,
     );
+  }
+
+  if (am_i_connected) {
+    client.onDisconnect(handleClientDisconnect);
+    if (userPanel) userPanel.show();
+    if (updateMenuStatesFn) updateMenuStatesFn({
+      ls_ss: false,
+      ls_js: false,
+      ls_es: true,
+      ls_cs: true,
+      ls_sd: true,
+    }, null, null);
   }
 
   return am_i_connected;
@@ -28,19 +64,35 @@ async function joinSession(name, url) {
   am_i_hosting = false;
   am_i_connected = await client.connectToServer(serverUrl, name, roomId || -1);
 
+  if (am_i_connected) {
+    client.onDisconnect(handleClientDisconnect);
+    if (userPanel) userPanel.show();
+    if (updateMenuStatesFn) updateMenuStatesFn({
+      ls_ss: false,
+      ls_js: false,
+      ls_es: true,
+      ls_cs: true,
+      ls_sd: true,
+    }, null, null);
+  }
+
   return am_i_connected;
+}
+
+function handleClientDisconnect() {
+  resetSessionState();
 }
 
 function endSession() {
   if (am_i_connected) {
     client.disconnect();
-    am_i_connected = false;
   }
 
   if (am_i_hosting) {
     server.stopServer();
-    am_i_hosting = false;
   }
+
+  resetSessionState();
 }
 
 function getSessionLink() {
@@ -77,4 +129,6 @@ module.exports = {
   endSession: endSession,
   getSessionLink: getSessionLink,
   syncDoc: syncDoc,
+  setUserPanel: setUserPanel,
+  setUpdateMenuStates: setUpdateMenuStates,
 };
