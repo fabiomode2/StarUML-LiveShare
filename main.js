@@ -27762,7 +27762,7 @@ var require_user_panel = __commonJS({
         this.maxHeight = 250;
         this.minHeight = 35;
         const storedHeight = parseInt(sessionStorage.getItem("liveshare.userpanel.height"));
-        this.savedHeight = storedHeight && storedHeight > 0 && storedHeight < this.maxHeight ? storedHeight : 160;
+        this.savedHeight = storedHeight && storedHeight > 0 && storedHeight < this.maxHeight ? storedHeight : 100;
         this.panel = null;
         this._isResizing = false;
         this._startY = 0;
@@ -27775,6 +27775,8 @@ var require_user_panel = __commonJS({
           display: flex;
           flex-direction: column;
           height: 100%;
+          max-height: 250px;
+          overflow: hidden;
           background: rgba(74, 76, 78);
           color: #ccc;
           font-size: 11px;
@@ -27838,7 +27840,8 @@ var require_user_panel = __commonJS({
         this.panelVisible = true;
         this.render();
         if (this.panel && typeof this.panel.setHeight === "function") {
-          const targetHeight = this.minimized ? 30 : Math.min(this.savedHeight, this.maxHeight);
+          const safeHeight = Math.min(Math.max(this.savedHeight, 35), this.maxHeight);
+          const targetHeight = this.minimized ? 35 : safeHeight;
           this.panel.setHeight(targetHeight);
         }
         client.onUserUpdate(() => {
@@ -27854,8 +27857,8 @@ var require_user_panel = __commonJS({
         const targetHeight = this.minimized ? 28 : Math.min(Math.max(this.savedHeight, 35), this.maxHeight);
         if (this.minimized) {
           const currentHeight = this.$panel.height();
-          if (currentHeight > 35) {
-            this.savedHeight = Math.min(currentHeight, this.maxHeight);
+          if (currentHeight > 35 && currentHeight < this.maxHeight) {
+            this.savedHeight = currentHeight;
             sessionStorage.setItem("liveshare.userpanel.height", this.savedHeight);
           }
         }
