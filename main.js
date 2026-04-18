@@ -27761,7 +27761,8 @@ var require_user_panel = __commonJS({
         this.minimized = sessionStorage.getItem("liveshare.userpanel.minimized") === "true";
         this.maxHeight = 250;
         this.minHeight = 35;
-        this.savedHeight = Math.min(parseInt(sessionStorage.getItem("liveshare.userpanel.height")) || 160, this.maxHeight);
+        const storedHeight = parseInt(sessionStorage.getItem("liveshare.userpanel.height"));
+        this.savedHeight = storedHeight && storedHeight > 0 && storedHeight < this.maxHeight ? storedHeight : 160;
         this.panel = null;
         this._isResizing = false;
         this._startY = 0;
