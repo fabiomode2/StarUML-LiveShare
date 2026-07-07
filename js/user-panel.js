@@ -50,6 +50,11 @@ class UserPanel {
           ">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="font-weight: 600; font-size: 10px; color: #ccc; text-transform: uppercase; letter-spacing: 1.2px;">LiveShare</span>
+              <span id="ls-ping-indicator" style="
+                font-size: 10px;
+                color: #666;
+                margin-left: 4px;
+              ">—</span>
             </div>
             <div id="ls-toggle-btn" style="
               width: 18px;
@@ -110,6 +115,23 @@ class UserPanel {
     client.onUserUpdate(() => {
       console.log("[LS] User panel: user update callback fired");
       if (this.panelVisible) this.render();
+    });
+
+    client.onLatencyUpdate((latency) => {
+      const $indicator = this.$panel.find("#ls-ping-indicator");
+      if ($indicator.length) {
+        let color;
+        if (latency < 0) {
+          color = '#666';
+        } else if (latency < 50) {
+          color = '#2ecc71';
+        } else if (latency < 150) {
+          color = '#f1c40f';
+        } else {
+          color = '#e74c3c';
+        }
+        $indicator.text(latency < 0 ? '—' : latency + 'ms').css('color', color);
+      }
     });
   }
 

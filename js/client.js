@@ -1,48 +1,49 @@
-const io = require("socket.io-client"); //socket.io
-const fachada = require("./fachada.js");
-const flatted = require("flatted"); //stringify json
-const cursors_js = require("./cursors.js");
+const io = require('socket.io-client');
+const fachada = require('./fachada.js');
+const flatted = require('flatted');
+const cursors_js = require('./cursors.js');
 
 let cursors = new cursors_js.CursorsHandler();
 let socket = null;
 let current_room = null;
-let address = ""; // for copy-session-link
-let users = {}; // for logging when users leave
+let address = '';
+let users = {};
 let am_i_host = false;
-let isRemoteChange = false;
-let isLocalUndo = false;
+let remoteOpInProgress = false;
 let activeHighlights = {};
 let followingUserId = null;
 let userUpdateCallback = null;
 let originalGridVisible = true;
-let originalBackground = "";
+let originalBackground = '';
 let followOverlay = null;
-let originalExecute = null;
 let followStyleElement = null;
 
-// Last known mouse state for viewport-only syncs
 let lastKnownMouse = { x: 0, y: 0, diagram: null };
 let lastSentViewport = { originX: 0, originY: 0, zoom: 0, diagram: null };
 let lastViewportSyncTime = 0;
 let viewportWatcherInterval = null;
-const VIEWPORT_SYNC_THROTTLE = 30; // ms (Faster sync)
-const VIEWPORT_CHECK_INTERVAL = 50; // ms (20 FPS for smoother tracking)
+const VIEWPORT_SYNC_THROTTLE = 30;
+const VIEWPORT_CHECK_INTERVAL = 50;
 
-// Camera state
 let targetCamera = { x: 0, y: 0, zoom: 1, diagram: null };
 let currentCamera = { x: 0, y: 0, zoom: 1 };
-let followAnimationFrame = null; // Still used for SHORT transitions if needed, but not persistent loop
+let followAnimationFrame = null;
 
 const ZOOM_PRECISION = 0.001;
 const SCROLL_PRECISION = 1.0;
-const LERP_SPEED = 0.3; // Speed for one-shot smooth transition
+const LERP_SPEED = 0.3;
+
+let lastAppliedSeq = 0;
+let selectionDebounceTimer = null;
+let currentLatency = -1;
+let latencyUpdateCallback = null;
 
 async function connectToServer(url, name, roomid) {
   removeChangesHook();
 
   return new Promise((resolve, reject) => {
     socket = io(url, {
-      transports: ["websocket"],
+      transports: ['websocket'],
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
@@ -53,128 +54,148 @@ async function connectToServer(url, name, roomid) {
 
     if (roomid && roomid !== -1) current_room = roomid;
 
-    socket.on("user-joined", (data) => {
+    socket.on('user-joined', (data) => {
       if (!users[data.id]) users[data.id] = data.name;
       fachada.INFO(`${data.name} joined`);
       if (userUpdateCallback) userUpdateCallback();
     });
 
-    socket.on("current-users", (data) => {
-      console.log("[LS] Received current-users:", data);
+    socket.on('current-users', (data) => {
+      console.log('[LS] Received current-users:', data);
       data.forEach((u) => {
         if (!users[u.id]) users[u.id] = u.name;
       });
-      console.log("[LS] Users object after current-users:", users);
-      if (userUpdateCallback) {
-        console.log("[LS] Calling userUpdateCallback");
-        userUpdateCallback();
-      }
+      if (userUpdateCallback) userUpdateCallback();
     });
 
-    socket.on("is-host", (is_host) => {
+    socket.on('is-host', (is_host) => {
       am_i_host = is_host;
       if (!am_i_host) fachada.disableHostOptions();
       if (am_i_host) fachada.hideLoadingOverlay();
       if (am_i_host) fachada.INFO("You're the host");
     });
 
-    socket.on("host-left", (data) => {
-      console.log("[LS] Host left the session");
-      fachada.WARN("Host left the session");
-      disconnect();
+    socket.on('host-left', () => {
+      console.log('[LS] Host left, session continues with new host');
+      fachada.WARN('Host changed. A new host has been assigned.');
     });
 
-      socket.on("room-assigned", async (id) => {
-        console.log("[LS] Room assigned: " + current_room);
-  
-        current_room = id;
-        addChangesHook();
-        startViewportWatcher(); // Start watching viewport changes
-        fachada.hideLoadingOverlay();
-        resolve(true);
+    socket.on('room-assigned', async (id) => {
+      console.log('[LS] Room assigned: ' + id);
+      current_room = id;
+      addChangesHook();
+      startViewportWatcher();
+      fachada.hideLoadingOverlay();
+      resolve(true);
+    });
+
+    socket.on('latency-response', () => {
+      currentLatency = Math.round(Date.now() - lastPingTime);
+      if (latencyUpdateCallback) latencyUpdateCallback(currentLatency);
+    });
+
+    socket.on('room-seq', (currentSeq) => {
+      if (currentSeq < lastAppliedSeq) {
+        console.log(
+          `[LS] Sequence reset: was ${lastAppliedSeq}, now ${currentSeq}`,
+        );
+        lastAppliedSeq = 0;
+      }
+      if (currentSeq > lastAppliedSeq) {
+        console.log(
+          `[LS] Requesting missed ops: ${lastAppliedSeq + 1} to ${currentSeq}`,
+        );
+        socket.emit('request-missed-ops', { fromSeq: lastAppliedSeq });
+      }
+    });
+
+    socket.on('missed-ops', (data) => {
+      if (!data.ops || data.ops.length === 0) return;
+      console.log(`[LS] Applying ${data.ops.length} missed operations`);
+      data.ops.sort((a, b) => a.seq - b.seq);
+      data.ops.forEach((entry) => {
+        applyRemoteOperationWithSeq(entry.seq, entry.operation);
       });
+    });
 
-    socket.on("update-mouse-pos", (data) => {
-      if (data.id == socket.id) return;
-
+    socket.on('update-mouse-pos', (data) => {
+      if (data.id === socket.id) return;
       cursors.updateMousePosition(data);
-      
-      // Highlight the followed user's cursor
       if (followingUserId) {
         cursors.setHighlight(followingUserId);
       } else {
         cursors.setHighlight(null);
       }
-
       if (followingUserId === data.id) {
         applyViewportSync(data);
       }
     });
 
-    socket.on("get-follow-sync", (data) => {
-      // Someone is following me, send them my current position
+    socket.on('get-follow-sync', (data) => {
       if (socket && socket.connected) {
         const viewport = getCurrentViewportData();
-        socket.emit("response-follow-sync", {
+        socket.emit('response-follow-sync', {
           requesterId: data.requesterId,
-          viewportData: viewport
+          viewportData: viewport,
         });
       }
     });
 
-    socket.on("follower-sync-data", (data) => {
+    socket.on('follower-sync-data', (data) => {
       if (followingUserId === data.id) {
-        console.info("[LS] Applying initial follow sync from", data.id);
         const viewportData = data.viewportData || data;
-        applyViewportSync({
-          id: data.id,
-          diagram: viewportData.diagram,
-          x: viewportData.x,
-          y: viewportData.y,
-          zoom: viewportData.zoom,
-          originX: viewportData.originX,
-          originY: viewportData.originY
-        }, true);
+        applyViewportSync(
+          {
+            id: data.id,
+            diagram: viewportData.diagram,
+            x: viewportData.x,
+            y: viewportData.y,
+            zoom: viewportData.zoom,
+            originX: viewportData.originX,
+            originY: viewportData.originY,
+          },
+          true,
+        );
       }
     });
 
-    socket.on("get-whole-document", (data) => {
+    socket.on('get-whole-document', (data) => {
       try {
         const projectObj = app.project.getProject();
         const cleanObject = app.repository.writeObject(projectObj);
         const str = flatted.stringify(cleanObject);
-        socket.emit("host-delivers-document", {
+        socket.emit('host-delivers-document', {
           to: data.requesterId,
           json: str,
         });
       } catch (err) {
-        fachada.ERR("Error sending whole document.");
+        fachada.ERR('Error sending whole document.');
       }
     });
 
-    socket.on("load-whole-document", (data) => {
+    socket.on('load-whole-document', (data) => {
       try {
         const projectObj = flatted.parse(data.json);
 
-        // --- Save workspace state (defensive) ---
         let openDiagramIds = [];
         let activeDiagramId = null;
         try {
           if (app.diagrams.getWorkingDiagrams) {
-            openDiagramIds = app.diagrams.getWorkingDiagrams().map((d) => d._id);
+            openDiagramIds = app.diagrams
+              .getWorkingDiagrams()
+              .map((d) => d._id);
           }
           if (app.diagrams.getCurrentDiagram()) {
             activeDiagramId = app.diagrams.getCurrentDiagram()._id;
           }
         } catch (e) {
-          console.warn("[LS] Could not save workspace state", e);
+          console.warn('[LS] Could not save workspace state', e);
         }
 
         app.repository.bypassConfirmation = true;
         app.project.loadFromJson(projectObj);
         app.repository.bypassConfirmation = false;
 
-        // --- Restore workspace state ---
         try {
           openDiagramIds.forEach((id) => {
             const diag = app.repository.get(id);
@@ -189,107 +210,48 @@ async function connectToServer(url, name, roomid) {
             }
           }
         } catch (e) {
-          console.warn("[LS] Could not restore workspace state", e);
+          console.warn('[LS] Could not restore workspace state', e);
         }
 
-        fachada.INFO("Document synchronized.");
+        fachada.INFO('Document synchronized.');
       } catch (err) {
-        fachada.ERR("Error loading remote document:", err);
+        fachada.ERR('Error loading remote document:', err);
         console.error(err);
       } finally {
         fachada.hideLoadingOverlay();
       }
     });
 
-    socket.on("remote-operation", (opData) => {
-      isRemoteChange = true;
+    socket.on('remote-operation', (data) => {
+      remoteOpInProgress = true;
       try {
-        const operation = flatted.parse(opData);
-        app.repository.doOperation(operation);
+        const isOwn = data.socketId === socket.id;
+        if (!isOwn) {
+          const operation = flatted.parse(data.operation);
+          app.repository.doOperation(operation);
+        }
+        lastAppliedSeq = data.seq;
         app.diagrams.repaint();
-
         updateAllHighlights();
       } catch (err) {
-        console.error("[LS] Operation Error:", err);
+        console.error('[LS] Operation Error:', err);
       } finally {
-        isRemoteChange = false;
+        remoteOpInProgress = false;
       }
     });
 
-    socket.on("remote-undo", async () => {
-      isRemoteChange = true;
-      try {
-        const undoManager = app.repository._undoManager || app.repository._operationManager;
-        if (undoManager && typeof undoManager.undo === 'function') {
-          await undoManager.undo();
-          app.diagrams.repaint();
-          updateAllHighlights();
-        } else if (app.repository._undoStack && app.repository._undoStack.length > 0) {
-          const lastOp = app.repository._undoStack[app.repository._undoStack.length - 1];
-          app.repository.rollback(lastOp);
-          app.diagrams.repaint();
-          updateAllHighlights();
-        } else {
-          console.log("[LS] Remote undo - no operations to undo");
-        }
-      } catch (e) {
-        console.error("[LS] Remote undo failed:", e);
-      } finally {
-        isRemoteChange = false;
-      }
-    });
-
-    socket.on("remote-redo", async () => {
-      isRemoteChange = true;
-      try {
-        const undoManager = app.repository._undoManager || app.repository._operationManager;
-        if (undoManager && typeof undoManager.redo === 'function') {
-          await undoManager.redo();
-          app.diagrams.repaint();
-          updateAllHighlights();
-        } else if (app.repository._redoStack && app.repository._redoStack.length > 0) {
-          const lastOp = app.repository._redoStack[app.repository._redoStack.length - 1];
-          app.repository.commit(lastOp);
-          app.diagrams.repaint();
-          updateAllHighlights();
-        } else {
-          console.log("[LS] Remote redo - no operations to redo");
-        }
-      } catch (e) {
-        console.error("[LS] Remote redo failed:", e);
-      } finally {
-        isRemoteChange = false;
-      }
-    });
-
-    // Handle Undo/Redo synchronization to prevent double-syncing
-    if (!originalExecute) {
-      originalExecute = app.commands.execute;
-      app.commands.execute = function (id, ...args) {
-        if (id === "edit:undo" || id === "edit:redo") {
-          isLocalUndo = true;
-          try {
-            return originalExecute.apply(app.commands, [id, ...args]);
-          } finally {
-            isLocalUndo = false;
-          }
-        }
-        return originalExecute.apply(app.commands, [id, ...args]);
-      };
-    }
-
-    socket.on("element-locked", ({ viewId, ownerId, color }) => {
+    socket.on('element-locked', ({ viewId, ownerId, color }) => {
       if (ownerId !== socket.id) {
         highlightElement(viewId, color);
       }
     });
 
-    socket.on("element-unlocked", ({ viewId }) => {
+    socket.on('element-unlocked', ({ viewId }) => {
       removeHighlight(viewId);
     });
 
-    socket.on("user-left", (id) => {
-      const userName = users[id] || "User";
+    socket.on('user-left', (id) => {
+      const userName = users[id] || 'User';
       fachada.INFO(`${userName} left`);
       delete users[id];
       cursors.removeCursor(id);
@@ -300,96 +262,126 @@ async function connectToServer(url, name, roomid) {
       if (userUpdateCallback) userUpdateCallback();
     });
 
-    socket.on("connect", () => {
+    socket.on('connect', () => {
       address = url;
       cursors.addMouseMovementSharing(sendMousePosition);
       fachada.showLoadingOverlay();
       if (socket.recovered) {
-        fachada.INFO("Connection recovered!");
+        fachada.INFO('Connection recovered!');
+      }
+      startPingMeasurement();
+      if (socket.io && socket.io.engine) {
+        socket.io.engine.on('pong', (latency) => {
+          currentLatency = Math.round(latency);
+          if (latencyUpdateCallback) latencyUpdateCallback(currentLatency);
+        });
       }
     });
 
-    socket.on("disconnect", (reason) => {
-      console.log("[LS] Socket disconnected, reason:", reason);
-      if (reason === "io server disconnect") {
-        disconnect();
-      } else if (reason === "transport close") {
+    socket.on('disconnect', (reason) => {
+      console.log('[LS] Socket disconnected, reason:', reason);
+      if (
+        reason === 'io server disconnect' ||
+        reason === 'io client disconnect' ||
+        reason === 'transport close'
+      ) {
         disconnect();
       } else {
+        fachada.WARN('Connection lost. Reconnecting...');
         removeAllHighlights();
         cursors.removeAllCursors();
       }
     });
 
-    socket.on("reconnect", (attempt) => {
-      fachada.INFO("Reconnected after " + attempt + " attempts.");
+    socket.on('reconnect', (attempt) => {
+      fachada.INFO('Reconnected after ' + attempt + ' attempts.');
     });
 
-    socket.on("connect_error", (err) => {
-      console.error("Connect Error:", err);
+    socket.on('connect_error', (err) => {
+      console.error('Connect Error:', err);
       resolve(false);
     });
 
-    // Handle visibility change to prevent throttling issues
-    document.addEventListener("visibilitychange", () => {
+    document.addEventListener('visibilitychange', () => {
       if (!document.hidden && socket && socket.connected) {
-        socket.emit("client-ping", { timestamp: Date.now() });
+        socket.emit('client-ping', { timestamp: Date.now() });
       }
     });
   });
 }
 
+function applyRemoteOperationWithSeq(seq, opStr) {
+  if (seq <= lastAppliedSeq) return;
+  remoteOpInProgress = true;
+  try {
+    const operation = flatted.parse(opStr);
+    app.repository.doOperation(operation);
+    lastAppliedSeq = seq;
+    app.diagrams.repaint();
+    updateAllHighlights();
+  } catch (err) {
+    console.error('[LS] Operation Error:', err);
+  } finally {
+    remoteOpInProgress = false;
+  }
+}
+
 const handleOperation = (operation) => {
-  if (isRemoteChange || isLocalUndo || app.repository.bypassConfirmation)
-    return;
+  if (remoteOpInProgress || app.repository.bypassConfirmation) return;
   if (socket && socket.connected && current_room) {
     const str = flatted.stringify(operation);
-    socket.emit("sync-operation", str);
+    socket.emit('sync-operation', str);
   }
 };
 
 const handleSelection = (models, views) => {
   if (!socket || !socket.connected) return;
-  if (views && views.length > 0) {
-    socket.emit(
-      "lock-element",
-      views.map((v) => v._id),
-    );
-  } else {
-    socket.emit("unlock-elements");
+  if (remoteOpInProgress) return;
+
+  if (selectionDebounceTimer) {
+    clearTimeout(selectionDebounceTimer);
   }
+
+  selectionDebounceTimer = setTimeout(() => {
+    selectionDebounceTimer = null;
+    if (views && views.length > 0) {
+      socket.emit(
+        'lock-element',
+        views.map((v) => v._id),
+      );
+    } else {
+      socket.emit('unlock-elements');
+    }
+  }, 80);
 };
 
 const handleCommands = (commandId) => {
-  // If it's a remote change, don't re-emit.
-  // We DO allow emission if it's isLocalUndo because we blocked its individual operations in handleOperation.
-  if (isRemoteChange || !socket || !socket.connected) return;
-  if (commandId === "edit:undo") socket.emit("sync-undo");
-  else if (commandId === "edit:redo") socket.emit("sync-redo");
+  if (remoteOpInProgress || !socket || !socket.connected) return;
 };
+
+function onDiagramChanged() {
+  updateAllHighlights();
+  syncViewportThrottled();
+}
 
 function addChangesHook() {
   removeChangesHook();
 
-  app.repository.on("operationExecuted", handleOperation);
-  app.commands.on("afterExecute", handleCommands);
-  app.selections.on("selectionChanged", handleSelection);
-  app.diagrams.on("currentDiagramChanged", () => {
-    updateAllHighlights();
-    syncViewportThrottled();
-  });
+  app.repository.on('operationExecuted', handleOperation);
+  app.commands.on('afterExecute', handleCommands);
+  app.selections.on('selectionChanged', handleSelection);
+  app.diagrams.on('currentDiagramChanged', onDiagramChanged);
 
-  // For zoom/scroll updates
   const diagramArea = app.diagrams.$diagramArea[0];
   if (diagramArea) {
-    diagramArea.addEventListener("wheel", onDiagramWheel, { passive: true });
-    diagramArea.addEventListener("mousedown", onDiagramMouseDown);
+    diagramArea.addEventListener('wheel', onDiagramWheel, { passive: true });
+    diagramArea.addEventListener('mousedown', onDiagramMouseDown);
   }
 }
 
 function onDiagramWheel() {
   updateAllHighlights();
-  checkViewportChange(); // Immediate check on wheel
+  checkViewportChange();
 }
 
 function checkViewportChange() {
@@ -401,7 +393,7 @@ function checkViewportChange() {
   const originY = currentDiagram._originY;
   const diagId = currentDiagram._id;
 
-  const changed = 
+  const changed =
     Math.abs(lastSentViewport.originX - originX) > 0.1 ||
     Math.abs(lastSentViewport.originY - originY) > 0.1 ||
     Math.abs(lastSentViewport.zoom - zoom) > 0.001 ||
@@ -409,8 +401,7 @@ function checkViewportChange() {
 
   if (changed) {
     syncViewportThrottled();
-    
-    // Update last sent state
+
     lastSentViewport.originX = originX;
     lastSentViewport.originY = originY;
     lastSentViewport.zoom = zoom;
@@ -421,7 +412,6 @@ function checkViewportChange() {
 function startViewportWatcher() {
   stopViewportWatcher();
 
-  // Initialize state immediately to avoid sending nulls
   const currentDiagram = app.diagrams.getCurrentDiagram();
   if (currentDiagram) {
     const zoom = app.diagrams.getZoomLevel();
@@ -429,19 +419,20 @@ function startViewportWatcher() {
       originX: currentDiagram._originX,
       originY: currentDiagram._originY,
       zoom: zoom,
-      diagram: currentDiagram._id
+      diagram: currentDiagram._id,
     };
-    
-    // Also initialize lastKnownMouse if null
+
     if (!lastKnownMouse.diagram) {
       lastKnownMouse.diagram = currentDiagram._id;
-      // Default mouse to host origin
       lastKnownMouse.x = currentDiagram._originX;
       lastKnownMouse.y = currentDiagram._originY;
     }
   }
 
-  viewportWatcherInterval = setInterval(checkViewportChange, VIEWPORT_CHECK_INTERVAL);
+  viewportWatcherInterval = setInterval(
+    checkViewportChange,
+    VIEWPORT_CHECK_INTERVAL,
+  );
 }
 
 function stopViewportWatcher() {
@@ -460,15 +451,15 @@ function syncViewportThrottled() {
 }
 
 function removeChangesHook() {
-  app.repository.off("operationExecuted", handleOperation);
-  app.commands.off("afterExecute", handleCommands);
-  app.selections.off("selectionChanged", handleSelection);
-  app.diagrams.off("currentDiagramChanged", updateAllHighlights);
+  app.repository.off('operationExecuted', handleOperation);
+  app.commands.off('afterExecute', handleCommands);
+  app.selections.off('selectionChanged', handleSelection);
+  app.diagrams.off('currentDiagramChanged', onDiagramChanged);
 
   const diagramArea = app.diagrams.$diagramArea[0];
   if (diagramArea) {
-    diagramArea.removeEventListener("wheel", updateAllHighlights);
-    diagramArea.removeEventListener("mousedown", onDiagramMouseDown);
+    diagramArea.removeEventListener('wheel', onDiagramWheel);
+    diagramArea.removeEventListener('mousedown', onDiagramMouseDown);
   }
 }
 
@@ -477,20 +468,19 @@ function onDiagramMouseDown() {
   isPanning = true;
   const onMouseMove = () => {
     if (isPanning) {
-        updateAllHighlights();
-        syncViewportThrottled();
+      updateAllHighlights();
+      syncViewportThrottled();
     }
   };
   const onMouseUp = () => {
     isPanning = false;
-    window.removeEventListener("mousemove", onMouseMove);
-    window.removeEventListener("mouseup", onMouseUp);
+    window.removeEventListener('mousemove', onMouseMove);
+    window.removeEventListener('mouseup', onMouseUp);
   };
-  window.addEventListener("mousemove", onMouseMove);
-  window.addEventListener("mouseup", onMouseUp);
+  window.addEventListener('mousemove', onMouseMove);
+  window.addEventListener('mouseup', onMouseUp);
 }
 
-// Highlights
 function highlightElement(viewId, color) {
   const view = app.repository.get(viewId);
   const diagramArea = app.diagrams.$diagramArea[0];
@@ -498,8 +488,8 @@ function highlightElement(viewId, color) {
   if (view && view instanceof type.View) {
     removeHighlight(viewId);
 
-    const hl = document.createElement("div");
-    hl.className = "element-lock-highlight";
+    const hl = document.createElement('div');
+    hl.className = 'element-lock-highlight';
     hl.style.cssText = `
       position: absolute;
       border: 3px solid ${color};
@@ -532,7 +522,7 @@ function updateAllHighlights() {
   const currentDiagram = app.diagrams.getCurrentDiagram();
   if (!currentDiagram) {
     for (let viewId in activeHighlights) {
-      activeHighlights[viewId].element.style.display = "none";
+      activeHighlights[viewId].element.style.display = 'none';
     }
     return;
   }
@@ -556,9 +546,9 @@ function updateAllHighlights() {
       hl.style.top = `${physicalY}px`;
       hl.style.width = `${physicalW}px`;
       hl.style.height = `${physicalH}px`;
-      hl.style.display = "block";
+      hl.style.display = 'block';
     } else {
-      activeHighlights[viewId].element.style.display = "none";
+      activeHighlights[viewId].element.style.display = 'none';
     }
   }
 }
@@ -568,8 +558,7 @@ function sendMousePosition(mouseData) {
 
   try {
     const { x, y, diagram } = mouseData;
-    
-    // Update cache
+
     lastKnownMouse.x = x;
     lastKnownMouse.y = y;
     lastKnownMouse.diagram = diagram;
@@ -579,32 +568,58 @@ function sendMousePosition(mouseData) {
     const originX = currentDiagram ? currentDiagram._originX : 0;
     const originY = currentDiagram ? currentDiagram._originY : 0;
 
-    socket.emit("client-mouse-moved", {
+    socket.emit('client-mouse-moved', {
       id: socket.id,
       x: x,
       y: y,
       diagram: diagram,
       zoom: zoom,
       originX: originX,
-      originY: originY
+      originY: originY,
     });
   } catch (e) {
-    console.error("[LS] Error sending mouse position:", e);
+    console.error('[LS] Error sending mouse position:', e);
   }
 }
 
 function requestDocument() {
   if (!(socket && socket.connected)) return;
   fachada.showLoadingOverlay();
-  socket.emit("request-doc");
+  socket.emit('request-doc');
+}
+
+let pingInterval = null;
+let lastPingTime = 0;
+const PING_INTERVAL = 5000;
+
+function startPingMeasurement() {
+  stopPingMeasurement();
+  sendPing();
+  pingInterval = setInterval(sendPing, PING_INTERVAL);
+}
+
+function sendPing() {
+  if (socket && socket.connected) {
+    lastPingTime = Date.now();
+    socket.emit('latency-check');
+  }
+}
+
+function stopPingMeasurement() {
+  if (pingInterval) {
+    clearInterval(pingInterval);
+    pingInterval = null;
+  }
 }
 
 function disconnect() {
+  stopPingMeasurement();
   if (socket) {
     socket.disconnect();
     socket = null;
   }
-  address = "";
+  currentLatency = -1;
+  address = '';
   current_room = null;
   stopViewportWatcher();
   removeAllHighlights();
@@ -616,16 +631,16 @@ function disconnect() {
   users = {};
   am_i_host = false;
   followingUserId = null;
+  remoteOpInProgress = false;
 
-  if (originalExecute) {
-    app.commands.execute = originalExecute;
-    originalExecute = null;
+  if (selectionDebounceTimer) {
+    clearTimeout(selectionDebounceTimer);
+    selectionDebounceTimer = null;
   }
 
   notifyDisconnect();
 }
 
-// getters
 function getConnectedAddress() {
   return address;
 }
@@ -646,23 +661,32 @@ function getFollowingUserId() {
   return followingUserId;
 }
 
+function getLatency() {
+  return currentLatency;
+}
+
+function onLatencyUpdate(callback) {
+  latencyUpdateCallback = callback;
+}
+
 function setFollowingUserId(id) {
   if (followingUserId && !id) {
-    // Restore grid visibility if we were following
     try {
-      app.preferences.set("diagramEditor.showGrid", originalGridVisible);
-    } catch (e) { console.warn("[LS] Could not restore grid preference"); }
-    
+      app.preferences.set('diagramEditor.showGrid', originalGridVisible);
+    } catch (e) {
+      console.warn('[LS] Could not restore grid preference');
+    }
+
     removeFollowEffects();
     stopFollowAnimation();
   } else if (!followingUserId && id) {
-    // Save current grid visibility and force it to be ON while following
     try {
-      originalGridVisible = app.preferences.get("diagramEditor.showGrid");
-      app.preferences.set("diagramEditor.showGrid", true);
-    } catch (e) { console.warn("[LS] Could not manage grid preference"); }
+      originalGridVisible = app.preferences.get('diagramEditor.showGrid');
+      app.preferences.set('diagramEditor.showGrid', true);
+    } catch (e) {
+      console.warn('[LS] Could not manage grid preference');
+    }
 
-    // initialize current camera to actual current state
     const diag = app.diagrams.getCurrentDiagram();
     if (diag) {
       currentCamera.x = diag._originX;
@@ -671,18 +695,14 @@ function setFollowingUserId(id) {
     }
     applyFollowEffects(id);
 
-    // Request initial position
     if (socket && socket.connected) {
-      console.log("[LS] Requesting initial follow sync from:", id);
-      socket.emit("request-follow-sync", { targetId: id });
+      socket.emit('request-follow-sync', { targetId: id });
     }
   } else if (followingUserId && id && followingUserId !== id) {
-    // Switching who to follow - keep grid treatment but update effects
     applyFollowEffects(id);
-    
-    // Request initial position for the new target
+
     if (socket && socket.connected) {
-      socket.emit("request-follow-sync", { targetId: id });
+      socket.emit('request-follow-sync', { targetId: id });
     }
   }
 
@@ -699,10 +719,10 @@ function getCurrentViewportData() {
       diagram: currentDiagram ? currentDiagram._id : null,
       zoom: zoom,
       originX: currentDiagram ? currentDiagram._originX : 0,
-      originY: currentDiagram ? currentDiagram._originY : 0
+      originY: currentDiagram ? currentDiagram._originY : 0,
     };
   } catch (e) {
-    console.error("[LS] Error getting current viewport data:", e);
+    console.error('[LS] Error getting current viewport data:', e);
     return null;
   }
 }
@@ -714,7 +734,7 @@ function applyViewportSync(data, force = false) {
     const currentDiagram = app.diagrams.getCurrentDiagram();
     const currentZoom = app.diagrams.getZoomLevel();
     const zoom = data.zoom || currentZoom;
-    
+
     let mouseX, mouseY;
     if (data.x !== undefined && data.y !== undefined) {
       mouseX = data.x;
@@ -726,15 +746,18 @@ function applyViewportSync(data, force = false) {
       mouseX = 0;
       mouseY = 0;
     }
-    
+
     const diagramArea = app.diagrams.$diagramArea[0];
     const canvas = diagramArea ? diagramArea.querySelector('svg') : null;
-    const viewWidth = canvas ? canvas.clientWidth : (window.innerWidth - 220);
+    const viewWidth = canvas ? canvas.clientWidth : window.innerWidth - 220;
     const viewHeight = canvas ? canvas.clientHeight : window.innerHeight;
-    const targetOriginX = mouseX - (viewWidth / 2) / zoom;
-    const targetOriginY = mouseY - (viewHeight / 2) / zoom;
-    
-    if (data.diagram && (!currentDiagram || currentDiagram._id !== data.diagram)) {
+    const targetOriginX = mouseX - viewWidth / 2 / zoom;
+    const targetOriginY = mouseY - viewHeight / 2 / zoom;
+
+    if (
+      data.diagram &&
+      (!currentDiagram || currentDiagram._id !== data.diagram)
+    ) {
       const targetDiag = app.repository.get(data.diagram);
       if (targetDiag && targetDiag instanceof type.Diagram) {
         app.diagrams.setCurrentDiagram(targetDiag);
@@ -751,33 +774,66 @@ function applyViewportSync(data, force = false) {
     targetCamera.diagram = data.diagram;
 
     const zoomDiff = Math.abs(targetCamera.zoom - currentZoom);
-    const scrollXDiff = Math.abs(targetCamera.x - (currentDiagram ? currentDiagram._originX : 0));
-    const scrollYDiff = Math.abs(targetCamera.y - (currentDiagram ? currentDiagram._originY : 0));
+    const scrollXDiff = Math.abs(
+      targetCamera.x - (currentDiagram ? currentDiagram._originX : 0),
+    );
+    const scrollYDiff = Math.abs(
+      targetCamera.y - (currentDiagram ? currentDiagram._originY : 0),
+    );
 
-    const shouldScroll = force || (!isPanning && (zoomDiff > ZOOM_PRECISION || scrollXDiff > FOLLOW_SCROLL_THRESHOLD || scrollYDiff > FOLLOW_SCROLL_THRESHOLD));
-    
+    const shouldScroll =
+      force ||
+      (!isPanning &&
+        (zoomDiff > ZOOM_PRECISION ||
+          scrollXDiff > FOLLOW_SCROLL_THRESHOLD ||
+          scrollYDiff > FOLLOW_SCROLL_THRESHOLD));
+
     if (shouldScroll) {
       if (zoomDiff > ZOOM_PRECISION || force) {
         app.diagrams.setZoomLevel(targetCamera.zoom);
+        currentCamera.zoom = targetCamera.zoom;
       }
-      
-      app.diagrams.scrollTo(targetCamera.x, targetCamera.y);
-      
-      currentCamera.x = targetCamera.x;
-      currentCamera.y = targetCamera.y;
-      currentCamera.zoom = targetCamera.zoom;
+
+      startFollowAnimation();
 
       updateAllHighlights();
     }
-  }
-  catch (e) {
-    console.error("[LS] Error syncing viewport following user:", e);
+  } catch (e) {
+    console.error('[LS] Error syncing viewport following user:', e);
   }
 }
 
 function startFollowAnimation() {
-  // No longer using persistent animation loop to avoid overriding StarUML's internal state
-  // and causing the "white screen" and coordinate locking bug.
+  if (followAnimationFrame) return;
+
+  function animate() {
+    const diag = app.diagrams.getCurrentDiagram();
+    if (!diag || !followingUserId) {
+      followAnimationFrame = null;
+      return;
+    }
+
+    const dx = targetCamera.x - diag._originX;
+    const dy = targetCamera.y - diag._originY;
+    const dz = targetCamera.zoom - app.diagrams.getZoomLevel();
+
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(dz) < 0.001) {
+      followAnimationFrame = null;
+      return;
+    }
+
+    if (Math.abs(dz) > 0.001) {
+      app.diagrams.setZoomLevel(app.diagrams.getZoomLevel() + dz * LERP_SPEED);
+    }
+    app.diagrams.scrollTo(
+      diag._originX + dx * LERP_SPEED,
+      diag._originY + dy * LERP_SPEED,
+    );
+
+    followAnimationFrame = requestAnimationFrame(animate);
+  }
+
+  followAnimationFrame = requestAnimationFrame(animate);
 }
 
 function stopFollowAnimation() {
@@ -789,16 +845,14 @@ function stopFollowAnimation() {
 
 function applyFollowEffects(targetId) {
   try {
-    const userName = users[targetId] || "User";
-    
-    // Remove existing overlay if any
+    const userName = users[targetId] || 'User';
+
     if (followOverlay) {
       followOverlay.remove();
     }
 
-    // Create a premium "Following" overlay
-    followOverlay = document.createElement("div");
-    followOverlay.id = "ls-follow-overlay";
+    followOverlay = document.createElement('div');
+    followOverlay.id = 'ls-follow-overlay';
     followOverlay.style.cssText = `
       position: absolute;
       top: 15px;
@@ -818,7 +872,6 @@ function applyFollowEffects(targetId) {
       box-shadow: 0 4px 10px rgba(0,0,0,0.4);
       pointer-events: auto;
       transition: all 0.3s ease;
-      animation: ls-slide-in 0.3s ease;
     `;
 
     followStyleElement = document.createElement('style');
@@ -852,29 +905,29 @@ function applyFollowEffects(targetId) {
         font-size: 10px;
         color: #888;
         transition: all 0.2s;
-      " title="Stop following" onmouseover="this.style.color='#fff';this.style.background='rgba(255,0,0,0.2)'" onmouseout="this.style.color='#888';this.style.background='rgba(255,255,255,0.05)'">✕</div>
+      " title="Stop following">✕</div>
     `;
 
     const diagramArea = app.diagrams.$diagramArea[0];
     if (diagramArea) {
       diagramArea.appendChild(followOverlay);
-      
-      document.getElementById("ls-stop-follow").onclick = (e) => {
+
+      document.getElementById('ls-stop-follow').onclick = (e) => {
         e.stopPropagation();
         setFollowingUserId(null);
-        if (userUpdateCallback) userUpdateCallback(); // Refresh UI panel
+        if (userUpdateCallback) userUpdateCallback();
       };
     }
   } catch (e) {
-    console.error("[LS] Error applying follow effects:", e);
+    console.error('[LS] Error applying follow effects:', e);
   }
 }
 
 function removeFollowEffects() {
   try {
     if (followOverlay) {
-      followOverlay.style.opacity = "0";
-      followOverlay.style.transform = "translateX(20px)";
+      followOverlay.style.opacity = '0';
+      followOverlay.style.transform = 'translateX(20px)';
       setTimeout(() => {
         if (followOverlay) {
           followOverlay.remove();
@@ -887,7 +940,7 @@ function removeFollowEffects() {
       followStyleElement = null;
     }
   } catch (e) {
-    console.error("[LS] Error removing follow effects:", e);
+    console.error('[LS] Error removing follow effects:', e);
   }
 }
 
@@ -916,6 +969,8 @@ module.exports = {
   getSocketId,
   getFollowingUserId,
   setFollowingUserId,
+  getLatency,
+  onLatencyUpdate,
   onUserUpdate,
   onDisconnect,
 };

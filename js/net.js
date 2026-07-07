@@ -1,22 +1,30 @@
-const client = require("./client.js");
-const server = require("./server.js");
+const client = require('./client.js');
+const server = require('./server.js');
+const tunnel = require('./tunnel.js');
 const CONNECT_TIMEOUT = 500;
 
 let am_i_hosting = false;
 let am_i_connected = false;
+let activeTunnelUrl = null;
 
 let userPanel = null;
 let updateMenuStatesFn = null;
 
 function resetSessionState() {
+  stopActiveTunnel();
   if (userPanel) userPanel.hide();
-  if (updateMenuStatesFn) updateMenuStatesFn({
-    ls_ss: true,
-    ls_js: true,
-    ls_es: false,
-    ls_cs: false,
-    ls_sd: false,
-  }, null, null);
+  if (updateMenuStatesFn)
+    updateMenuStatesFn(
+      {
+        ls_ss: true,
+        ls_js: true,
+        ls_es: false,
+        ls_cs: false,
+        ls_sd: false,
+      },
+      null,
+      null,
+    );
   am_i_connected = false;
   am_i_hosting = false;
 }
@@ -29,12 +37,28 @@ function setUpdateMenuStates(fn) {
   updateMenuStatesFn = fn;
 }
 
-async function startSession(name, type, remoteServer) {
-  if (remoteServer) {
+async function startSession(name, mode, remoteServer) {
+  if (mode === 'remote') {
     am_i_hosting = false;
     am_i_connected = await client.connectToServer(remoteServer, name, -1);
   } else {
-    am_i_hosting = server.startServer(server.defaultPort);
+    am_i_hosting = true;
+    await server.startServer(server.defaultPort);
+
+    if (mode === 'tunnel') {
+      const port = server.getServerPort();
+      const result = await tunnel.startTunnel(port);
+      if (result.url) {
+        activeTunnelUrl = result.url;
+        console.log(`[LS] Tunnel URL: ${activeTunnelUrl}`);
+      } else {
+        const fachada = require('./fachada.js');
+        const detail =
+          result.errors.length > 0 ? ' (' + result.errors.join('; ') + ')' : '';
+        fachada.WARN('Tunnel unavailable — LAN only.' + detail);
+      }
+    }
+
     am_i_connected = await client.connectToServer(
       server.getServerAddress(),
       name,
@@ -44,13 +68,18 @@ async function startSession(name, type, remoteServer) {
   if (am_i_connected) {
     client.onDisconnect(handleClientDisconnect);
     if (userPanel) userPanel.show();
-    if (updateMenuStatesFn) updateMenuStatesFn({
-      ls_ss: false,
-      ls_js: false,
-      ls_es: true,
-      ls_cs: true,
-      ls_sd: true,
-    }, null, null);
+    if (updateMenuStatesFn)
+      updateMenuStatesFn(
+        {
+          ls_ss: false,
+          ls_js: false,
+          ls_es: true,
+          ls_cs: true,
+          ls_sd: true,
+        },
+        null,
+        null,
+      );
   }
 
   return am_i_connected;
@@ -58,7 +87,7 @@ async function startSession(name, type, remoteServer) {
 
 async function joinSession(name, url) {
   const urlObj = new URL(url);
-  const roomId = urlObj.searchParams.get("room");
+  const roomId = urlObj.searchParams.get('room');
   const serverUrl = urlObj.origin;
 
   am_i_hosting = false;
@@ -67,13 +96,18 @@ async function joinSession(name, url) {
   if (am_i_connected) {
     client.onDisconnect(handleClientDisconnect);
     if (userPanel) userPanel.show();
-    if (updateMenuStatesFn) updateMenuStatesFn({
-      ls_ss: false,
-      ls_js: false,
-      ls_es: true,
-      ls_cs: true,
-      ls_sd: true,
-    }, null, null);
+    if (updateMenuStatesFn)
+      updateMenuStatesFn(
+        {
+          ls_ss: false,
+          ls_js: false,
+          ls_es: true,
+          ls_cs: true,
+          ls_sd: true,
+        },
+        null,
+        null,
+      );
   }
 
   return am_i_connected;
@@ -81,6 +115,13 @@ async function joinSession(name, url) {
 
 function handleClientDisconnect() {
   resetSessionState();
+}
+
+function stopActiveTunnel() {
+  if (activeTunnelUrl) {
+    tunnel.stopTunnel();
+    activeTunnelUrl = null;
+  }
 }
 
 function endSession() {
@@ -96,22 +137,25 @@ function endSession() {
 }
 
 function getSessionLink() {
+  const roomId = client.getCurrentRoom();
+
+  if (activeTunnelUrl) {
+    const urlObj = new URL(activeTunnelUrl);
+    if (roomId) {
+      urlObj.searchParams.set('room', roomId);
+    }
+    return urlObj.toString();
+  }
+
   let baseUrl = am_i_hosting
     ? server.getServerAddress()
     : client.getConnectedAddress();
 
-  console.log(`[LS] Generating link. base: ${baseUrl}`);
+  if (!baseUrl) return '';
 
-  if (!baseUrl) return "";
-
-  const roomId = client.getCurrentRoom();
-  console.log(`[LS] Generating link. room id: ${roomId}`);
-
-  if (roomId !== null && roomId !== undefined) {
+  if (roomId) {
     const urlObj = new URL(baseUrl);
-    urlObj.searchParams.set("room", roomId);
-    console.log(`[LS] Generating link. final link: ${urlObj.toString()}`);
-
+    urlObj.searchParams.set('room', roomId);
     return urlObj.toString();
   }
 

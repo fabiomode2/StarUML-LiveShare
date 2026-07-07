@@ -27,52 +27,109 @@ var require_fachada = __commonJS({
       );
       return app.dialogs.showModalDialogUsingTemplate(dialogHTML);
     }
+    var MODES = [
+      { id: "lan", label: "LAN", desc: "Start a local server for LAN" },
+      {
+        id: "remote",
+        label: "Remote",
+        desc: "Connect to an existing remote server"
+      },
+      {
+        id: "tunnel",
+        label: "LAN+Tunnel",
+        desc: "Local server with public tunnel"
+      }
+    ];
     async function showSSDialog() {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const htmlPath = path.join("html", "ss_dialog.html");
-        const dialog = _createDialog(htmlPath);
+        let dialog;
+        try {
+          dialog = _createDialog(htmlPath);
+        } catch (e) {
+          ERR("Error creating dialog: " + e.message);
+          resolve(null);
+          return;
+        }
         const $el = dialog.getElement();
+        let currentModeIndex = 2;
+        function updateMode(index) {
+          const mode = MODES[index];
+          $el.find("#mode-label").text(mode.label).attr("data-mode", mode.id);
+          $el.find("#mode-desc").text(mode.desc);
+          if (mode.id === "remote") {
+            $el.find("#server-group").removeClass("hidden");
+          } else {
+            $el.find("#server-group").addClass("hidden");
+          }
+        }
+        updateMode(currentModeIndex);
+        $el.on("click", "#mode-prev", () => {
+          currentModeIndex = (currentModeIndex - 1 + MODES.length) % MODES.length;
+          updateMode(currentModeIndex);
+        });
+        $el.on("click", "#mode-next", () => {
+          currentModeIndex = (currentModeIndex + 1) % MODES.length;
+          updateMode(currentModeIndex);
+        });
         $el.on("click", "#ok-btn", () => {
-          const data = {
-            name: $el.find("#name").val(),
-            type: $el.find("#type").val(),
-            server: $el.find("#server").val()
-          };
-          if (data.name == "") {
-            ERR("Username cant be null.");
-            return null;
+          const name = $el.find("#name").val().trim();
+          const mode = $el.find("#mode-label").attr("data-mode");
+          const server = $el.find("#server").val().trim();
+          if (!name) {
+            ERR("Username cannot be empty.");
+            return;
+          }
+          if (mode === "remote" && !server) {
+            ERR("Server address cannot be empty.");
+            return;
           }
           dialog.close();
-          resolve(data);
+          resolve({ name, mode, server });
         });
         $el.on("click", "#cancel-btn", () => {
           dialog.close();
           resolve(null);
         });
+        $el.on("dialog:close", () => {
+          resolve(null);
+        });
       });
     }
     async function showJSDialog() {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const htmlPath = path.join("html", "js_dialog.html");
-        const dialog = _createDialog(htmlPath);
+        let dialog;
+        try {
+          dialog = _createDialog(htmlPath);
+        } catch (e) {
+          ERR("Error creating dialog: " + e.message);
+          resolve(null);
+          return;
+        }
         const $el = dialog.getElement();
         $el.on("click", "#ok-btn", () => {
-          const data = {
-            name: $el.find("#name").val(),
-            address: $el.find("#address").val()
-          };
-          if (data.name === "") {
-            ERR("Username can't be null.");
+          const name = $el.find("#name").val().trim();
+          let address = $el.find("#address").val().trim();
+          if (!name) {
+            ERR("Username cannot be empty.");
             return;
           }
-          if (!data.address.startsWith("http")) {
-            data.address = "http://" + data.address;
+          if (!address) {
+            ERR("Address cannot be empty.");
+            return;
+          }
+          if (!address.startsWith("http")) {
+            address = "http://" + address;
           }
           dialog.close();
-          resolve(data);
+          resolve({ name, address });
         });
         $el.on("click", "#cancel-btn", () => {
           dialog.close();
+          resolve(null);
+        });
+        $el.on("dialog:close", () => {
           resolve(null);
         });
       });
@@ -82,23 +139,25 @@ var require_fachada = __commonJS({
       const forbidden = [
         "project:new",
         "project:open",
-        // "project:save",
-        // "project:save-as",
         "project:import-fragment",
         "project:close",
         "project:open-recent"
       ];
       forbidden.forEach((cmdId) => {
-        if (app.commands.commands[cmdId] && !originalHandlers[cmdId]) {
-          originalHandlers[cmdId] = app.commands.commands[cmdId];
-        }
-        if (host == false) {
+        if (!app.commands.commands[cmdId]) return;
+        if (host) {
+          if (originalHandlers[cmdId]) {
+            app.commands.commands[cmdId] = originalHandlers[cmdId];
+            delete originalHandlers[cmdId];
+          }
+        } else {
+          if (!originalHandlers[cmdId]) {
+            originalHandlers[cmdId] = app.commands.commands[cmdId];
+          }
           app.commands.commands[cmdId] = () => {
             WARN("Only host can manage files.");
             console.log(`[LS] Blocking: ${cmdId}`);
           };
-        } else {
-          app.commands.commands[cmdId] = originalHandlers[cmdId];
         }
       });
     }
@@ -106,8 +165,6 @@ var require_fachada = __commonJS({
       const menuStates = {
         "file.new": state,
         "file.open": state,
-        // "file.save": state,
-        // "file.save-as": state,
         "file.import": state,
         "file.export-diagram-to-png": state,
         "file.export-diagram-to-svg": state,
@@ -9260,14 +9317,12 @@ var require_client = __commonJS({
     var address = "";
     var users = {};
     var am_i_host = false;
-    var isRemoteChange = false;
-    var isLocalUndo = false;
+    var remoteOpInProgress = false;
     var activeHighlights = {};
     var followingUserId = null;
     var userUpdateCallback = null;
     var originalGridVisible = true;
     var followOverlay = null;
-    var originalExecute = null;
     var followStyleElement = null;
     var lastKnownMouse = { x: 0, y: 0, diagram: null };
     var lastSentViewport = { originX: 0, originY: 0, zoom: 0, diagram: null };
@@ -9279,6 +9334,11 @@ var require_client = __commonJS({
     var currentCamera = { x: 0, y: 0, zoom: 1 };
     var followAnimationFrame = null;
     var ZOOM_PRECISION = 1e-3;
+    var LERP_SPEED = 0.3;
+    var lastAppliedSeq = 0;
+    var selectionDebounceTimer = null;
+    var currentLatency = -1;
+    var latencyUpdateCallback = null;
     async function connectToServer(url, name, roomid) {
       removeChangesHook();
       return new Promise((resolve, reject) => {
@@ -9302,11 +9362,7 @@ var require_client = __commonJS({
           data.forEach((u) => {
             if (!users[u.id]) users[u.id] = u.name;
           });
-          console.log("[LS] Users object after current-users:", users);
-          if (userUpdateCallback) {
-            console.log("[LS] Calling userUpdateCallback");
-            userUpdateCallback();
-          }
+          if (userUpdateCallback) userUpdateCallback();
         });
         socket.on("is-host", (is_host) => {
           am_i_host = is_host;
@@ -9314,21 +9370,46 @@ var require_client = __commonJS({
           if (am_i_host) fachada2.hideLoadingOverlay();
           if (am_i_host) fachada2.INFO("You're the host");
         });
-        socket.on("host-left", (data) => {
-          console.log("[LS] Host left the session");
-          fachada2.WARN("Host left the session");
-          disconnect();
+        socket.on("host-left", () => {
+          console.log("[LS] Host left, session continues with new host");
+          fachada2.WARN("Host changed. A new host has been assigned.");
         });
         socket.on("room-assigned", async (id) => {
-          console.log("[LS] Room assigned: " + current_room);
+          console.log("[LS] Room assigned: " + id);
           current_room = id;
           addChangesHook();
           startViewportWatcher();
           fachada2.hideLoadingOverlay();
           resolve(true);
         });
+        socket.on("latency-response", () => {
+          currentLatency = Math.round(Date.now() - lastPingTime);
+          if (latencyUpdateCallback) latencyUpdateCallback(currentLatency);
+        });
+        socket.on("room-seq", (currentSeq) => {
+          if (currentSeq < lastAppliedSeq) {
+            console.log(
+              `[LS] Sequence reset: was ${lastAppliedSeq}, now ${currentSeq}`
+            );
+            lastAppliedSeq = 0;
+          }
+          if (currentSeq > lastAppliedSeq) {
+            console.log(
+              `[LS] Requesting missed ops: ${lastAppliedSeq + 1} to ${currentSeq}`
+            );
+            socket.emit("request-missed-ops", { fromSeq: lastAppliedSeq });
+          }
+        });
+        socket.on("missed-ops", (data) => {
+          if (!data.ops || data.ops.length === 0) return;
+          console.log(`[LS] Applying ${data.ops.length} missed operations`);
+          data.ops.sort((a, b) => a.seq - b.seq);
+          data.ops.forEach((entry) => {
+            applyRemoteOperationWithSeq(entry.seq, entry.operation);
+          });
+        });
         socket.on("update-mouse-pos", (data) => {
-          if (data.id == socket.id) return;
+          if (data.id === socket.id) return;
           cursors.updateMousePosition(data);
           if (followingUserId) {
             cursors.setHighlight(followingUserId);
@@ -9350,17 +9431,19 @@ var require_client = __commonJS({
         });
         socket.on("follower-sync-data", (data) => {
           if (followingUserId === data.id) {
-            console.info("[LS] Applying initial follow sync from", data.id);
             const viewportData = data.viewportData || data;
-            applyViewportSync({
-              id: data.id,
-              diagram: viewportData.diagram,
-              x: viewportData.x,
-              y: viewportData.y,
-              zoom: viewportData.zoom,
-              originX: viewportData.originX,
-              originY: viewportData.originY
-            }, true);
+            applyViewportSync(
+              {
+                id: data.id,
+                diagram: viewportData.diagram,
+                x: viewportData.x,
+                y: viewportData.y,
+                zoom: viewportData.zoom,
+                originX: viewportData.originX,
+                originY: viewportData.originY
+              },
+              true
+            );
           }
         });
         socket.on("get-whole-document", (data) => {
@@ -9418,77 +9501,23 @@ var require_client = __commonJS({
             fachada2.hideLoadingOverlay();
           }
         });
-        socket.on("remote-operation", (opData) => {
-          isRemoteChange = true;
+        socket.on("remote-operation", (data) => {
+          remoteOpInProgress = true;
           try {
-            const operation = flatted2.parse(opData);
-            app.repository.doOperation(operation);
+            const isOwn = data.socketId === socket.id;
+            if (!isOwn) {
+              const operation = flatted2.parse(data.operation);
+              app.repository.doOperation(operation);
+            }
+            lastAppliedSeq = data.seq;
             app.diagrams.repaint();
             updateAllHighlights();
           } catch (err) {
             console.error("[LS] Operation Error:", err);
           } finally {
-            isRemoteChange = false;
+            remoteOpInProgress = false;
           }
         });
-        socket.on("remote-undo", async () => {
-          isRemoteChange = true;
-          try {
-            const undoManager = app.repository._undoManager || app.repository._operationManager;
-            if (undoManager && typeof undoManager.undo === "function") {
-              await undoManager.undo();
-              app.diagrams.repaint();
-              updateAllHighlights();
-            } else if (app.repository._undoStack && app.repository._undoStack.length > 0) {
-              const lastOp = app.repository._undoStack[app.repository._undoStack.length - 1];
-              app.repository.rollback(lastOp);
-              app.diagrams.repaint();
-              updateAllHighlights();
-            } else {
-              console.log("[LS] Remote undo - no operations to undo");
-            }
-          } catch (e) {
-            console.error("[LS] Remote undo failed:", e);
-          } finally {
-            isRemoteChange = false;
-          }
-        });
-        socket.on("remote-redo", async () => {
-          isRemoteChange = true;
-          try {
-            const undoManager = app.repository._undoManager || app.repository._operationManager;
-            if (undoManager && typeof undoManager.redo === "function") {
-              await undoManager.redo();
-              app.diagrams.repaint();
-              updateAllHighlights();
-            } else if (app.repository._redoStack && app.repository._redoStack.length > 0) {
-              const lastOp = app.repository._redoStack[app.repository._redoStack.length - 1];
-              app.repository.commit(lastOp);
-              app.diagrams.repaint();
-              updateAllHighlights();
-            } else {
-              console.log("[LS] Remote redo - no operations to redo");
-            }
-          } catch (e) {
-            console.error("[LS] Remote redo failed:", e);
-          } finally {
-            isRemoteChange = false;
-          }
-        });
-        if (!originalExecute) {
-          originalExecute = app.commands.execute;
-          app.commands.execute = function(id, ...args) {
-            if (id === "edit:undo" || id === "edit:redo") {
-              isLocalUndo = true;
-              try {
-                return originalExecute.apply(app.commands, [id, ...args]);
-              } finally {
-                isLocalUndo = false;
-              }
-            }
-            return originalExecute.apply(app.commands, [id, ...args]);
-          };
-        }
         socket.on("element-locked", ({ viewId, ownerId, color }) => {
           if (ownerId !== socket.id) {
             highlightElement(viewId, color);
@@ -9515,14 +9544,20 @@ var require_client = __commonJS({
           if (socket.recovered) {
             fachada2.INFO("Connection recovered!");
           }
+          startPingMeasurement();
+          if (socket.io && socket.io.engine) {
+            socket.io.engine.on("pong", (latency) => {
+              currentLatency = Math.round(latency);
+              if (latencyUpdateCallback) latencyUpdateCallback(currentLatency);
+            });
+          }
         });
         socket.on("disconnect", (reason) => {
           console.log("[LS] Socket disconnected, reason:", reason);
-          if (reason === "io server disconnect") {
-            disconnect();
-          } else if (reason === "transport close") {
+          if (reason === "io server disconnect" || reason === "io client disconnect" || reason === "transport close") {
             disconnect();
           } else {
+            fachada2.WARN("Connection lost. Reconnecting...");
             removeAllHighlights();
             cursors.removeAllCursors();
           }
@@ -9541,9 +9576,23 @@ var require_client = __commonJS({
         });
       });
     }
+    function applyRemoteOperationWithSeq(seq, opStr) {
+      if (seq <= lastAppliedSeq) return;
+      remoteOpInProgress = true;
+      try {
+        const operation = flatted2.parse(opStr);
+        app.repository.doOperation(operation);
+        lastAppliedSeq = seq;
+        app.diagrams.repaint();
+        updateAllHighlights();
+      } catch (err) {
+        console.error("[LS] Operation Error:", err);
+      } finally {
+        remoteOpInProgress = false;
+      }
+    }
     var handleOperation = (operation) => {
-      if (isRemoteChange || isLocalUndo || app.repository.bypassConfirmation)
-        return;
+      if (remoteOpInProgress || app.repository.bypassConfirmation) return;
       if (socket && socket.connected && current_room) {
         const str = flatted2.stringify(operation);
         socket.emit("sync-operation", str);
@@ -9551,29 +9600,35 @@ var require_client = __commonJS({
     };
     var handleSelection = (models, views) => {
       if (!socket || !socket.connected) return;
-      if (views && views.length > 0) {
-        socket.emit(
-          "lock-element",
-          views.map((v) => v._id)
-        );
-      } else {
-        socket.emit("unlock-elements");
+      if (remoteOpInProgress) return;
+      if (selectionDebounceTimer) {
+        clearTimeout(selectionDebounceTimer);
       }
+      selectionDebounceTimer = setTimeout(() => {
+        selectionDebounceTimer = null;
+        if (views && views.length > 0) {
+          socket.emit(
+            "lock-element",
+            views.map((v) => v._id)
+          );
+        } else {
+          socket.emit("unlock-elements");
+        }
+      }, 80);
     };
     var handleCommands = (commandId) => {
-      if (isRemoteChange || !socket || !socket.connected) return;
-      if (commandId === "edit:undo") socket.emit("sync-undo");
-      else if (commandId === "edit:redo") socket.emit("sync-redo");
+      if (remoteOpInProgress || !socket || !socket.connected) return;
     };
+    function onDiagramChanged() {
+      updateAllHighlights();
+      syncViewportThrottled();
+    }
     function addChangesHook() {
       removeChangesHook();
       app.repository.on("operationExecuted", handleOperation);
       app.commands.on("afterExecute", handleCommands);
       app.selections.on("selectionChanged", handleSelection);
-      app.diagrams.on("currentDiagramChanged", () => {
-        updateAllHighlights();
-        syncViewportThrottled();
-      });
+      app.diagrams.on("currentDiagramChanged", onDiagramChanged);
       const diagramArea = app.diagrams.$diagramArea[0];
       if (diagramArea) {
         diagramArea.addEventListener("wheel", onDiagramWheel, { passive: true });
@@ -9617,7 +9672,10 @@ var require_client = __commonJS({
           lastKnownMouse.y = currentDiagram._originY;
         }
       }
-      viewportWatcherInterval = setInterval(checkViewportChange, VIEWPORT_CHECK_INTERVAL);
+      viewportWatcherInterval = setInterval(
+        checkViewportChange,
+        VIEWPORT_CHECK_INTERVAL
+      );
     }
     function stopViewportWatcher() {
       if (viewportWatcherInterval) {
@@ -9636,10 +9694,10 @@ var require_client = __commonJS({
       app.repository.off("operationExecuted", handleOperation);
       app.commands.off("afterExecute", handleCommands);
       app.selections.off("selectionChanged", handleSelection);
-      app.diagrams.off("currentDiagramChanged", updateAllHighlights);
+      app.diagrams.off("currentDiagramChanged", onDiagramChanged);
       const diagramArea = app.diagrams.$diagramArea[0];
       if (diagramArea) {
-        diagramArea.removeEventListener("wheel", updateAllHighlights);
+        diagramArea.removeEventListener("wheel", onDiagramWheel);
         diagramArea.removeEventListener("mousedown", onDiagramMouseDown);
       }
     }
@@ -9751,11 +9809,33 @@ var require_client = __commonJS({
       fachada2.showLoadingOverlay();
       socket.emit("request-doc");
     }
+    var pingInterval = null;
+    var lastPingTime = 0;
+    var PING_INTERVAL = 5e3;
+    function startPingMeasurement() {
+      stopPingMeasurement();
+      sendPing();
+      pingInterval = setInterval(sendPing, PING_INTERVAL);
+    }
+    function sendPing() {
+      if (socket && socket.connected) {
+        lastPingTime = Date.now();
+        socket.emit("latency-check");
+      }
+    }
+    function stopPingMeasurement() {
+      if (pingInterval) {
+        clearInterval(pingInterval);
+        pingInterval = null;
+      }
+    }
     function disconnect() {
+      stopPingMeasurement();
       if (socket) {
         socket.disconnect();
         socket = null;
       }
+      currentLatency = -1;
       address = "";
       current_room = null;
       stopViewportWatcher();
@@ -9768,9 +9848,10 @@ var require_client = __commonJS({
       users = {};
       am_i_host = false;
       followingUserId = null;
-      if (originalExecute) {
-        app.commands.execute = originalExecute;
-        originalExecute = null;
+      remoteOpInProgress = false;
+      if (selectionDebounceTimer) {
+        clearTimeout(selectionDebounceTimer);
+        selectionDebounceTimer = null;
       }
       notifyDisconnect();
     }
@@ -9788,6 +9869,12 @@ var require_client = __commonJS({
     }
     function getFollowingUserId() {
       return followingUserId;
+    }
+    function getLatency() {
+      return currentLatency;
+    }
+    function onLatencyUpdate(callback) {
+      latencyUpdateCallback = callback;
     }
     function setFollowingUserId(id) {
       if (followingUserId && !id) {
@@ -9813,7 +9900,6 @@ var require_client = __commonJS({
         }
         applyFollowEffects(id);
         if (socket && socket.connected) {
-          console.log("[LS] Requesting initial follow sync from:", id);
           socket.emit("request-follow-sync", { targetId: id });
         }
       } else if (followingUserId && id && followingUserId !== id) {
@@ -9879,22 +9965,50 @@ var require_client = __commonJS({
         targetCamera.zoom = zoom;
         targetCamera.diagram = data.diagram;
         const zoomDiff = Math.abs(targetCamera.zoom - currentZoom);
-        const scrollXDiff = Math.abs(targetCamera.x - (currentDiagram ? currentDiagram._originX : 0));
-        const scrollYDiff = Math.abs(targetCamera.y - (currentDiagram ? currentDiagram._originY : 0));
+        const scrollXDiff = Math.abs(
+          targetCamera.x - (currentDiagram ? currentDiagram._originX : 0)
+        );
+        const scrollYDiff = Math.abs(
+          targetCamera.y - (currentDiagram ? currentDiagram._originY : 0)
+        );
         const shouldScroll = force || !isPanning && (zoomDiff > ZOOM_PRECISION || scrollXDiff > FOLLOW_SCROLL_THRESHOLD || scrollYDiff > FOLLOW_SCROLL_THRESHOLD);
         if (shouldScroll) {
           if (zoomDiff > ZOOM_PRECISION || force) {
             app.diagrams.setZoomLevel(targetCamera.zoom);
+            currentCamera.zoom = targetCamera.zoom;
           }
-          app.diagrams.scrollTo(targetCamera.x, targetCamera.y);
-          currentCamera.x = targetCamera.x;
-          currentCamera.y = targetCamera.y;
-          currentCamera.zoom = targetCamera.zoom;
+          startFollowAnimation();
           updateAllHighlights();
         }
       } catch (e) {
         console.error("[LS] Error syncing viewport following user:", e);
       }
+    }
+    function startFollowAnimation() {
+      if (followAnimationFrame) return;
+      function animate() {
+        const diag = app.diagrams.getCurrentDiagram();
+        if (!diag || !followingUserId) {
+          followAnimationFrame = null;
+          return;
+        }
+        const dx = targetCamera.x - diag._originX;
+        const dy = targetCamera.y - diag._originY;
+        const dz = targetCamera.zoom - app.diagrams.getZoomLevel();
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(dz) < 1e-3) {
+          followAnimationFrame = null;
+          return;
+        }
+        if (Math.abs(dz) > 1e-3) {
+          app.diagrams.setZoomLevel(app.diagrams.getZoomLevel() + dz * LERP_SPEED);
+        }
+        app.diagrams.scrollTo(
+          diag._originX + dx * LERP_SPEED,
+          diag._originY + dy * LERP_SPEED
+        );
+        followAnimationFrame = requestAnimationFrame(animate);
+      }
+      followAnimationFrame = requestAnimationFrame(animate);
     }
     function stopFollowAnimation() {
       if (followAnimationFrame) {
@@ -9929,7 +10043,6 @@ var require_client = __commonJS({
       box-shadow: 0 4px 10px rgba(0,0,0,0.4);
       pointer-events: auto;
       transition: all 0.3s ease;
-      animation: ls-slide-in 0.3s ease;
     `;
         followStyleElement = document.createElement("style");
         followStyleElement.innerHTML = `
@@ -9961,7 +10074,7 @@ var require_client = __commonJS({
         font-size: 10px;
         color: #888;
         transition: all 0.2s;
-      " title="Stop following" onmouseover="this.style.color='#fff';this.style.background='rgba(255,0,0,0.2)'" onmouseout="this.style.color='#888';this.style.background='rgba(255,255,255,0.05)'">\u2715</div>
+      " title="Stop following">\u2715</div>
     `;
         const diagramArea = app.diagrams.$diagramArea[0];
         if (diagramArea) {
@@ -10017,6 +10130,8 @@ var require_client = __commonJS({
       getSocketId,
       getFollowingUserId,
       setFollowingUserId,
+      getLatency,
+      onLatencyUpdate,
       onUserUpdate,
       onDisconnect
     };
@@ -27413,6 +27528,7 @@ var require_server2 = __commonJS({
     var { networkInterfaces } = require("os");
     var server = null;
     var defaultPort = 6789;
+    var MAX_OP_HISTORY = 500;
     var LiveShareServer = class {
       constructor() {
         this.io = null;
@@ -27421,140 +27537,172 @@ var require_server2 = __commonJS({
         this.users = {};
         this.locks = {};
         this.rooms = {};
+        this.roomSeqs = {};
+        this.opHistory = {};
       }
       start(port = 3e3) {
-        this.server = http.createServer();
-        this.io = new Server(this.server, {
-          cors: { origin: "*" },
-          pingTimeout: 6e4,
-          pingInterval: 25e3,
-          maxHttpBufferSize: 1e8
-        });
-        this.io.on("connection", async (socket) => {
-          const username = socket.handshake.auth.username || "Anonymous";
-          let room_id = socket.handshake.auth.room;
-          console.log(`[LS] User connected:${username}, ${socket.id}`);
-          if (!room_id || room_id == -1 || room_id === "-1" || room_id === "null") {
-            room_id = "room_" + Math.random().toString(36).substring(2, 10);
-            console.log(`[LS] Room created :${room_id}`);
-          }
-          await socket.join(room_id);
-          if (!this.rooms[room_id])
-            this.rooms[room_id] = { users: {}, host_id: socket.id, locks: {} };
-          const isHost = socket.id == this.rooms[room_id].host_id;
-          this.rooms[room_id].users[socket.id] = socket.id;
-          this.users[socket.id] = {
-            id: socket.id,
-            name: username,
-            isHost,
-            room: room_id,
-            color: "#" + Math.floor(Math.random() * 16777215).toString(16)
-            // color for locks
-          };
-          socket.emit("is-host", isHost);
-          socket.emit("room-assigned", room_id);
-          const roomUsers = this.rooms[room_id].users;
-          const otherUsers = Object.keys(roomUsers).filter((uid) => uid !== socket.id).map((uid) => ({
-            id: uid,
-            name: this.users[uid] ? this.users[uid].name : "Anonymous"
-          }));
-          socket.emit("current-users", otherUsers);
-          socket.to(room_id).emit("user-joined", { id: socket.id, name: username });
-          if (!isHost && this.rooms[room_id].host_id) {
-            this.io.to(this.rooms[room_id].host_id).emit("get-whole-document", { requesterId: socket.id });
-          }
-          socket.on("host-delivers-document", (data) => {
-            this.io.to(data.to).emit("load-whole-document", { json: data.json });
+        return new Promise((resolve, reject) => {
+          this.server = http.createServer();
+          this.io = new Server(this.server, {
+            cors: { origin: "*" },
+            pingTimeout: 6e4,
+            pingInterval: 25e3,
+            maxHttpBufferSize: 1e8
           });
-          socket.on("client-mouse-moved", (data) => {
-            socket.to(this.users[socket.id].room).emit("update-mouse-pos", {
+          this.io.on("connection", async (socket) => {
+            const username = socket.handshake.auth.username || "Anonymous";
+            let room_id = socket.handshake.auth.room;
+            console.log(`[LS] User connected: ${username}, ${socket.id}`);
+            if (!room_id || room_id == -1 || room_id === "-1" || room_id === "null") {
+              room_id = "room_" + Math.random().toString(36).substring(2, 10);
+              console.log(`[LS] Room created: ${room_id}`);
+            }
+            await socket.join(room_id);
+            if (!this.rooms[room_id]) {
+              this.rooms[room_id] = { users: {}, host_id: socket.id, locks: {} };
+            }
+            if (!this.roomSeqs[room_id]) this.roomSeqs[room_id] = 0;
+            if (!this.opHistory[room_id]) this.opHistory[room_id] = [];
+            for (const [sid] of Object.entries(this.rooms[room_id].users)) {
+              if (sid !== socket.id && this.users[sid] && this.users[sid].name === username) {
+                delete this.rooms[room_id].users[sid];
+                delete this.users[sid];
+              }
+            }
+            const isHost = socket.id === this.rooms[room_id].host_id;
+            this.rooms[room_id].users[socket.id] = socket.id;
+            this.users[socket.id] = {
               id: socket.id,
-              x: data.x,
-              y: data.y,
-              diagram: data.diagram,
-              zoom: data.zoom,
-              originX: data.originX,
-              originY: data.originY,
-              name: this.users[socket.id].name
+              name: username,
+              isHost,
+              room: room_id,
+              color: "#" + Math.floor(Math.random() * 16777215).toString(16)
+            };
+            socket.emit("is-host", isHost);
+            socket.emit("room-assigned", room_id);
+            socket.emit("room-seq", this.roomSeqs[room_id]);
+            const roomUsers = this.rooms[room_id].users;
+            const otherUsers = Object.keys(roomUsers).filter((uid) => uid !== socket.id).map((uid) => ({
+              id: uid,
+              name: this.users[uid] ? this.users[uid].name : "Anonymous"
+            }));
+            socket.emit("current-users", otherUsers);
+            socket.to(room_id).emit("user-joined", { id: socket.id, name: username });
+            if (!isHost && this.rooms[room_id].host_id) {
+              this.io.to(this.rooms[room_id].host_id).emit("get-whole-document", { requesterId: socket.id });
+            }
+            socket.on("latency-check", () => {
+              socket.emit("latency-response");
             });
-          });
-          socket.on("request-follow-sync", (data) => {
-            if (data.targetId && this.users[data.targetId]) {
-              this.io.to(data.targetId).emit("get-follow-sync", {
-                requesterId: socket.id
-              });
-            }
-          });
-          socket.on("response-follow-sync", (data) => {
-            if (data.requesterId && this.users[data.requesterId]) {
-              this.io.to(data.requesterId).emit("follower-sync-data", {
+            socket.on("host-delivers-document", (data) => {
+              this.io.to(data.to).emit("load-whole-document", { json: data.json });
+            });
+            socket.on("client-mouse-moved", (data) => {
+              socket.to(this.users[socket.id].room).emit("update-mouse-pos", {
                 id: socket.id,
-                ...data.viewportData
+                x: data.x,
+                y: data.y,
+                diagram: data.diagram,
+                zoom: data.zoom,
+                originX: data.originX,
+                originY: data.originY,
+                name: this.users[socket.id].name
               });
-            }
-          });
-          socket.on("request-doc", () => {
-            console.log(
-              `[LS] ${this.users[socket.id].name} requested the whole doc.`
-            );
-            this.io.to(this.rooms[this.users[socket.id].room].host_id).emit("get-whole-document", { requesterId: socket.id });
-          });
-          socket.on("sync-operation", (op) => {
-            const userData = this.users[socket.id];
-            if (userData && userData.room) {
+            });
+            socket.on("request-follow-sync", (data) => {
+              if (data.targetId && this.users[data.targetId]) {
+                this.io.to(data.targetId).emit("get-follow-sync", {
+                  requesterId: socket.id
+                });
+              }
+            });
+            socket.on("response-follow-sync", (data) => {
+              if (data.requesterId && this.users[data.requesterId]) {
+                this.io.to(data.requesterId).emit("follower-sync-data", {
+                  id: socket.id,
+                  ...data.viewportData
+                });
+              }
+            });
+            socket.on("request-doc", () => {
               console.log(
-                `[LS] ${userData.name} sent operation to room ${userData.room}`
+                `[LS] ${this.users[socket.id].name} requested the whole doc.`
               );
-              socket.to(userData.room).emit("remote-operation", op);
-            }
-          });
-          socket.on("sync-undo", () => {
-            const userData = this.users[socket.id];
-            if (userData && userData.room) {
-              socket.to(userData.room).emit("remote-undo");
-            }
-          });
-          socket.on("sync-redo", () => {
-            const userData = this.users[socket.id];
-            if (userData && userData.room) {
-              socket.to(userData.room).emit("remote-redo");
-            }
-          });
-          socket.on("lock-element", (viewIds) => {
-            const room_id2 = this.users[socket.id].room;
-            viewIds.forEach((id) => {
-              if (!this.rooms[room_id2].locks[id]) {
+              this.io.to(this.rooms[this.users[socket.id].room].host_id).emit("get-whole-document", { requesterId: socket.id });
+            });
+            socket.on("sync-operation", (opStr) => {
+              const userData = this.users[socket.id];
+              if (!userData || !userData.room) return;
+              const room_id2 = userData.room;
+              if (!this.opHistory[room_id2]) this.opHistory[room_id2] = [];
+              if (!this.roomSeqs[room_id2]) this.roomSeqs[room_id2] = 0;
+              this.roomSeqs[room_id2]++;
+              const seq = this.roomSeqs[room_id2];
+              this.opHistory[room_id2].push({
+                seq,
+                socketId: socket.id,
+                operation: opStr,
+                timestamp: Date.now()
+              });
+              if (this.opHistory[room_id2].length > MAX_OP_HISTORY) {
+                this.opHistory[room_id2].shift();
+              }
+              this.io.to(room_id2).emit("remote-operation", {
+                seq,
+                operation: opStr,
+                socketId: socket.id
+              });
+            });
+            socket.on("request-missed-ops", (data) => {
+              const userData = this.users[socket.id];
+              if (!userData) return;
+              const room_id2 = userData.room;
+              const fromSeq = data.fromSeq;
+              const history = this.opHistory[room_id2] || [];
+              const missed = history.filter((entry) => entry.seq > fromSeq);
+              if (missed.length > 0) {
+                console.log(
+                  `[LS] Sending ${missed.length} missed ops to ${userData.name} (from seq ${fromSeq})`
+                );
+                socket.emit("missed-ops", { ops: missed });
+              }
+            });
+            socket.on("lock-element", (viewIds) => {
+              const room_id2 = this.users[socket.id].room;
+              if (!this.rooms[room_id2]) return;
+              viewIds.forEach((id) => {
+                if (this.rooms[room_id2].locks[id]) return;
                 this.rooms[room_id2].locks[id] = socket.id;
-                this.io.to(this.users[socket.id].room).emit("element-locked", {
+                this.io.to(room_id2).emit("element-locked", {
                   viewId: id,
                   ownerId: socket.id,
                   color: this.users[socket.id].color
                 });
+              });
+            });
+            socket.on("unlock-elements", () => {
+              const room_id2 = this.users[socket.id].room;
+              if (!this.rooms[room_id2]) return;
+              for (let id in this.rooms[room_id2].locks) {
+                if (this.rooms[room_id2].locks[id] === socket.id) {
+                  delete this.rooms[room_id2].locks[id];
+                  this.io.to(room_id2).emit("element-unlocked", { viewId: id });
+                }
               }
             });
-          });
-          socket.on("unlock-elements", () => {
-            const room_id2 = this.users[socket.id].room;
-            for (let id in this.rooms[room_id2].locks) {
-              if (this.rooms[room_id2].locks[id] === socket.id) {
-                delete this.rooms[room_id2].locks[id];
-                this.io.to(this.users[socket.id].room).emit("element-unlocked", { viewId: id });
+            socket.on("disconnect", () => {
+              const userData = this.users[socket.id];
+              if (!userData) return;
+              const room_id2 = userData.room;
+              if (!this.rooms[room_id2]) return;
+              for (let id in this.rooms[room_id2].locks) {
+                if (this.rooms[room_id2].locks[id] === socket.id) {
+                  delete this.rooms[room_id2].locks[id];
+                  this.io.to(room_id2).emit("element-unlocked", { viewId: id });
+                }
               }
-            }
-          });
-          socket.on("disconnect", () => {
-            const userData = this.users[socket.id];
-            if (!userData) return;
-            const room_id2 = userData.room;
-            for (let id in this.rooms[room_id2].locks) {
-              if (this.rooms[room_id2].locks[id] === socket.id) {
-                delete this.rooms[room_id2].locks[id];
-                this.io.to(room_id2).emit("element-unlocked", { viewId: id });
-              }
-            }
-            console.log(`[LS] ${this.users[socket.id].name}, ${socket.id} left.`);
-            this.io.to(room_id2).emit("user-left", socket.id);
-            if (this.rooms[room_id2]) {
+              console.log(`[LS] ${userData.name}, ${socket.id} left.`);
+              socket.to(room_id2).emit("user-left", socket.id);
               delete this.rooms[room_id2].users[socket.id];
               let remainingUsers = Object.keys(this.rooms[room_id2].users);
               if (this.rooms[room_id2].host_id === socket.id) {
@@ -27562,36 +27710,40 @@ var require_server2 = __commonJS({
                 if (remainingUsers.length > 0) {
                   let new_host = remainingUsers[0];
                   this.rooms[room_id2].host_id = new_host;
+                  this.users[new_host].isHost = true;
                   this.io.to(new_host).emit("is-host", true);
-                  if (this.users[new_host]) this.users[new_host].isHost = true;
                 }
               }
               if (remainingUsers.length === 0) {
                 delete this.rooms[room_id2];
+                delete this.roomSeqs[room_id2];
+                delete this.opHistory[room_id2];
               }
-            }
-            delete this.users[socket.id];
+              delete this.users[socket.id];
+            });
           });
-        });
-        this.server.listen(port, () => {
-          console.log(`[LS] LiveShare server running on port ${port}`);
+          this.server.on("error", (err) => {
+            if (err.code === "EADDRINUSE") {
+              console.error(`[LS] Port ${port} occupied. Close other instances.`);
+            }
+            reject(err);
+          });
+          this.server.listen(port, () => {
+            console.log(`[LS] LiveShare server running on port ${port}`);
+            resolve();
+          });
         });
       }
       stop() {
         if (this.server) this.server.close();
       }
     };
-    function startServer(port) {
+    async function startServer(port) {
       if (server) server.stop();
       server = new LiveShareServer();
       const targetPort = port || 3e3;
       try {
-        server.start(targetPort);
-        server.server.on("error", (e) => {
-          if (e.code === "EADDRINUSE") {
-            console.error(`Port ${targetPort} occupied. Close other instances.`);
-          }
-        });
+        await server.start(targetPort);
       } catch (e) {
         return false;
       }
@@ -27607,18 +27759,33 @@ var require_server2 = __commonJS({
     function getServer() {
       return server;
     }
+    function getServerPort() {
+      return server && server.server && server.server.address() ? server.server.address().port : defaultPort;
+    }
     function get_ip() {
       const nets = networkInterfaces();
+      const candidates = [];
       for (const name of Object.keys(nets)) {
         for (const net2 of nets[name]) {
           if (net2.internal) continue;
           const isIPv4 = net2.family === "IPv4" || net2.family === 4;
           if (isIPv4) {
-            return net2.address;
+            candidates.push(net2.address);
           }
         }
       }
-      return "127.0.0.1";
+      const priority = (ip) => {
+        if (ip.startsWith("10.")) return 0;
+        const parts = ip.split(".");
+        if (parts[0] === "172") {
+          const second = parseInt(parts[1], 10);
+          if (second >= 16 && second <= 31) return 1;
+        }
+        if (ip.startsWith("192.168.")) return 2;
+        return 3;
+      };
+      candidates.sort((a, b) => priority(a) - priority(b));
+      return candidates[0] || "127.0.0.1";
     }
     module2.exports = {
       LiveShareServer,
@@ -27626,8 +27793,260 @@ var require_server2 = __commonJS({
       stopServer,
       getServerAddress,
       getServer,
+      getServerPort,
       defaultPort
     };
+  }
+});
+
+// js/tunnel.js
+var require_tunnel = __commonJS({
+  "js/tunnel.js"(exports2, module2) {
+    var { spawn } = require("child_process");
+    var PROVIDER_TIMEOUT = 2e4;
+    var tunnelInstance = null;
+    var currentUrl = null;
+    var currentProviderName = null;
+    function wrapTunnel(url, closeFn) {
+      const cbs = { close: [], error: [] };
+      let closed = false;
+      const obj = {
+        url,
+        close: () => {
+          if (closed) return;
+          closed = true;
+          closeFn();
+          cbs.close.slice().forEach((fn) => fn());
+        },
+        onClose: (cb) => cbs.close.push(cb),
+        onError: (cb) => cbs.error.push(cb)
+      };
+      obj._fireClose = () => {
+        if (closed) return;
+        closed = true;
+        cbs.close.slice().forEach((fn) => fn());
+      };
+      obj._fireError = (err) => {
+        cbs.error.slice().forEach((fn) => fn(err));
+      };
+      return obj;
+    }
+    var cancelRegistry = [];
+    function cancelAllInFlight() {
+      const handlers = cancelRegistry.splice(0);
+      handlers.forEach((fn) => fn());
+    }
+    function cleanupHandler(handler) {
+      const idx = cancelRegistry.indexOf(handler);
+      if (idx !== -1) cancelRegistry.splice(idx, 1);
+    }
+    function registerCancel(handler) {
+      cancelRegistry.push(handler);
+      return () => cleanupHandler(handler);
+    }
+    async function withTimeout(promise, ms) {
+      return Promise.race([
+        promise,
+        new Promise(
+          (_, reject) => setTimeout(() => reject(new Error("timeout")), ms)
+        )
+      ]);
+    }
+    function tryCloudflared(port) {
+      return new Promise((resolve, reject) => {
+        const child = spawn(
+          "cloudflared",
+          ["tunnel", "--url", `http://localhost:${port}`, "--no-autoupdate"],
+          {
+            stdio: ["ignore", "pipe", "pipe"]
+          }
+        );
+        let resolved = false;
+        let buffer = "";
+        const unreg = registerCancel(() => {
+          if (resolved) return;
+          resolved = true;
+          try {
+            child.kill("SIGTERM");
+          } catch (_) {
+          }
+          reject(new Error("cancelled"));
+        });
+        function onOutput(data) {
+          if (resolved) return;
+          buffer += data.toString();
+          const m = buffer.match(
+            /https:\/\/[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.trycloudflare\.com/
+          );
+          if (m) {
+            resolved = true;
+            unreg();
+            child.stdout.removeAllListeners("data");
+            child.stderr.removeAllListeners("data");
+            const tw = wrapTunnel(m[0], () => child.kill("SIGTERM"));
+            child.on("exit", () => tw._fireClose());
+            child.on("error", (err) => tw._fireError(err));
+            resolve(tw);
+          }
+        }
+        child.stdout.on("data", onOutput);
+        child.stderr.on("data", onOutput);
+        child.on("error", (err) => {
+          if (!resolved) {
+            resolved = true;
+            unreg();
+            reject(err);
+          }
+        });
+        child.on("exit", (code) => {
+          if (!resolved) {
+            resolved = true;
+            unreg();
+            reject(new Error(`cloudflared exited with code ${code}`));
+          }
+        });
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            unreg();
+            try {
+              child.kill("SIGTERM");
+            } catch (_) {
+            }
+            reject(new Error("cloudflared timed out"));
+          }
+        }, PROVIDER_TIMEOUT);
+      });
+    }
+    function tryLocalhostRun(port) {
+      return new Promise((resolve, reject) => {
+        const child = spawn(
+          "ssh",
+          [
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "ServerAliveInterval=30",
+            "-R",
+            `80:localhost:${port}`,
+            "nokey@localhost.run"
+          ],
+          {
+            stdio: ["ignore", "pipe", "pipe"]
+          }
+        );
+        let resolved = false;
+        let buffer = "";
+        const unreg = registerCancel(() => {
+          if (resolved) return;
+          resolved = true;
+          try {
+            child.kill("SIGTERM");
+          } catch (_) {
+          }
+          reject(new Error("cancelled"));
+        });
+        function onOutput(data) {
+          if (resolved) return;
+          buffer += data.toString();
+          const m = buffer.match(
+            /https:\/\/[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.lhr\.life/
+          );
+          if (m) {
+            resolved = true;
+            unreg();
+            child.stdout.removeAllListeners("data");
+            child.stderr.removeAllListeners("data");
+            const tw = wrapTunnel(m[0], () => child.kill("SIGTERM"));
+            child.on("exit", () => tw._fireClose());
+            child.on("error", (err) => tw._fireError(err));
+            resolve(tw);
+          }
+        }
+        child.stdout.on("data", onOutput);
+        child.stderr.on("data", onOutput);
+        child.on("error", (err) => {
+          if (!resolved) {
+            resolved = true;
+            unreg();
+            reject(err);
+          }
+        });
+        child.on("exit", (code) => {
+          if (!resolved) {
+            resolved = true;
+            unreg();
+            reject(new Error(`ssh exited with code ${code}`));
+          }
+        });
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            unreg();
+            try {
+              child.kill("SIGTERM");
+            } catch (_) {
+            }
+            reject(new Error("localhost.run timed out"));
+          }
+        }, PROVIDER_TIMEOUT);
+      });
+    }
+    var PROVIDERS = [
+      { name: "localhost.run", fn: tryLocalhostRun },
+      { name: "cloudflared", fn: tryCloudflared }
+    ];
+    async function startTunnel(port) {
+      stopTunnel();
+      const errors = [];
+      for (const provider of PROVIDERS) {
+        console.log(`[LS] Tunnel: trying ${provider.name}...`);
+        try {
+          const instance = await withTimeout(provider.fn(port), PROVIDER_TIMEOUT);
+          cancelAllInFlight();
+          currentUrl = instance.url;
+          tunnelInstance = instance;
+          currentProviderName = provider.name;
+          instance.onClose(() => {
+            console.log(`[LS] Tunnel closed (${provider.name})`);
+            tunnelInstance = null;
+            currentUrl = null;
+            currentProviderName = null;
+          });
+          instance.onError((err) => {
+            console.error(`[LS] Tunnel error (${provider.name}):`, err);
+          });
+          console.log(`[LS] Tunnel started via ${provider.name}: ${currentUrl}`);
+          return { url: currentUrl, errors: [] };
+        } catch (e) {
+          cancelAllInFlight();
+          const msg = `${provider.name}: ${e.message || e}`;
+          errors.push(msg);
+          console.warn(
+            `[LS] Tunnel provider ${provider.name} failed: ${e.message || e}`
+          );
+        }
+      }
+      console.error("[LS] All tunnel providers failed");
+      return { url: null, errors };
+    }
+    function getTunnelUrl() {
+      return currentUrl;
+    }
+    function stopTunnel() {
+      cancelAllInFlight();
+      if (tunnelInstance) {
+        try {
+          tunnelInstance.close();
+        } catch (e) {
+          console.error("[LS] Error closing tunnel:", e);
+        }
+        tunnelInstance = null;
+        currentUrl = null;
+        currentProviderName = null;
+      }
+    }
+    module2.exports = { startTunnel, getTunnelUrl, stopTunnel };
   }
 });
 
@@ -27636,19 +28055,27 @@ var require_net = __commonJS({
   "js/net.js"(exports2, module2) {
     var client = require_client();
     var server = require_server2();
+    var tunnel = require_tunnel();
     var am_i_hosting = false;
     var am_i_connected = false;
+    var activeTunnelUrl = null;
     var userPanel2 = null;
     var updateMenuStatesFn = null;
     function resetSessionState() {
+      stopActiveTunnel();
       if (userPanel2) userPanel2.hide();
-      if (updateMenuStatesFn) updateMenuStatesFn({
-        ls_ss: true,
-        ls_js: true,
-        ls_es: false,
-        ls_cs: false,
-        ls_sd: false
-      }, null, null);
+      if (updateMenuStatesFn)
+        updateMenuStatesFn(
+          {
+            ls_ss: true,
+            ls_js: true,
+            ls_es: false,
+            ls_cs: false,
+            ls_sd: false
+          },
+          null,
+          null
+        );
       am_i_connected = false;
       am_i_hosting = false;
     }
@@ -27658,12 +28085,25 @@ var require_net = __commonJS({
     function setUpdateMenuStates(fn) {
       updateMenuStatesFn = fn;
     }
-    async function startSession2(name, type2, remoteServer) {
-      if (remoteServer) {
+    async function startSession2(name, mode, remoteServer) {
+      if (mode === "remote") {
         am_i_hosting = false;
         am_i_connected = await client.connectToServer(remoteServer, name, -1);
       } else {
-        am_i_hosting = server.startServer(server.defaultPort);
+        am_i_hosting = true;
+        await server.startServer(server.defaultPort);
+        if (mode === "tunnel") {
+          const port = server.getServerPort();
+          const result = await tunnel.startTunnel(port);
+          if (result.url) {
+            activeTunnelUrl = result.url;
+            console.log(`[LS] Tunnel URL: ${activeTunnelUrl}`);
+          } else {
+            const fachada2 = require_fachada();
+            const detail = result.errors.length > 0 ? " (" + result.errors.join("; ") + ")" : "";
+            fachada2.WARN("Tunnel unavailable \u2014 LAN only." + detail);
+          }
+        }
         am_i_connected = await client.connectToServer(
           server.getServerAddress(),
           name
@@ -27672,13 +28112,18 @@ var require_net = __commonJS({
       if (am_i_connected) {
         client.onDisconnect(handleClientDisconnect);
         if (userPanel2) userPanel2.show();
-        if (updateMenuStatesFn) updateMenuStatesFn({
-          ls_ss: false,
-          ls_js: false,
-          ls_es: true,
-          ls_cs: true,
-          ls_sd: true
-        }, null, null);
+        if (updateMenuStatesFn)
+          updateMenuStatesFn(
+            {
+              ls_ss: false,
+              ls_js: false,
+              ls_es: true,
+              ls_cs: true,
+              ls_sd: true
+            },
+            null,
+            null
+          );
       }
       return am_i_connected;
     }
@@ -27691,18 +28136,29 @@ var require_net = __commonJS({
       if (am_i_connected) {
         client.onDisconnect(handleClientDisconnect);
         if (userPanel2) userPanel2.show();
-        if (updateMenuStatesFn) updateMenuStatesFn({
-          ls_ss: false,
-          ls_js: false,
-          ls_es: true,
-          ls_cs: true,
-          ls_sd: true
-        }, null, null);
+        if (updateMenuStatesFn)
+          updateMenuStatesFn(
+            {
+              ls_ss: false,
+              ls_js: false,
+              ls_es: true,
+              ls_cs: true,
+              ls_sd: true
+            },
+            null,
+            null
+          );
       }
       return am_i_connected;
     }
     function handleClientDisconnect() {
       resetSessionState();
+    }
+    function stopActiveTunnel() {
+      if (activeTunnelUrl) {
+        tunnel.stopTunnel();
+        activeTunnelUrl = null;
+      }
     }
     function endSession2() {
       if (am_i_connected) {
@@ -27714,15 +28170,19 @@ var require_net = __commonJS({
       resetSessionState();
     }
     function getSessionLink() {
-      let baseUrl = am_i_hosting ? server.getServerAddress() : client.getConnectedAddress();
-      console.log(`[LS] Generating link. base: ${baseUrl}`);
-      if (!baseUrl) return "";
       const roomId = client.getCurrentRoom();
-      console.log(`[LS] Generating link. room id: ${roomId}`);
-      if (roomId !== null && roomId !== void 0) {
+      if (activeTunnelUrl) {
+        const urlObj = new URL(activeTunnelUrl);
+        if (roomId) {
+          urlObj.searchParams.set("room", roomId);
+        }
+        return urlObj.toString();
+      }
+      let baseUrl = am_i_hosting ? server.getServerAddress() : client.getConnectedAddress();
+      if (!baseUrl) return "";
+      if (roomId) {
         const urlObj = new URL(baseUrl);
         urlObj.searchParams.set("room", roomId);
-        console.log(`[LS] Generating link. final link: ${urlObj.toString()}`);
         return urlObj.toString();
       }
       return baseUrl;
@@ -27795,6 +28255,11 @@ var require_user_panel = __commonJS({
           ">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="font-weight: 600; font-size: 10px; color: #ccc; text-transform: uppercase; letter-spacing: 1.2px;">LiveShare</span>
+              <span id="ls-ping-indicator" style="
+                font-size: 10px;
+                color: #666;
+                margin-left: 4px;
+              ">\u2014</span>
             </div>
             <div id="ls-toggle-btn" style="
               width: 18px;
@@ -27847,6 +28312,22 @@ var require_user_panel = __commonJS({
         client.onUserUpdate(() => {
           console.log("[LS] User panel: user update callback fired");
           if (this.panelVisible) this.render();
+        });
+        client.onLatencyUpdate((latency) => {
+          const $indicator = this.$panel.find("#ls-ping-indicator");
+          if ($indicator.length) {
+            let color;
+            if (latency < 0) {
+              color = "#666";
+            } else if (latency < 50) {
+              color = "#2ecc71";
+            } else if (latency < 150) {
+              color = "#f1c40f";
+            } else {
+              color = "#e74c3c";
+            }
+            $indicator.text(latency < 0 ? "\u2014" : latency + "ms").css("color", color);
+          }
         });
       }
       toggleMinimize() {
@@ -27959,7 +28440,7 @@ var userPanel = new UserPanel();
 async function startSession() {
   const data = await fachada.showSS();
   if (!data) return;
-  if (!await net.startSession(data.name, data.type, data.server)) {
+  if (!await net.startSession(data.name, data.mode, data.server)) {
     fachada.WARN("Couldnt start session");
     return;
   }

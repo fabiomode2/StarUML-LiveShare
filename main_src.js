@@ -1,21 +1,20 @@
-const fachada = require("./js/fachada.js");
-const net = require("./js/net.js");
-const flatted = require("flatted"); //stringify json
-const UserPanel = require("./js/user-panel.js");
+const fachada = require('./js/fachada.js');
+const net = require('./js/net.js');
+const flatted = require('flatted'); //stringify json
+const UserPanel = require('./js/user-panel.js');
 
 const userPanel = new UserPanel();
-
 
 async function startSession() {
   const data = await fachada.showSS();
   if (!data) return;
 
-  if (!(await net.startSession(data.name, data.type, data.server))) {
-    fachada.WARN("Couldnt start session");
+  if (!(await net.startSession(data.name, data.mode, data.server))) {
+    fachada.WARN('Couldnt start session');
     return;
   }
 
-  fachada.INFO("Session started!");
+  fachada.INFO('Session started!');
 
   // hide start-session and join-session, show end-session and copy-session-link
   app.menu.updateStates(
@@ -38,11 +37,11 @@ async function joinSession() {
   if (!data) return;
 
   if (!(await net.joinSession(data.name, data.address))) {
-    fachada.WARN("Couldnt join session");
+    fachada.WARN('Couldnt join session');
     return;
   }
 
-  fachada.INFO("Session joined!");
+  fachada.INFO('Session joined!');
 
   // hide start-session and join-session, show end-session and copy-session-link
   app.menu.updateStates(
@@ -63,7 +62,7 @@ async function joinSession() {
 function endSession() {
   net.endSession();
   userPanel.hide();
-  fachada.INFO("Session ended");
+  fachada.INFO('Session ended');
 
   app.menu.updateStates(
     {
@@ -84,12 +83,12 @@ function copySessionLink() {
   navigator.clipboard
     .writeText(link)
     .then(() => {
-      fachada.INFO("Session link copied!");
+      fachada.INFO('Session link copied!');
     })
     .catch((err) => {
-      console.error("[LS] Error copying with navigator:", err);
-      console.log("[LS] Couldnt copy. The link is: " + link);
-      fachada.ERR("Error. See console");
+      console.error('[LS] Error copying with navigator:', err);
+      console.log('[LS] Couldnt copy. The link is: ' + link);
+      fachada.ERR('Error. See console');
     });
 }
 
@@ -98,27 +97,26 @@ function syncDocument() {
 }
 
 function init() {
-  app.commands.register("liveshare:ss", startSession);
-  app.commands.register("liveshare:js", joinSession);
-  app.commands.register("liveshare:cs", copySessionLink);
-  app.commands.register("liveshare:es", endSession);
-  app.commands.register("liveshare:sd", syncDocument);
+  app.commands.register('liveshare:ss', startSession);
+  app.commands.register('liveshare:js', joinSession);
+  app.commands.register('liveshare:cs', copySessionLink);
+  app.commands.register('liveshare:es', endSession);
+  app.commands.register('liveshare:sd', syncDocument);
 
   // debug print
-  app.commands.register("liveshare:pa", () => {
+  app.commands.register('liveshare:pa', () => {
     console.log(app);
     console.log(app.project.getProject());
     // console.log(flatted.stringify(app));
   });
 
-    app.menu.updateStates(
+  app.menu.updateStates(
     {
       ls_pa: false,
     },
     null,
     null,
   );
-
 }
 
 exports.init = init;
