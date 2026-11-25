@@ -1,6 +1,7 @@
 const client = require('./client.js');
 const server = require('./server.js');
 const tunnel = require('./tunnel.js');
+const fachada = require('./fachada.js');
 const CONNECT_TIMEOUT = 500;
 
 let am_i_hosting = false;
@@ -47,12 +48,19 @@ async function startSession(name, mode, remoteServer) {
 
     if (mode === 'tunnel') {
       const port = server.getServerPort();
+      tunnel.setUrlChangeCallback((newUrl) => {
+        activeTunnelUrl = newUrl;
+        if (newUrl) {
+          fachada.INFO('Tunnel URL changed: ' + newUrl);
+        } else {
+          fachada.WARN('Tunnel unavailable — LAN only.');
+        }
+      });
       const result = await tunnel.startTunnel(port);
       if (result.url) {
         activeTunnelUrl = result.url;
         console.log(`[LS] Tunnel URL: ${activeTunnelUrl}`);
       } else {
-        const fachada = require('./fachada.js');
         const detail =
           result.errors.length > 0 ? ' (' + result.errors.join('; ') + ')' : '';
         fachada.WARN('Tunnel unavailable — LAN only.' + detail);
@@ -118,10 +126,8 @@ function handleClientDisconnect() {
 }
 
 function stopActiveTunnel() {
-  if (activeTunnelUrl) {
-    tunnel.stopTunnel();
-    activeTunnelUrl = null;
-  }
+  tunnel.stopTunnel();
+  activeTunnelUrl = null;
 }
 
 function endSession() {

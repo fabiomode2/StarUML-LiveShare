@@ -9309,7 +9309,7 @@ var require_client = __commonJS({
   "js/client.js"(exports2, module2) {
     var io = require_cjs5();
     var fachada2 = require_fachada();
-    var flatted2 = require_cjs6();
+    var flatted = require_cjs6();
     var cursors_js = require_cursors();
     var cursors = new cursors_js.CursorsHandler();
     var socket = null;
@@ -9324,23 +9324,41 @@ var require_client = __commonJS({
     var originalGridVisible = true;
     var followOverlay = null;
     var followStyleElement = null;
-    var lastKnownMouse = { x: 0, y: 0, diagram: null };
+    var lastKnownMouse = { x: null, y: null, diagram: null };
     var lastSentViewport = { originX: 0, originY: 0, zoom: 0, diagram: null };
     var lastViewportSyncTime = 0;
     var viewportWatcherInterval = null;
+    var SIDEBAR_WIDTH = 220;
     var VIEWPORT_SYNC_THROTTLE = 30;
     var VIEWPORT_CHECK_INTERVAL = 50;
-    var targetCamera = { x: 0, y: 0, zoom: 1, diagram: null };
-    var currentCamera = { x: 0, y: 0, zoom: 1 };
-    var followAnimationFrame = null;
-    var ZOOM_PRECISION = 1e-3;
+    var REMOTE_OP_DEBOUNCE_MS = 150;
+    var PROMOTION_DOC_TIMEOUT_MS = 4e3;
     var LERP_SPEED = 0.3;
+    var targetCamera = { x: 0, y: 0, zoom: 1, diagram: null };
+    var followAnimationFrame = null;
+    var promotionDocTimer = null;
+    var ZOOM_PRECISION = 1e-3;
     var lastAppliedSeq = 0;
+    var documentSynced = false;
+    var documentLoaded = false;
+    var lastKnownRoomSeq = 0;
+    var ownOpLog = [];
+    var retainedRoom = null;
+    var retainedSeq = 0;
     var selectionDebounceTimer = null;
+    var remoteOpEndTime = 0;
+    var pendingGapOp = null;
+    var lastFailedApplySeq = null;
+    var lastFailedApplyAt = 0;
+    var MAX_OWN_OP_LOG = 200;
+    var syncOpEmissionCount = 0;
+    var syncAckCount = 0;
+    var serverSupportsSyncAck = false;
     var currentLatency = -1;
     var latencyUpdateCallback = null;
     async function connectToServer(url, name, roomid) {
       removeChangesHook();
+      serverSupportsSyncAck = false;
       return new Promise((resolve, reject) => {
         socket = io(url, {
           transports: ["websocket"],
@@ -9362,17 +9380,40 @@ var require_client = __commonJS({
           data.forEach((u) => {
             if (!users[u.id]) users[u.id] = u.name;
           });
+          if (am_i_host && data.length === 0 && !documentLoaded) {
+            documentLoaded = true;
+            socket.emit("doc-ready", { seq: lastAppliedSeq });
+          }
           if (userUpdateCallback) userUpdateCallback();
         });
         socket.on("is-host", (is_host) => {
+          const wasHost = am_i_host;
           am_i_host = is_host;
-          if (!am_i_host) fachada2.disableHostOptions();
-          if (am_i_host) fachada2.hideLoadingOverlay();
-          if (am_i_host) fachada2.INFO("You're the host");
+          if (!am_i_host) {
+            fachada2.disableHostOptions();
+            return;
+          }
+          fachada2.enableHostOptions();
+          fachada2.INFO("You're the host");
+          if (!wasHost && documentLoaded) {
+            fachada2.showLoadingOverlay();
+            if (promotionDocTimer) clearTimeout(promotionDocTimer);
+            promotionDocTimer = setTimeout(() => {
+              promotionDocTimer = null;
+              fachada2.hideLoadingOverlay();
+            }, PROMOTION_DOC_TIMEOUT_MS);
+          }
+          documentSynced = true;
         });
         socket.on("host-left", () => {
           console.log("[LS] Host left, session continues with new host");
           fachada2.WARN("Host changed. A new host has been assigned.");
+        });
+        socket.on("new-host", (newHostId) => {
+          console.log("[LS] New host assigned:", newHostId);
+          if (users[newHostId]) {
+            fachada2.INFO(`${users[newHostId]} is now the host`);
+          }
         });
         socket.on("room-assigned", async (id) => {
           console.log("[LS] Room assigned: " + id);
@@ -9387,13 +9428,39 @@ var require_client = __commonJS({
           if (latencyUpdateCallback) latencyUpdateCallback(currentLatency);
         });
         socket.on("room-seq", (currentSeq) => {
-          if (currentSeq < lastAppliedSeq) {
+          lastKnownRoomSeq = currentSeq;
+          const retainedRegressed = current_room === retainedRoom && retainedSeq > 0 && currentSeq < retainedSeq;
+          if ((currentSeq < lastAppliedSeq || retainedRegressed) && documentLoaded) {
             console.log(
-              `[LS] Sequence reset: was ${lastAppliedSeq}, now ${currentSeq}`
+              `[LS] Sequence reset: was ${Math.max(lastAppliedSeq, retainedSeq)}, now ${currentSeq}`
             );
             lastAppliedSeq = 0;
+            documentSynced = false;
+            documentLoaded = false;
+            pendingGapOp = null;
+            lastFailedApplySeq = null;
+            lastFailedApplyAt = 0;
+            ownOpLog = [];
+            retainedRoom = null;
+            retainedSeq = 0;
+            requestDocument();
           }
-          if (currentSeq > lastAppliedSeq) {
+          if (currentSeq > lastAppliedSeq && documentSynced && documentLoaded && !pendingGapOp) {
+            if (current_room === retainedRoom && retainedSeq > 0) {
+              if (currentSeq <= retainedSeq) {
+                console.log(
+                  `[LS] Retained repo already has ops up to ${retainedSeq}, advancing`
+                );
+                lastAppliedSeq = currentSeq;
+                return;
+              }
+              console.log(
+                `[LS] Room advanced beyond retained ${retainedSeq}, catching up`
+              );
+              lastAppliedSeq = Math.max(lastAppliedSeq, retainedSeq);
+              retainedRoom = null;
+              retainedSeq = 0;
+            }
             console.log(
               `[LS] Requesting missed ops: ${lastAppliedSeq + 1} to ${currentSeq}`
             );
@@ -9401,12 +9468,95 @@ var require_client = __commonJS({
           }
         });
         socket.on("missed-ops", (data) => {
-          if (!data.ops || data.ops.length === 0) return;
+          const gapOp = pendingGapOp;
+          pendingGapOp = null;
+          if (!data.ops || data.ops.length === 0) {
+            if (gapOp) {
+              console.warn("[LS] Missed ops reply empty, dropped queued gap op");
+            }
+            if (lastKnownRoomSeq > lastAppliedSeq) {
+              console.warn("[LS] Missed ops unavailable, requesting full document");
+              requestDocument();
+            }
+            return;
+          }
           console.log(`[LS] Applying ${data.ops.length} missed operations`);
           data.ops.sort((a, b) => a.seq - b.seq);
+          let expectedSeq = lastAppliedSeq;
+          let headGap = false;
+          for (const entry of data.ops) {
+            if (entry.seq <= expectedSeq) continue;
+            if (entry.seq > expectedSeq + 1) {
+              headGap = true;
+              break;
+            }
+            expectedSeq = entry.seq;
+          }
+          if (headGap) {
+            console.warn(
+              "[LS] Missed ops reply is not contiguous (history pruned), requesting full document"
+            );
+            requestDocument();
+            return;
+          }
+          let applyFailed = false;
+          let failedSeq = null;
           data.ops.forEach((entry) => {
-            applyRemoteOperationWithSeq(entry.seq, entry.operation);
+            if (entry.socketId === socket.id) {
+              if (applyFailed) return;
+              lastAppliedSeq = Math.max(lastAppliedSeq, entry.seq);
+              return;
+            }
+            if (entry.seq <= lastAppliedSeq) return;
+            if (!applyRemoteOperationWithSeq(entry.seq, entry.operation)) {
+              applyFailed = true;
+              if (failedSeq === null) failedSeq = entry.seq;
+            }
           });
+          if (applyFailed) {
+            const repeatedWithinWindow = failedSeq === lastFailedApplySeq && Date.now() - lastFailedApplyAt < 5e3;
+            if (repeatedWithinWindow) {
+              console.error(
+                `[LS] Operation ${failedSeq} failed again, not requesting another document yet`
+              );
+              return;
+            }
+            lastFailedApplySeq = failedSeq;
+            lastFailedApplyAt = Date.now();
+            console.warn(
+              "[LS] Failed to apply a missed operation, requesting full document"
+            );
+            requestDocument(true);
+            return;
+          }
+          lastFailedApplySeq = null;
+          if (lastAppliedSeq < lastKnownRoomSeq) {
+            const roomSeqAtReply = lastKnownRoomSeq;
+            setTimeout(() => {
+              if (lastAppliedSeq < roomSeqAtReply && socket && socket.connected) {
+                console.warn(
+                  "[LS] Missed ops partial (history pruned), requesting full document"
+                );
+                requestDocument();
+              }
+            }, 300);
+            return;
+          }
+          if (gapOp && !data.ops.some((entry) => entry.seq === gapOp.seq)) {
+            console.warn(
+              `[LS] Gap op seq ${gapOp.seq} not in history, requesting full document`
+            );
+            if (lastKnownRoomSeq > lastAppliedSeq) requestDocument();
+          }
+        });
+        socket.on("sync-ack", (data) => {
+          serverSupportsSyncAck = true;
+          syncAckCount++;
+          const entry = ownOpLog.find((e) => e.emitIdx === syncAckCount - 1);
+          if (entry) entry.seq = data.seq;
+        });
+        socket.on("sync-capabilities", (caps) => {
+          serverSupportsSyncAck = caps && caps.syncAck === true;
         });
         socket.on("update-mouse-pos", (data) => {
           if (data.id === socket.id) return;
@@ -9450,18 +9600,34 @@ var require_client = __commonJS({
           try {
             const projectObj = app.project.getProject();
             const cleanObject = app.repository.writeObject(projectObj);
-            const str = flatted2.stringify(cleanObject);
+            const str = flatted.stringify(cleanObject);
             socket.emit("host-delivers-document", {
               to: data.requesterId,
-              json: str
+              json: str,
+              seq: lastAppliedSeq,
+              forEviction: data.forEviction === true
             });
           } catch (err) {
             fachada2.ERR("Error sending whole document.");
           }
         });
         socket.on("load-whole-document", (data) => {
+          const wasLoaded = documentLoaded;
+          if (promotionDocTimer) {
+            clearTimeout(promotionDocTimer);
+            promotionDocTimer = null;
+          }
+          if (data.seq !== void 0 && data.seq <= lastAppliedSeq && documentLoaded) {
+            const evictionLoad = data.forEviction === true && current_room !== retainedRoom;
+            if (!evictionLoad) {
+              ownOpLog = [];
+              socket.emit("doc-ready", { seq: lastAppliedSeq });
+              fachada2.hideLoadingOverlay();
+              return;
+            }
+          }
           try {
-            const projectObj = flatted2.parse(data.json);
+            const projectObj = flatted.parse(data.json);
             let openDiagramIds = [];
             let activeDiagramId = null;
             try {
@@ -9475,8 +9641,11 @@ var require_client = __commonJS({
               console.warn("[LS] Could not save workspace state", e);
             }
             app.repository.bypassConfirmation = true;
-            app.project.loadFromJson(projectObj);
-            app.repository.bypassConfirmation = false;
+            try {
+              app.project.loadFromJson(projectObj);
+            } finally {
+              app.repository.bypassConfirmation = false;
+            }
             try {
               openDiagramIds.forEach((id) => {
                 const diag = app.repository.get(id);
@@ -9493,6 +9662,41 @@ var require_client = __commonJS({
             } catch (e) {
               console.warn("[LS] Could not restore workspace state", e);
             }
+            if (data.seq !== void 0) {
+              lastAppliedSeq = data.seq;
+            }
+            documentSynced = true;
+            documentLoaded = true;
+            pendingGapOp = null;
+            lastFailedApplySeq = null;
+            lastFailedApplyAt = 0;
+            retainedRoom = null;
+            retainedSeq = 0;
+            const pendingOwnOps = ownOpLog;
+            ownOpLog = [];
+            const loadedSeq = data.seq !== void 0 ? data.seq : lastAppliedSeq;
+            remoteOpInProgress = true;
+            try {
+              pendingOwnOps.forEach((entry) => {
+                if (entry.seq !== null && entry.seq <= loadedSeq) return;
+                if (entry.seq === null && !serverSupportsSyncAck && wasLoaded) {
+                  return;
+                }
+                try {
+                  app.repository.doOperation(entry.operation);
+                } catch (e) {
+                  console.warn("[LS] Replay pending own op failed:", e);
+                }
+              });
+            } finally {
+              remoteOpInProgress = false;
+            }
+            app.diagrams.repaint();
+            updateAllHighlights();
+            socket.emit("doc-ready", { seq: lastAppliedSeq });
+            if (data.seq !== void 0 && lastKnownRoomSeq > data.seq) {
+              socket.emit("request-missed-ops", { fromSeq: data.seq });
+            }
             fachada2.INFO("Document synchronized.");
           } catch (err) {
             fachada2.ERR("Error loading remote document:", err);
@@ -9502,20 +9706,42 @@ var require_client = __commonJS({
           }
         });
         socket.on("remote-operation", (data) => {
-          remoteOpInProgress = true;
-          try {
-            const isOwn = data.socketId === socket.id;
-            if (!isOwn) {
-              const operation = flatted2.parse(data.operation);
-              app.repository.doOperation(operation);
+          const isOwn = data.socketId === socket.id;
+          if (isOwn) {
+            if (documentSynced && data.seq > lastAppliedSeq && !pendingGapOp) {
+              lastAppliedSeq = data.seq;
             }
-            lastAppliedSeq = data.seq;
             app.diagrams.repaint();
             updateAllHighlights();
+            return;
+          }
+          if (data.seq <= lastAppliedSeq) return;
+          if (!documentSynced) return;
+          if (data.seq > lastAppliedSeq + 1) {
+            const hadGap = !!pendingGapOp;
+            if (!hadGap || data.seq > pendingGapOp.seq) {
+              pendingGapOp = { operation: data.operation, seq: data.seq };
+            }
+            if (!hadGap) {
+              console.log(
+                `[LS] Detected gap: ${lastAppliedSeq} -> ${data.seq}, queuing op and requesting missed ops`
+              );
+              socket.emit("request-missed-ops", { fromSeq: lastAppliedSeq });
+            }
+            return;
+          }
+          remoteOpInProgress = true;
+          try {
+            const operation = flatted.parse(data.operation);
+            app.repository.doOperation(operation);
+            lastAppliedSeq = data.seq;
           } catch (err) {
             console.error("[LS] Operation Error:", err);
           } finally {
             remoteOpInProgress = false;
+            remoteOpEndTime = Date.now();
+            app.diagrams.repaint();
+            updateAllHighlights();
           }
         });
         socket.on("element-locked", ({ viewId, ownerId, color }) => {
@@ -9539,18 +9765,10 @@ var require_client = __commonJS({
         });
         socket.on("connect", () => {
           address = url;
+          syncAckCount = syncOpEmissionCount;
           cursors.addMouseMovementSharing(sendMousePosition);
           fachada2.showLoadingOverlay();
-          if (socket.recovered) {
-            fachada2.INFO("Connection recovered!");
-          }
           startPingMeasurement();
-          if (socket.io && socket.io.engine) {
-            socket.io.engine.on("pong", (latency) => {
-              currentLatency = Math.round(latency);
-              if (latencyUpdateCallback) latencyUpdateCallback(currentLatency);
-            });
-          }
         });
         socket.on("disconnect", (reason) => {
           console.log("[LS] Socket disconnected, reason:", reason);
@@ -9577,47 +9795,67 @@ var require_client = __commonJS({
       });
     }
     function applyRemoteOperationWithSeq(seq, opStr) {
-      if (seq <= lastAppliedSeq) return;
+      if (seq <= lastAppliedSeq) return true;
       remoteOpInProgress = true;
       try {
-        const operation = flatted2.parse(opStr);
+        const operation = flatted.parse(opStr);
         app.repository.doOperation(operation);
         lastAppliedSeq = seq;
-        app.diagrams.repaint();
-        updateAllHighlights();
+        return true;
       } catch (err) {
         console.error("[LS] Operation Error:", err);
+        return false;
       } finally {
         remoteOpInProgress = false;
+        remoteOpEndTime = Date.now();
+        app.diagrams.repaint();
+        updateAllHighlights();
       }
     }
     var handleOperation = (operation) => {
       if (remoteOpInProgress || app.repository.bypassConfirmation) return;
       if (socket && socket.connected && current_room) {
-        const str = flatted2.stringify(operation);
+        if (ownOpLog.length >= MAX_OWN_OP_LOG) {
+          const ackedIdx = ownOpLog.findIndex((e) => e.seq !== null);
+          if (ackedIdx !== -1) {
+            ownOpLog.splice(ackedIdx, 1);
+          } else if (!serverSupportsSyncAck) {
+            ownOpLog.shift();
+          }
+        }
+        ownOpLog.push({
+          operation,
+          seq: null,
+          emitIdx: syncOpEmissionCount
+        });
+        const str = flatted.stringify(operation);
         socket.emit("sync-operation", str);
+        syncOpEmissionCount++;
       }
     };
     var handleSelection = (models, views) => {
       if (!socket || !socket.connected) return;
-      if (remoteOpInProgress) return;
+      const viewIds = views && views.length > 0 ? views.map((v) => v._id) : null;
       if (selectionDebounceTimer) {
         clearTimeout(selectionDebounceTimer);
       }
-      selectionDebounceTimer = setTimeout(() => {
+      const emitLockChange = () => {
+        if (remoteOpInProgress) {
+          selectionDebounceTimer = setTimeout(emitLockChange, 50);
+          return;
+        }
         selectionDebounceTimer = null;
-        if (views && views.length > 0) {
-          socket.emit(
-            "lock-element",
-            views.map((v) => v._id)
-          );
+        if (viewIds) {
+          socket.emit("lock-element", viewIds);
         } else {
           socket.emit("unlock-elements");
         }
-      }, 80);
-    };
-    var handleCommands = (commandId) => {
-      if (remoteOpInProgress || !socket || !socket.connected) return;
+      };
+      const wait = Math.max(
+        80,
+        remoteOpEndTime + REMOTE_OP_DEBOUNCE_MS - Date.now()
+      );
+      selectionDebounceTimer = setTimeout(emitLockChange, wait);
     };
     function onDiagramChanged() {
       updateAllHighlights();
@@ -9626,7 +9864,6 @@ var require_client = __commonJS({
     function addChangesHook() {
       removeChangesHook();
       app.repository.on("operationExecuted", handleOperation);
-      app.commands.on("afterExecute", handleCommands);
       app.selections.on("selectionChanged", handleSelection);
       app.diagrams.on("currentDiagramChanged", onDiagramChanged);
       const diagramArea = app.diagrams.$diagramArea[0];
@@ -9668,8 +9905,6 @@ var require_client = __commonJS({
         };
         if (!lastKnownMouse.diagram) {
           lastKnownMouse.diagram = currentDiagram._id;
-          lastKnownMouse.x = currentDiagram._originX;
-          lastKnownMouse.y = currentDiagram._originY;
         }
       }
       viewportWatcherInterval = setInterval(
@@ -9686,13 +9921,14 @@ var require_client = __commonJS({
     function syncViewportThrottled() {
       const now = Date.now();
       if (now - lastViewportSyncTime >= VIEWPORT_SYNC_THROTTLE) {
-        sendMousePosition(lastKnownMouse);
+        const hasMouse = lastKnownMouse.x != null && lastKnownMouse.y != null;
+        const payload = hasMouse ? lastKnownMouse : getCurrentViewportData();
+        if (payload) sendMousePosition(payload);
         lastViewportSyncTime = now;
       }
     }
     function removeChangesHook() {
       app.repository.off("operationExecuted", handleOperation);
-      app.commands.off("afterExecute", handleCommands);
       app.selections.off("selectionChanged", handleSelection);
       app.diagrams.off("currentDiagramChanged", onDiagramChanged);
       const diagramArea = app.diagrams.$diagramArea[0];
@@ -9700,23 +9936,47 @@ var require_client = __commonJS({
         diagramArea.removeEventListener("wheel", onDiagramWheel);
         diagramArea.removeEventListener("mousedown", onDiagramMouseDown);
       }
+      cleanupPanListeners();
     }
     var isPanning = false;
+    var panningSafetyTimer = null;
+    var panMoveHandler = null;
+    var panUpHandler = null;
+    function cleanupPanListeners() {
+      if (panMoveHandler) {
+        window.removeEventListener("mousemove", panMoveHandler);
+        panMoveHandler = null;
+      }
+      if (panUpHandler) {
+        window.removeEventListener("mouseup", panUpHandler);
+        panUpHandler = null;
+      }
+      if (panningSafetyTimer) {
+        clearTimeout(panningSafetyTimer);
+        panningSafetyTimer = null;
+      }
+      isPanning = false;
+    }
     function onDiagramMouseDown() {
+      cleanupPanListeners();
       isPanning = true;
-      const onMouseMove = () => {
+      const armPanningSafety = () => {
+        if (panningSafetyTimer) clearTimeout(panningSafetyTimer);
+        panningSafetyTimer = setTimeout(cleanupPanListeners, 3e3);
+      };
+      panMoveHandler = () => {
         if (isPanning) {
+          armPanningSafety();
           updateAllHighlights();
           syncViewportThrottled();
         }
       };
-      const onMouseUp = () => {
-        isPanning = false;
-        window.removeEventListener("mousemove", onMouseMove);
-        window.removeEventListener("mouseup", onMouseUp);
+      panUpHandler = () => {
+        cleanupPanListeners();
       };
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("mouseup", onMouseUp);
+      window.addEventListener("mousemove", panMoveHandler);
+      window.addEventListener("mouseup", panUpHandler);
+      armPanningSafety();
     }
     function highlightElement(viewId, color) {
       const view = app.repository.get(viewId);
@@ -9784,6 +10044,7 @@ var require_client = __commonJS({
       if (!(socket && socket.connected)) return;
       try {
         const { x, y, diagram } = mouseData;
+        if (x == null || y == null) return;
         lastKnownMouse.x = x;
         lastKnownMouse.y = y;
         lastKnownMouse.diagram = diagram;
@@ -9804,7 +10065,11 @@ var require_client = __commonJS({
         console.error("[LS] Error sending mouse position:", e);
       }
     }
-    function requestDocument() {
+    function requestDocument(fromFailure = false) {
+      if (!fromFailure) {
+        lastFailedApplySeq = null;
+        lastFailedApplyAt = 0;
+      }
       if (!(socket && socket.connected)) return;
       fachada2.showLoadingOverlay();
       socket.emit("request-doc");
@@ -9837,6 +10102,8 @@ var require_client = __commonJS({
       }
       currentLatency = -1;
       address = "";
+      retainedRoom = current_room;
+      retainedSeq = lastAppliedSeq;
       current_room = null;
       stopViewportWatcher();
       removeAllHighlights();
@@ -9849,10 +10116,27 @@ var require_client = __commonJS({
       am_i_host = false;
       followingUserId = null;
       remoteOpInProgress = false;
+      lastAppliedSeq = 0;
+      documentSynced = false;
+      documentLoaded = false;
+      lastKnownRoomSeq = 0;
+      ownOpLog = [];
+      syncOpEmissionCount = 0;
+      syncAckCount = 0;
+      serverSupportsSyncAck = false;
+      remoteOpEndTime = 0;
+      pendingGapOp = null;
+      lastFailedApplySeq = null;
+      lastFailedApplyAt = 0;
+      if (promotionDocTimer) {
+        clearTimeout(promotionDocTimer);
+        promotionDocTimer = null;
+      }
       if (selectionDebounceTimer) {
         clearTimeout(selectionDebounceTimer);
         selectionDebounceTimer = null;
       }
+      cleanupPanListeners();
       notifyDisconnect();
     }
     function getConnectedAddress() {
@@ -9884,7 +10168,6 @@ var require_client = __commonJS({
           console.warn("[LS] Could not restore grid preference");
         }
         removeFollowEffects();
-        stopFollowAnimation();
       } else if (!followingUserId && id) {
         try {
           originalGridVisible = app.preferences.get("diagramEditor.showGrid");
@@ -9894,9 +10177,9 @@ var require_client = __commonJS({
         }
         const diag = app.diagrams.getCurrentDiagram();
         if (diag) {
-          currentCamera.x = diag._originX;
-          currentCamera.y = diag._originY;
-          currentCamera.zoom = app.diagrams.getZoomLevel();
+          targetCamera.x = diag._originX;
+          targetCamera.y = diag._originY;
+          targetCamera.zoom = app.diagrams.getZoomLevel();
         }
         applyFollowEffects(id);
         if (socket && socket.connected) {
@@ -9914,20 +10197,51 @@ var require_client = __commonJS({
       try {
         const currentDiagram = app.diagrams.getCurrentDiagram();
         const zoom = app.diagrams.getZoomLevel();
+        const diagramArea = app.diagrams.$diagramArea[0];
+        const canvas = diagramArea ? diagramArea.querySelector("svg") : null;
+        const vw = canvas ? canvas.clientWidth : window.innerWidth - SIDEBAR_WIDTH;
+        const vh = canvas ? canvas.clientHeight : window.innerHeight;
+        const originX = currentDiagram ? currentDiagram._originX : 0;
+        const originY = currentDiagram ? currentDiagram._originY : 0;
+        const centerX = originX + vw / 2 / zoom;
+        const centerY = originY + vh / 2 / zoom;
         return {
-          x: lastKnownMouse.x,
-          y: lastKnownMouse.y,
+          x: lastKnownMouse.x != null ? lastKnownMouse.x : centerX,
+          y: lastKnownMouse.y != null ? lastKnownMouse.y : centerY,
           diagram: currentDiagram ? currentDiagram._id : null,
           zoom,
-          originX: currentDiagram ? currentDiagram._originX : 0,
-          originY: currentDiagram ? currentDiagram._originY : 0
+          originX,
+          originY
         };
       } catch (e) {
         console.error("[LS] Error getting current viewport data:", e);
         return null;
       }
     }
-    var FOLLOW_SCROLL_THRESHOLD = 200;
+    var FOLLOW_SCROLL_THRESHOLD = 100;
+    function startFollowAnimation() {
+      if (followAnimationFrame) return;
+      function animate() {
+        followAnimationFrame = null;
+        const diag = app.diagrams.getCurrentDiagram();
+        if (!diag || !followingUserId) return;
+        const dx = targetCamera.x - diag._originX;
+        const dy = targetCamera.y - diag._originY;
+        const dz = targetCamera.zoom - app.diagrams.getZoomLevel();
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(dz) < 1e-3) {
+          return;
+        }
+        if (Math.abs(dz) > 1e-3) {
+          app.diagrams.setZoomLevel(app.diagrams.getZoomLevel() + dz * LERP_SPEED);
+        }
+        app.diagrams.scrollTo(
+          diag._originX + dx * LERP_SPEED,
+          diag._originY + dy * LERP_SPEED
+        );
+        followAnimationFrame = requestAnimationFrame(animate);
+      }
+      followAnimationFrame = requestAnimationFrame(animate);
+    }
     function applyViewportSync(data, force = false) {
       try {
         const currentDiagram = app.diagrams.getCurrentDiagram();
@@ -9946,7 +10260,7 @@ var require_client = __commonJS({
         }
         const diagramArea = app.diagrams.$diagramArea[0];
         const canvas = diagramArea ? diagramArea.querySelector("svg") : null;
-        const viewWidth = canvas ? canvas.clientWidth : window.innerWidth - 220;
+        const viewWidth = canvas ? canvas.clientWidth : window.innerWidth - SIDEBAR_WIDTH;
         const viewHeight = canvas ? canvas.clientHeight : window.innerHeight;
         const targetOriginX = mouseX - viewWidth / 2 / zoom;
         const targetOriginY = mouseY - viewHeight / 2 / zoom;
@@ -9955,9 +10269,6 @@ var require_client = __commonJS({
           if (targetDiag && targetDiag instanceof type.Diagram) {
             app.diagrams.setCurrentDiagram(targetDiag);
             app.diagrams.repaint();
-            currentCamera.x = targetOriginX;
-            currentCamera.y = targetOriginY;
-            currentCamera.zoom = zoom;
           }
         }
         targetCamera.x = targetOriginX;
@@ -9975,45 +10286,12 @@ var require_client = __commonJS({
         if (shouldScroll) {
           if (zoomDiff > ZOOM_PRECISION || force) {
             app.diagrams.setZoomLevel(targetCamera.zoom);
-            currentCamera.zoom = targetCamera.zoom;
           }
           startFollowAnimation();
           updateAllHighlights();
         }
       } catch (e) {
         console.error("[LS] Error syncing viewport following user:", e);
-      }
-    }
-    function startFollowAnimation() {
-      if (followAnimationFrame) return;
-      function animate() {
-        const diag = app.diagrams.getCurrentDiagram();
-        if (!diag || !followingUserId) {
-          followAnimationFrame = null;
-          return;
-        }
-        const dx = targetCamera.x - diag._originX;
-        const dy = targetCamera.y - diag._originY;
-        const dz = targetCamera.zoom - app.diagrams.getZoomLevel();
-        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(dz) < 1e-3) {
-          followAnimationFrame = null;
-          return;
-        }
-        if (Math.abs(dz) > 1e-3) {
-          app.diagrams.setZoomLevel(app.diagrams.getZoomLevel() + dz * LERP_SPEED);
-        }
-        app.diagrams.scrollTo(
-          diag._originX + dx * LERP_SPEED,
-          diag._originY + dy * LERP_SPEED
-        );
-        followAnimationFrame = requestAnimationFrame(animate);
-      }
-      followAnimationFrame = requestAnimationFrame(animate);
-    }
-    function stopFollowAnimation() {
-      if (followAnimationFrame) {
-        cancelAnimationFrame(followAnimationFrame);
-        followAnimationFrame = null;
       }
     }
     function applyFollowEffects(targetId) {
@@ -27525,10 +27803,12 @@ var require_server2 = __commonJS({
   "js/server.js"(exports2, module2) {
     var { Server } = require_dist2();
     var http = require("http");
+    var { randomBytes } = require("crypto");
     var { networkInterfaces } = require("os");
     var server = null;
     var defaultPort = 6789;
     var MAX_OP_HISTORY = 500;
+    var EVICTION_HANDOVER_TIMEOUT = 15e3;
     var LiveShareServer = class {
       constructor() {
         this.io = null;
@@ -27539,6 +27819,7 @@ var require_server2 = __commonJS({
         this.rooms = {};
         this.roomSeqs = {};
         this.opHistory = {};
+        this.pendingEvictions = {};
       }
       start(port = 3e3) {
         return new Promise((resolve, reject) => {
@@ -27554,7 +27835,7 @@ var require_server2 = __commonJS({
             let room_id = socket.handshake.auth.room;
             console.log(`[LS] User connected: ${username}, ${socket.id}`);
             if (!room_id || room_id == -1 || room_id === "-1" || room_id === "null") {
-              room_id = "room_" + Math.random().toString(36).substring(2, 10);
+              room_id = "room_" + randomBytes(16).toString("hex");
               console.log(`[LS] Room created: ${room_id}`);
             }
             await socket.join(room_id);
@@ -27563,10 +27844,48 @@ var require_server2 = __commonJS({
             }
             if (!this.roomSeqs[room_id]) this.roomSeqs[room_id] = 0;
             if (!this.opHistory[room_id]) this.opHistory[room_id] = [];
+            let handoverPending = false;
             for (const [sid] of Object.entries(this.rooms[room_id].users)) {
               if (sid !== socket.id && this.users[sid] && this.users[sid].name === username) {
                 delete this.rooms[room_id].users[sid];
                 delete this.users[sid];
+                for (let id in this.rooms[room_id].locks) {
+                  if (this.rooms[room_id].locks[id] === sid) {
+                    delete this.rooms[room_id].locks[id];
+                    this.io.to(room_id).emit("element-unlocked", { viewId: id });
+                  }
+                }
+                socket.to(room_id).emit("user-left", sid);
+                let deferDisconnect = false;
+                if (this.rooms[room_id].host_id === sid) {
+                  this.io.to(room_id).emit("host-left", { oldHostId: sid });
+                  const remaining = Object.keys(this.rooms[room_id].users);
+                  if (remaining.length > 0) {
+                    this.promoteHost(room_id, remaining[0], {
+                      evictionHandover: true
+                    });
+                    this.requestEvictionHandover(
+                      room_id,
+                      sid,
+                      remaining[0],
+                      socket.id
+                    );
+                  } else {
+                    this.rooms[room_id].host_id = socket.id;
+                    this.requestEvictionHandover(
+                      room_id,
+                      sid,
+                      socket.id,
+                      socket.id
+                    );
+                  }
+                  deferDisconnect = true;
+                  handoverPending = true;
+                }
+                if (!deferDisconnect) {
+                  const evictedSocket = this.io.sockets.sockets.get(sid);
+                  if (evictedSocket) evictedSocket.disconnect(true);
+                }
               }
             }
             const isHost = socket.id === this.rooms[room_id].host_id;
@@ -27576,29 +27895,53 @@ var require_server2 = __commonJS({
               name: username,
               isHost,
               room: room_id,
+              docReady: false,
               color: "#" + Math.floor(Math.random() * 16777215).toString(16)
             };
             socket.emit("is-host", isHost);
             socket.emit("room-assigned", room_id);
+            socket.emit("sync-capabilities", { syncAck: true });
             socket.emit("room-seq", this.roomSeqs[room_id]);
             const roomUsers = this.rooms[room_id].users;
             const otherUsers = Object.keys(roomUsers).filter((uid) => uid !== socket.id).map((uid) => ({
               id: uid,
               name: this.users[uid] ? this.users[uid].name : "Anonymous"
             }));
-            socket.emit("current-users", otherUsers);
+            if (!handoverPending) {
+              socket.emit("current-users", otherUsers);
+            }
             socket.to(room_id).emit("user-joined", { id: socket.id, name: username });
-            if (!isHost && this.rooms[room_id].host_id) {
+            if (!isHost && !handoverPending && this.rooms[room_id].host_id) {
               this.io.to(this.rooms[room_id].host_id).emit("get-whole-document", { requesterId: socket.id });
             }
+            socket.on("doc-ready", () => {
+              const userData = this.users[socket.id];
+              if (userData) userData.docReady = true;
+            });
             socket.on("latency-check", () => {
               socket.emit("latency-response");
             });
             socket.on("host-delivers-document", (data) => {
-              this.io.to(data.to).emit("load-whole-document", { json: data.json });
+              if (this.users[data.to]) this.users[data.to].docReady = false;
+              if (data.seq === void 0) {
+                this.io.to(data.to).emit("load-whole-document", {
+                  json: data.json
+                });
+              } else {
+                this.io.to(data.to).emit("load-whole-document", {
+                  json: data.json,
+                  seq: data.seq,
+                  forEviction: data.forEviction === true
+                });
+              }
+              if (data.forEviction === true && this.pendingEvictions[socket.id]) {
+                this.resolveEviction(socket.id);
+              }
             });
             socket.on("client-mouse-moved", (data) => {
-              socket.to(this.users[socket.id].room).emit("update-mouse-pos", {
+              const userData = this.users[socket.id];
+              if (!userData || !userData.room) return;
+              socket.to(userData.room).emit("update-mouse-pos", {
                 id: socket.id,
                 x: data.x,
                 y: data.y,
@@ -27606,7 +27949,7 @@ var require_server2 = __commonJS({
                 zoom: data.zoom,
                 originX: data.originX,
                 originY: data.originY,
-                name: this.users[socket.id].name
+                name: userData.name
               });
             });
             socket.on("request-follow-sync", (data) => {
@@ -27625,10 +27968,11 @@ var require_server2 = __commonJS({
               }
             });
             socket.on("request-doc", () => {
-              console.log(
-                `[LS] ${this.users[socket.id].name} requested the whole doc.`
-              );
-              this.io.to(this.rooms[this.users[socket.id].room].host_id).emit("get-whole-document", { requesterId: socket.id });
+              const userData = this.users[socket.id];
+              if (!userData || !this.rooms[userData.room]) return;
+              userData.docReady = false;
+              console.log(`[LS] ${userData.name} requested the whole doc.`);
+              this.io.to(this.rooms[userData.room].host_id).emit("get-whole-document", { requesterId: socket.id });
             });
             socket.on("sync-operation", (opStr) => {
               const userData = this.users[socket.id];
@@ -27652,6 +27996,8 @@ var require_server2 = __commonJS({
                 operation: opStr,
                 socketId: socket.id
               });
+              socket.emit("sync-ack", { seq });
+              this.io.to(room_id2).emit("room-seq", seq);
             });
             socket.on("request-missed-ops", (data) => {
               const userData = this.users[socket.id];
@@ -27664,11 +28010,13 @@ var require_server2 = __commonJS({
                 console.log(
                   `[LS] Sending ${missed.length} missed ops to ${userData.name} (from seq ${fromSeq})`
                 );
-                socket.emit("missed-ops", { ops: missed });
               }
+              socket.emit("missed-ops", { ops: missed });
             });
             socket.on("lock-element", (viewIds) => {
-              const room_id2 = this.users[socket.id].room;
+              const userData = this.users[socket.id];
+              if (!userData || !userData.room) return;
+              const room_id2 = userData.room;
               if (!this.rooms[room_id2]) return;
               viewIds.forEach((id) => {
                 if (this.rooms[room_id2].locks[id]) return;
@@ -27676,12 +28024,14 @@ var require_server2 = __commonJS({
                 this.io.to(room_id2).emit("element-locked", {
                   viewId: id,
                   ownerId: socket.id,
-                  color: this.users[socket.id].color
+                  color: userData.color
                 });
               });
             });
             socket.on("unlock-elements", () => {
-              const room_id2 = this.users[socket.id].room;
+              const userData = this.users[socket.id];
+              if (!userData || !userData.room) return;
+              const room_id2 = userData.room;
               if (!this.rooms[room_id2]) return;
               for (let id in this.rooms[room_id2].locks) {
                 if (this.rooms[room_id2].locks[id] === socket.id) {
@@ -27691,33 +28041,35 @@ var require_server2 = __commonJS({
               }
             });
             socket.on("disconnect", () => {
+              if (this.pendingEvictions[socket.id]) {
+                this.resolveEviction(socket.id);
+                return;
+              }
               const userData = this.users[socket.id];
               if (!userData) return;
               const room_id2 = userData.room;
-              if (!this.rooms[room_id2]) return;
-              for (let id in this.rooms[room_id2].locks) {
-                if (this.rooms[room_id2].locks[id] === socket.id) {
-                  delete this.rooms[room_id2].locks[id];
-                  this.io.to(room_id2).emit("element-unlocked", { viewId: id });
+              if (this.rooms[room_id2]) {
+                for (let id in this.rooms[room_id2].locks) {
+                  if (this.rooms[room_id2].locks[id] === socket.id) {
+                    delete this.rooms[room_id2].locks[id];
+                    this.io.to(room_id2).emit("element-unlocked", { viewId: id });
+                  }
                 }
-              }
-              console.log(`[LS] ${userData.name}, ${socket.id} left.`);
-              socket.to(room_id2).emit("user-left", socket.id);
-              delete this.rooms[room_id2].users[socket.id];
-              let remainingUsers = Object.keys(this.rooms[room_id2].users);
-              if (this.rooms[room_id2].host_id === socket.id) {
-                this.io.to(room_id2).emit("host-left", { oldHostId: socket.id });
-                if (remainingUsers.length > 0) {
-                  let new_host = remainingUsers[0];
-                  this.rooms[room_id2].host_id = new_host;
-                  this.users[new_host].isHost = true;
-                  this.io.to(new_host).emit("is-host", true);
+                console.log(`[LS] ${userData.name}, ${socket.id} left.`);
+                socket.to(room_id2).emit("user-left", socket.id);
+                delete this.rooms[room_id2].users[socket.id];
+                let remainingUsers = Object.keys(this.rooms[room_id2].users);
+                if (this.rooms[room_id2].host_id === socket.id) {
+                  this.io.to(room_id2).emit("host-left", { oldHostId: socket.id });
+                  if (remainingUsers.length > 0) {
+                    this.promoteHost(room_id2, remainingUsers[0]);
+                  }
                 }
-              }
-              if (remainingUsers.length === 0) {
-                delete this.rooms[room_id2];
-                delete this.roomSeqs[room_id2];
-                delete this.opHistory[room_id2];
+                if (remainingUsers.length === 0) {
+                  delete this.rooms[room_id2];
+                  delete this.roomSeqs[room_id2];
+                  delete this.opHistory[room_id2];
+                }
               }
               delete this.users[socket.id];
             });
@@ -27734,7 +28086,97 @@ var require_server2 = __commonJS({
           });
         });
       }
+      requestEvictionHandover(room_id, evictedSid, receiverId, joinerId) {
+        const timer = setTimeout(() => {
+          console.log("[LS] Eviction handover timed out");
+          this.resolveEviction(evictedSid);
+        }, EVICTION_HANDOVER_TIMEOUT);
+        this.pendingEvictions[evictedSid] = {
+          timer,
+          receiverId,
+          joinerId,
+          roomId: room_id
+        };
+        this.io.to(evictedSid).emit("get-whole-document", {
+          requesterId: receiverId,
+          forEviction: true
+        });
+      }
+      resolveEviction(evictedSid) {
+        const pending = this.pendingEvictions[evictedSid];
+        if (!pending) return;
+        clearTimeout(pending.timer);
+        delete this.pendingEvictions[evictedSid];
+        const evictedSocket = this.io.sockets.sockets.get(evictedSid);
+        if (evictedSocket && evictedSocket.connected) {
+          evictedSocket.disconnect(true);
+        }
+        const room = this.rooms[pending.roomId];
+        if (!room) return;
+        const userListFor = (uid) => Object.keys(room.users).filter((id) => id !== uid).map((id) => ({
+          id,
+          name: this.users[id] ? this.users[id].name : "Anonymous"
+        }));
+        const receiver = this.io.sockets.sockets.get(pending.receiverId);
+        if (receiver) {
+          receiver.emit("current-users", userListFor(pending.receiverId));
+        }
+        const joiner = this.io.sockets.sockets.get(pending.joinerId);
+        if (joiner && joiner !== receiver) {
+          joiner.emit("current-users", userListFor(pending.joinerId));
+          if (receiver) {
+            this.io.to(pending.receiverId).emit("get-whole-document", {
+              requesterId: pending.joinerId
+            });
+          }
+        }
+      }
+      promoteHost(room_id, new_host, options = {}) {
+        this.rooms[room_id].host_id = new_host;
+        this.users[new_host].isHost = true;
+        const roomUsers = this.rooms[room_id].users;
+        const otherUsers = Object.keys(roomUsers).filter((uid) => uid !== new_host);
+        if (!options.evictionHandover && otherUsers.length > 0) {
+          const readyPeers = otherUsers.filter(
+            (uid) => this.users[uid] && this.users[uid].docReady
+          );
+          const newHostReady = this.users[new_host] && this.users[new_host].docReady;
+          if (readyPeers.length > 0 || !newHostReady) {
+            const candidates = readyPeers.length > 0 ? readyPeers : otherUsers;
+            const history = this.opHistory[room_id] || [];
+            let bestPeer = candidates[0];
+            let bestTs = -1;
+            for (const uid of candidates) {
+              let ts = -1;
+              for (let i = history.length - 1; i >= 0; i--) {
+                if (history[i].socketId === uid) {
+                  ts = history[i].timestamp;
+                  break;
+                }
+              }
+              if (ts > bestTs) {
+                bestTs = ts;
+                bestPeer = uid;
+              }
+            }
+            this.io.to(bestPeer).emit("get-whole-document", { requesterId: new_host });
+          }
+        }
+        this.io.to(new_host).emit("is-host", true);
+        if (!options.evictionHandover) {
+          const allUsers = Object.keys(roomUsers).filter((uid) => uid !== new_host).map((uid) => ({
+            id: uid,
+            name: this.users[uid] ? this.users[uid].name : "Anonymous"
+          }));
+          this.io.to(new_host).emit("current-users", allUsers);
+        }
+        this.io.to(room_id).except(new_host).emit("new-host", new_host);
+      }
       stop() {
+        for (const sid in this.pendingEvictions) {
+          clearTimeout(this.pendingEvictions[sid].timer);
+        }
+        this.pendingEvictions = {};
         if (this.server) this.server.close();
       }
     };
@@ -27766,26 +28208,31 @@ var require_server2 = __commonJS({
       const nets = networkInterfaces();
       const candidates = [];
       for (const name of Object.keys(nets)) {
+        const nameLower = name.toLowerCase();
+        if (nameLower.includes("docker") || nameLower.includes("wsl") || nameLower.includes("virtualbox") || nameLower.includes("vbox") || nameLower.includes("vmware") || nameLower.includes("wg") || nameLower.includes("ppp") || nameLower.includes("vpn") || nameLower.includes("tailscale") || nameLower.includes("tun") || nameLower.includes("tap") || nameLower.includes("bridge") || nameLower.startsWith("br-") || nameLower.includes("loopback")) {
+          continue;
+        }
         for (const net2 of nets[name]) {
           if (net2.internal) continue;
           const isIPv4 = net2.family === "IPv4" || net2.family === 4;
           if (isIPv4) {
-            candidates.push(net2.address);
+            let priority = 3;
+            if (net2.address.startsWith("192.168.")) {
+              priority = 0;
+            } else {
+              const parts = net2.address.split(".");
+              if (parts[0] === "172") {
+                const second = parseInt(parts[1], 10);
+                if (second >= 16 && second <= 31) priority = 1;
+              }
+            }
+            if (net2.address.startsWith("10.")) priority = 2;
+            candidates.push({ address: net2.address, priority });
           }
         }
       }
-      const priority = (ip) => {
-        if (ip.startsWith("10.")) return 0;
-        const parts = ip.split(".");
-        if (parts[0] === "172") {
-          const second = parseInt(parts[1], 10);
-          if (second >= 16 && second <= 31) return 1;
-        }
-        if (ip.startsWith("192.168.")) return 2;
-        return 3;
-      };
-      candidates.sort((a, b) => priority(a) - priority(b));
-      return candidates[0] || "127.0.0.1";
+      candidates.sort((a, b) => a.priority - b.priority);
+      return candidates.length > 0 ? candidates[0].address : "127.0.0.1";
     }
     module2.exports = {
       LiveShareServer,
@@ -27799,14 +28246,948 @@ var require_server2 = __commonJS({
   }
 });
 
-// js/tunnel.js
+// node_modules/cloudflared/lib/constants.js
+var require_constants2 = __commonJS({
+  "node_modules/cloudflared/lib/constants.js"(exports2, module2) {
+    "use strict";
+    var __create = Object.create;
+    var __defProp = Object.defineProperty;
+    var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+    var __getOwnPropNames2 = Object.getOwnPropertyNames;
+    var __getProtoOf = Object.getPrototypeOf;
+    var __hasOwnProp = Object.prototype.hasOwnProperty;
+    var __export = (target, all) => {
+      for (var name in all)
+        __defProp(target, name, { get: all[name], enumerable: true });
+    };
+    var __copyProps = (to, from, except, desc) => {
+      if (from && typeof from === "object" || typeof from === "function") {
+        for (let key of __getOwnPropNames2(from))
+          if (!__hasOwnProp.call(to, key) && key !== except)
+            __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+      }
+      return to;
+    };
+    var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+      // If the importer is in node compatibility mode or this is not an ESM
+      // file that has been converted to a CommonJS file using a Babel-
+      // compatible transform (i.e. "__esModule" has not been set), then set
+      // "default" to the CommonJS "module.exports" for node compatibility.
+      isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+      mod
+    ));
+    var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+    var constants_exports = {};
+    __export(constants_exports, {
+      CLOUDFLARED_VERSION: () => CLOUDFLARED_VERSION,
+      DEFAULT_CLOUDFLARED_BIN: () => DEFAULT_CLOUDFLARED_BIN,
+      RELEASE_BASE: () => RELEASE_BASE,
+      bin: () => bin,
+      use: () => use
+    });
+    module2.exports = __toCommonJS(constants_exports);
+    var import_node_path = __toESM(require("node:path"));
+    var DEFAULT_CLOUDFLARED_BIN = import_node_path.default.join(
+      __dirname,
+      "..",
+      "bin",
+      process.platform === "win32" ? "cloudflared.exe" : "cloudflared"
+    );
+    var bin = process.env.CLOUDFLARED_BIN || DEFAULT_CLOUDFLARED_BIN;
+    function use(executable) {
+      bin = executable;
+    }
+    var CLOUDFLARED_VERSION = process.env.CLOUDFLARED_VERSION || "latest";
+    var RELEASE_BASE = "https://github.com/cloudflare/cloudflared/releases/";
+  }
+});
+
+// node_modules/cloudflared/lib/error.js
+var require_error = __commonJS({
+  "node_modules/cloudflared/lib/error.js"(exports2, module2) {
+    "use strict";
+    var __defProp = Object.defineProperty;
+    var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+    var __getOwnPropNames2 = Object.getOwnPropertyNames;
+    var __hasOwnProp = Object.prototype.hasOwnProperty;
+    var __export = (target, all) => {
+      for (var name in all)
+        __defProp(target, name, { get: all[name], enumerable: true });
+    };
+    var __copyProps = (to, from, except, desc) => {
+      if (from && typeof from === "object" || typeof from === "function") {
+        for (let key of __getOwnPropNames2(from))
+          if (!__hasOwnProp.call(to, key) && key !== except)
+            __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+      }
+      return to;
+    };
+    var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+    var error_exports = {};
+    __export(error_exports, {
+      UnsupportedError: () => UnsupportedError
+    });
+    module2.exports = __toCommonJS(error_exports);
+    var UnsupportedError = class extends Error {
+      constructor(message) {
+        super(message);
+      }
+    };
+  }
+});
+
+// node_modules/cloudflared/lib/install.js
+var require_install = __commonJS({
+  "node_modules/cloudflared/lib/install.js"(exports2, module2) {
+    "use strict";
+    var __create = Object.create;
+    var __defProp = Object.defineProperty;
+    var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+    var __getOwnPropNames2 = Object.getOwnPropertyNames;
+    var __getProtoOf = Object.getPrototypeOf;
+    var __hasOwnProp = Object.prototype.hasOwnProperty;
+    var __export = (target, all) => {
+      for (var name in all)
+        __defProp(target, name, { get: all[name], enumerable: true });
+    };
+    var __copyProps = (to, from, except, desc) => {
+      if (from && typeof from === "object" || typeof from === "function") {
+        for (let key of __getOwnPropNames2(from))
+          if (!__hasOwnProp.call(to, key) && key !== except)
+            __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+      }
+      return to;
+    };
+    var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+      // If the importer is in node compatibility mode or this is not an ESM
+      // file that has been converted to a CommonJS file using a Babel-
+      // compatible transform (i.e. "__esModule" has not been set), then set
+      // "default" to the CommonJS "module.exports" for node compatibility.
+      isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+      mod
+    ));
+    var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+    var install_exports = {};
+    __export(install_exports, {
+      install: () => install,
+      install_linux: () => install_linux,
+      install_macos: () => install_macos,
+      install_windows: () => install_windows
+    });
+    module2.exports = __toCommonJS(install_exports);
+    var import_node_fs = __toESM(require("node:fs"));
+    var import_node_path = __toESM(require("node:path"));
+    var import_node_https = __toESM(require("node:https"));
+    var import_node_child_process = require("node:child_process");
+    var import_constants = require_constants2();
+    var import_error = require_error();
+    var LINUX_URL = {
+      arm64: "cloudflared-linux-arm64",
+      arm: "cloudflared-linux-arm",
+      x64: "cloudflared-linux-amd64",
+      ia32: "cloudflared-linux-386"
+    };
+    var MACOS_URL = {
+      arm64: "cloudflared-darwin-arm64.tgz",
+      x64: "cloudflared-darwin-amd64.tgz"
+    };
+    var WINDOWS_URL = {
+      x64: "cloudflared-windows-amd64.exe",
+      ia32: "cloudflared-windows-386.exe"
+    };
+    function resolve_base(version) {
+      if (version === "latest") {
+        return `${import_constants.RELEASE_BASE}latest/download/`;
+      }
+      return `${import_constants.RELEASE_BASE}download/${version}/`;
+    }
+    async function install(to, version = import_constants.CLOUDFLARED_VERSION) {
+      if (process.platform === "linux") {
+        return install_linux(to, version);
+      } else if (process.platform === "darwin") {
+        return install_macos(to, version);
+      } else if (process.platform === "win32") {
+        return install_windows(to, version);
+      } else {
+        throw new import_error.UnsupportedError("Unsupported platform: " + process.platform);
+      }
+    }
+    async function install_linux(to, version = import_constants.CLOUDFLARED_VERSION) {
+      const file = LINUX_URL[process.arch];
+      if (file === void 0) {
+        throw new import_error.UnsupportedError("Unsupported architecture: " + process.arch);
+      }
+      await download(resolve_base(version) + file, to);
+      import_node_fs.default.chmodSync(to, "755");
+      return to;
+    }
+    async function install_macos(to, version = import_constants.CLOUDFLARED_VERSION) {
+      let arch = process.arch;
+      if (version !== "latest" && version_number(version) < 20240802) {
+        arch = "x64";
+      }
+      const file = MACOS_URL[arch];
+      if (file === void 0) {
+        throw new import_error.UnsupportedError("Unsupported architecture: " + arch);
+      }
+      await download(resolve_base(version) + file, `${to}.tgz`);
+      if (process.env.VERBOSE) console.log(`Extracting to ${to}`);
+      (0, import_node_child_process.execSync)(`tar -xzf ${import_node_path.default.basename(`${to}.tgz`)}`, { cwd: import_node_path.default.dirname(to) });
+      import_node_fs.default.unlinkSync(`${to}.tgz`);
+      import_node_fs.default.renameSync(`${import_node_path.default.dirname(to)}/cloudflared`, to);
+      return to;
+    }
+    async function install_windows(to, version = import_constants.CLOUDFLARED_VERSION) {
+      const file = WINDOWS_URL[process.arch];
+      if (file === void 0) {
+        throw new import_error.UnsupportedError("Unsupported architecture: " + process.arch);
+      }
+      await download(resolve_base(version) + file, to);
+      return to;
+    }
+    function download(url, to, redirect = 0) {
+      if (process.env.VERBOSE) {
+        console.log(redirect === 0 ? `Downloading ${url} to ${to}` : `Redirecting to ${url}`);
+      }
+      if (!import_node_fs.default.existsSync(import_node_path.default.dirname(to))) {
+        import_node_fs.default.mkdirSync(import_node_path.default.dirname(to), { recursive: true });
+      }
+      return new Promise((resolve, reject) => {
+        const request = import_node_https.default.get(url, (res) => {
+          const redirect_code = [301, 302, 303, 307, 308];
+          if (redirect_code.includes(res.statusCode) && res.headers.location !== void 0) {
+            request.destroy();
+            const redirection = res.headers.location;
+            resolve(download(redirection, to, redirect + 1));
+            return;
+          }
+          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+            const file = import_node_fs.default.createWriteStream(to);
+            file.on("finish", () => {
+              file.close(() => resolve(to));
+            });
+            file.on("error", (err) => {
+              import_node_fs.default.unlink(to, () => reject(err));
+            });
+            res.pipe(file);
+          } else {
+            request.destroy();
+            reject(new Error(`HTTP response with status code: ${res.statusCode}`));
+          }
+        });
+        request.on("error", (err) => {
+          reject(err);
+        });
+        request.end();
+      });
+    }
+    function version_number(semver) {
+      const [major, minor, patch] = semver.split(".").map(Number);
+      return major * 1e4 + minor * 100 + patch;
+    }
+  }
+});
+
+// node_modules/cloudflared/lib/regex.js
+var require_regex = __commonJS({
+  "node_modules/cloudflared/lib/regex.js"(exports2, module2) {
+    "use strict";
+    var __defProp = Object.defineProperty;
+    var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+    var __getOwnPropNames2 = Object.getOwnPropertyNames;
+    var __hasOwnProp = Object.prototype.hasOwnProperty;
+    var __export = (target, all) => {
+      for (var name in all)
+        __defProp(target, name, { get: all[name], enumerable: true });
+    };
+    var __copyProps = (to, from, except, desc) => {
+      if (from && typeof from === "object" || typeof from === "function") {
+        for (let key of __getOwnPropNames2(from))
+          if (!__hasOwnProp.call(to, key) && key !== except)
+            __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+      }
+      return to;
+    };
+    var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+    var regex_exports = {};
+    __export(regex_exports, {
+      config_regex: () => config_regex,
+      conn_regex: () => conn_regex,
+      connectorID_regex: () => connectorID_regex,
+      disconnect_regex: () => disconnect_regex,
+      index_regex: () => index_regex,
+      ip_regex: () => ip_regex,
+      location_regex: () => location_regex,
+      metrics_regex: () => metrics_regex,
+      tunnelID_regex: () => tunnelID_regex
+    });
+    module2.exports = __toCommonJS(regex_exports);
+    var conn_regex = /connection[= ]([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+    var ip_regex = /ip=([0-9.]+)/;
+    var location_regex = /location=([A-Za-z0-9]+)/;
+    var index_regex = /connIndex=(\d)/;
+    var disconnect_regex = /Unregistered tunnel connection connIndex=(\d)/i;
+    var tunnelID_regex = /tunnelID=([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+    var connectorID_regex = /Connector ID: ([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+    var metrics_regex = /metrics server on ([0-9.:]+\/metrics)/;
+    var config_regex = /config="(.+[^\\])"/;
+  }
+});
+
+// node_modules/cloudflared/lib/handler.js
+var require_handler = __commonJS({
+  "node_modules/cloudflared/lib/handler.js"(exports2, module2) {
+    "use strict";
+    var __defProp = Object.defineProperty;
+    var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+    var __getOwnPropNames2 = Object.getOwnPropertyNames;
+    var __hasOwnProp = Object.prototype.hasOwnProperty;
+    var __export = (target, all) => {
+      for (var name in all)
+        __defProp(target, name, { get: all[name], enumerable: true });
+    };
+    var __copyProps = (to, from, except, desc) => {
+      if (from && typeof from === "object" || typeof from === "function") {
+        for (let key of __getOwnPropNames2(from))
+          if (!__hasOwnProp.call(to, key) && key !== except)
+            __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+      }
+      return to;
+    };
+    var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+    var handler_exports = {};
+    __export(handler_exports, {
+      ConfigHandler: () => ConfigHandler,
+      ConnectionHandler: () => ConnectionHandler,
+      TryCloudflareHandler: () => TryCloudflareHandler
+    });
+    module2.exports = __toCommonJS(handler_exports);
+    var import_node_stream = require("node:stream");
+    var import_regex = require_regex();
+    var ConnectionHandler = class {
+      constructor(tunnel) {
+        this.connections = [];
+        this.connected_handler = (output, tunnel2) => {
+          const conn_match = output.match(import_regex.conn_regex);
+          const ip_match = output.match(import_regex.ip_regex);
+          const location_match = output.match(import_regex.location_regex);
+          const index_match = output.match(import_regex.index_regex);
+          if (conn_match && ip_match && location_match && index_match) {
+            const connection = {
+              id: conn_match[1],
+              ip: ip_match[1],
+              location: location_match[1]
+            };
+            this.connections[Number(index_match[1])] = connection;
+            tunnel2.emit("connected", connection);
+          }
+        };
+        this.disconnected_handler = (output, tunnel2) => {
+          const index_match = output.includes("terminated") ? output.match(import_regex.index_regex) : null;
+          if (index_match) {
+            const index = Number(index_match[1]);
+            if (this.connections[index]) {
+              tunnel2.emit("disconnected", this.connections[index]);
+              this.connections[index] = void 0;
+            }
+          }
+        };
+        tunnel.addHandler(this.connected_handler.bind(this));
+        tunnel.addHandler(this.disconnected_handler.bind(this));
+      }
+    };
+    var TryCloudflareHandler = class {
+      constructor(tunnel) {
+        this.url_handler = (output, tunnel2) => {
+          const url_match = output.match(/https:\/\/([a-z0-9-]+)\.trycloudflare\.com/);
+          if (url_match) {
+            tunnel2.emit("url", url_match[0]);
+          }
+        };
+        tunnel.addHandler(this.url_handler.bind(this));
+      }
+    };
+    var ConfigHandler = class extends import_node_stream.EventEmitter {
+      constructor(tunnel) {
+        super();
+        this.config_handler = (output, tunnel2) => {
+          const config_match = output.match(/\bconfig="(.+?)" version=(\d+)/);
+          if (config_match) {
+            try {
+              const config_str = config_match[1].replace(/\\"/g, '"');
+              const config = JSON.parse(config_str);
+              const version = parseInt(config_match[2], 10);
+              this.emit("config", {
+                config,
+                version
+              });
+              if (config && typeof config === "object" && "ingress" in config && Array.isArray(config.ingress)) {
+                for (const ingress of config.ingress) {
+                  if ("hostname" in ingress) {
+                    tunnel2.emit("url", ingress.hostname);
+                  }
+                }
+              }
+            } catch (error) {
+              this.emit("error", new Error(`Failed to parse config: ${error}`));
+            }
+          }
+        };
+        tunnel.addHandler(this.config_handler.bind(this));
+      }
+      on(event, listener) {
+        return super.on(event, listener);
+      }
+      once(event, listener) {
+        return super.once(event, listener);
+      }
+      off(event, listener) {
+        return super.off(event, listener);
+      }
+      emit(event, ...args) {
+        return super.emit(event, ...args);
+      }
+    };
+  }
+});
+
+// node_modules/cloudflared/lib/tunnel.js
 var require_tunnel = __commonJS({
+  "node_modules/cloudflared/lib/tunnel.js"(exports2, module2) {
+    "use strict";
+    var __defProp = Object.defineProperty;
+    var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+    var __getOwnPropNames2 = Object.getOwnPropertyNames;
+    var __hasOwnProp = Object.prototype.hasOwnProperty;
+    var __export = (target, all) => {
+      for (var name in all)
+        __defProp(target, name, { get: all[name], enumerable: true });
+    };
+    var __copyProps = (to, from, except, desc) => {
+      if (from && typeof from === "object" || typeof from === "function") {
+        for (let key of __getOwnPropNames2(from))
+          if (!__hasOwnProp.call(to, key) && key !== except)
+            __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+      }
+      return to;
+    };
+    var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+    var tunnel_exports = {};
+    __export(tunnel_exports, {
+      Tunnel: () => Tunnel,
+      build_args: () => build_args,
+      build_options: () => build_options,
+      tunnel: () => tunnel
+    });
+    module2.exports = __toCommonJS(tunnel_exports);
+    var import_node_child_process = require("node:child_process");
+    var import_node_events = require("node:events");
+    var import_constants = require_constants2();
+    var import_handler = require_handler();
+    var Tunnel = class _Tunnel extends import_node_events.EventEmitter {
+      constructor(options = ["tunnel", "--hello-world"]) {
+        super();
+        this.outputHandlers = [];
+        this.stop = this._stop.bind(this);
+        this.setupDefaultHandlers();
+        const args = Array.isArray(options) ? options : build_args(options);
+        this._process = this.createProcess(args);
+        this.setupEventHandlers();
+      }
+      get process() {
+        return this._process;
+      }
+      setupDefaultHandlers() {
+        new import_handler.ConnectionHandler(this);
+        new import_handler.TryCloudflareHandler(this);
+      }
+      /**
+       * Add a custom output handler
+       * @param handler Function to handle cloudflared output
+       */
+      addHandler(handler) {
+        this.outputHandlers.push(handler);
+      }
+      /**
+       * Remove a previously added output handler
+       * @param handler The handler to remove
+       */
+      removeHandler(handler) {
+        const index = this.outputHandlers.indexOf(handler);
+        if (index !== -1) {
+          this.outputHandlers.splice(index, 1);
+        }
+      }
+      processOutput(output) {
+        for (const handler of this.outputHandlers) {
+          try {
+            handler(output, this);
+          } catch (error) {
+            this.emit("error", error instanceof Error ? error : new Error(String(error)));
+          }
+        }
+      }
+      setupEventHandlers() {
+        this.on("stdout", (output) => {
+          this.processOutput(output);
+        });
+        this.on("stderr", (output) => {
+          this.processOutput(output);
+        });
+      }
+      createProcess(args) {
+        var _a, _b;
+        const child = (0, import_node_child_process.spawn)(import_constants.bin, args, { stdio: ["ignore", "pipe", "pipe"] });
+        child.on("error", (error) => this.emit("error", error));
+        child.on("exit", (code, signal) => this.emit("exit", code, signal));
+        if (process.env.VERBOSE) {
+          child.stdout.pipe(process.stdout);
+          child.stderr.pipe(process.stderr);
+        }
+        (_a = child.stdout) == null ? void 0 : _a.on("data", (data) => this.emit("stdout", data.toString()));
+        (_b = child.stderr) == null ? void 0 : _b.on("data", (data) => this.emit("stderr", data.toString()));
+        return child;
+      }
+      _stop() {
+        return this.process.kill("SIGINT");
+      }
+      on(event, listener) {
+        return super.on(event, listener);
+      }
+      once(event, listener) {
+        return super.once(event, listener);
+      }
+      off(event, listener) {
+        return super.off(event, listener);
+      }
+      emit(event, ...args) {
+        return super.emit(event, ...args);
+      }
+      /**
+       * Create a quick tunnel without a Cloudflare account.
+       * @param url The local service URL to connect to. If not provided, the hello world mode will be used.
+       * @param options The options to pass to cloudflared.
+       */
+      static quick(url, options = {}) {
+        const args = ["tunnel"];
+        if (url) {
+          args.push("--url", url);
+        } else {
+          args.push("--hello-world");
+        }
+        args.push(...build_options(options));
+        return new _Tunnel(args);
+      }
+      /**
+       * Create a tunnel with a Cloudflare account.
+       * @param token The Cloudflare Tunnel token.
+       * @param options The options to pass to cloudflared.
+       */
+      static withToken(token, options = {}) {
+        options["--token"] = token;
+        return new _Tunnel(build_args(options));
+      }
+    };
+    function tunnel(options = {}) {
+      return new Tunnel(options);
+    }
+    function build_args(options) {
+      const args = "--hello-world" in options ? ["tunnel"] : ["tunnel", "run"];
+      args.push(...build_options(options));
+      return args;
+    }
+    function build_options(options) {
+      const opts = [];
+      for (const [key, value] of Object.entries(options)) {
+        if (typeof value === "string") {
+          opts.push(`${key}`, value);
+        } else if (typeof value === "number") {
+          opts.push(`${key}`, value.toString());
+        } else if (typeof value === "boolean") {
+          if (value === true) {
+            opts.push(`${key}`);
+          }
+        }
+      }
+      return opts;
+    }
+  }
+});
+
+// node_modules/cloudflared/lib/service.js
+var require_service = __commonJS({
+  "node_modules/cloudflared/lib/service.js"(exports2, module2) {
+    "use strict";
+    var __create = Object.create;
+    var __defProp = Object.defineProperty;
+    var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+    var __getOwnPropNames2 = Object.getOwnPropertyNames;
+    var __getProtoOf = Object.getPrototypeOf;
+    var __hasOwnProp = Object.prototype.hasOwnProperty;
+    var __export = (target, all) => {
+      for (var name in all)
+        __defProp(target, name, { get: all[name], enumerable: true });
+    };
+    var __copyProps = (to, from, except, desc) => {
+      if (from && typeof from === "object" || typeof from === "function") {
+        for (let key of __getOwnPropNames2(from))
+          if (!__hasOwnProp.call(to, key) && key !== except)
+            __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+      }
+      return to;
+    };
+    var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+      // If the importer is in node compatibility mode or this is not an ESM
+      // file that has been converted to a CommonJS file using a Babel-
+      // compatible transform (i.e. "__esModule" has not been set), then set
+      // "default" to the CommonJS "module.exports" for node compatibility.
+      isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+      mod
+    ));
+    var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+    var service_exports = {};
+    __export(service_exports, {
+      AlreadyInstalledError: () => AlreadyInstalledError2,
+      LINUX_SERVICE_PATH: () => LINUX_SERVICE_PATH,
+      MACOS_SERVICE_PATH: () => MACOS_SERVICE_PATH2,
+      NotInstalledError: () => NotInstalledError2,
+      clean: () => clean,
+      current: () => current,
+      err: () => err,
+      exists: () => exists,
+      identifier: () => identifier2,
+      install: () => install,
+      journal: () => journal,
+      log: () => log,
+      service: () => service2,
+      service_name: () => service_name,
+      uninstall: () => uninstall
+    });
+    module2.exports = __toCommonJS(service_exports);
+    var import_node_os = __toESM(require("node:os"));
+    var import_node_fs = __toESM(require("node:fs"));
+    var import_node_child_process = require("node:child_process");
+    var import_constants = require_constants2();
+    var import_regex = require_regex();
+    var identifier2 = "com.cloudflare.cloudflared";
+    var service_name = "cloudflared.service";
+    var MACOS_SERVICE_PATH2 = {
+      PLIST: is_root() ? `/Library/LaunchDaemons/${identifier2}.plist` : `${import_node_os.default.homedir()}/Library/LaunchAgents/${identifier2}.plist`,
+      OUT: is_root() ? `/Library/Logs/${identifier2}.out.log` : `${import_node_os.default.homedir()}/Library/Logs/${identifier2}.out.log`,
+      ERR: is_root() ? `/Library/Logs/${identifier2}.err.log` : `${import_node_os.default.homedir()}/Library/Logs/${identifier2}.err.log`
+    };
+    var LINUX_SERVICE_PATH = {
+      SYSTEMD: `/etc/systemd/system/${service_name}`,
+      SERVICE: "/etc/init.d/cloudflared",
+      SERVICE_OUT: "/var/log/cloudflared.log",
+      SERVICE_ERR: "/var/log/cloudflared.err"
+    };
+    var service2 = { install, uninstall, exists, log, err, current, clean, journal };
+    var AlreadyInstalledError2 = class extends Error {
+      constructor() {
+        super("service is already installed");
+      }
+    };
+    var NotInstalledError2 = class extends Error {
+      constructor() {
+        super("service is not installed");
+      }
+    };
+    function install(token) {
+      if (!["darwin", "linux"].includes(process.platform)) {
+        throw new Error(`Not Implemented on platform ${process.platform}`);
+      }
+      if (exists()) {
+        throw new AlreadyInstalledError2();
+      }
+      const args = ["service", "install"];
+      if (token) {
+        args.push(token);
+      }
+      const result = (0, import_node_child_process.spawnSync)(import_constants.bin, args);
+      if (result.status !== 0) {
+        throw new Error(`service install failed: ${result.stderr.toString()}`);
+      }
+    }
+    function uninstall() {
+      if (!["darwin", "linux"].includes(process.platform)) {
+        throw new Error(`Not Implemented on platform ${process.platform}`);
+      }
+      if (!exists()) {
+        throw new NotInstalledError2();
+      }
+      const result = (0, import_node_child_process.spawnSync)(import_constants.bin, ["service", "uninstall"]);
+      if (result.status !== 0) {
+        throw new Error(`service uninstall failed: ${result.stderr.toString()}`);
+      }
+      if (process.platform === "darwin") {
+        import_node_fs.default.rmSync(MACOS_SERVICE_PATH2.OUT);
+        import_node_fs.default.rmSync(MACOS_SERVICE_PATH2.ERR);
+      } else if (process.platform === "linux" && !is_systemd()) {
+        import_node_fs.default.rmSync(LINUX_SERVICE_PATH.SERVICE_OUT);
+        import_node_fs.default.rmSync(LINUX_SERVICE_PATH.SERVICE_ERR);
+      }
+    }
+    function log() {
+      if (!exists()) {
+        throw new NotInstalledError2();
+      }
+      if (process.platform === "darwin") {
+        return import_node_fs.default.readFileSync(MACOS_SERVICE_PATH2.OUT, "utf8");
+      }
+      if (process.platform === "linux" && !is_systemd()) {
+        return import_node_fs.default.readFileSync(LINUX_SERVICE_PATH.SERVICE_OUT, "utf8");
+      }
+      throw new Error(`Not Implemented on platform ${process.platform}`);
+    }
+    function err() {
+      if (!exists()) {
+        throw new NotInstalledError2();
+      }
+      if (process.platform === "darwin") {
+        return import_node_fs.default.readFileSync(MACOS_SERVICE_PATH2.ERR, "utf8");
+      }
+      if (process.platform === "linux" && !is_systemd()) {
+        return import_node_fs.default.readFileSync(LINUX_SERVICE_PATH.SERVICE_ERR, "utf8");
+      }
+      throw new Error(`Not Implemented on platform ${process.platform}`);
+    }
+    function journal(n = 300) {
+      if (process.platform === "linux" && is_systemd()) {
+        const args = ["-u", service_name, "-o", "cat", "-n", n.toString()];
+        return (0, import_node_child_process.spawnSync)("journalctl", args).stdout.toString();
+      }
+      throw new Error(`Not Implemented on platform ${process.platform}`);
+    }
+    function current() {
+      var _a, _b, _c, _d;
+      if (!["darwin", "linux"].includes(process.platform)) {
+        throw new Error(`Not Implemented on platform ${process.platform}`);
+      }
+      if (!exists()) {
+        throw new NotInstalledError2();
+      }
+      const log2 = is_systemd() ? journal() : err();
+      let tunnelID = "";
+      let connectorID = "";
+      const connections = [];
+      let metrics = "";
+      let config = {};
+      for (const line of log2.split("\n")) {
+        try {
+          if (line.match(import_regex.tunnelID_regex)) {
+            tunnelID = ((_a = line.match(import_regex.tunnelID_regex)) == null ? void 0 : _a[1]) ?? "";
+          } else if (line.match(import_regex.connectorID_regex)) {
+            connectorID = ((_b = line.match(import_regex.connectorID_regex)) == null ? void 0 : _b[1]) ?? "";
+          } else if (line.match(import_regex.conn_regex) && line.match(import_regex.location_regex) && line.match(import_regex.ip_regex) && line.match(import_regex.index_regex)) {
+            const [, id] = line.match(import_regex.conn_regex) ?? [];
+            const [, location2] = line.match(import_regex.location_regex) ?? [];
+            const [, ip] = line.match(import_regex.ip_regex) ?? [];
+            const [, idx] = line.match(import_regex.index_regex) ?? [];
+            connections[parseInt(idx)] = { id, ip, location: location2 };
+          } else if (line.match(import_regex.disconnect_regex)) {
+            const [, idx] = line.match(import_regex.disconnect_regex) ?? [];
+            if (parseInt(idx) in connections) {
+              connections[parseInt(idx)] = { id: "", ip: "", location: "" };
+            }
+          } else if (line.match(import_regex.metrics_regex)) {
+            metrics = ((_c = line.match(import_regex.metrics_regex)) == null ? void 0 : _c[1]) ?? "";
+          } else if (line.match(import_regex.config_regex)) {
+            config = JSON.parse(((_d = line.match(import_regex.config_regex)) == null ? void 0 : _d[1].replace(/\\/g, "")) ?? "{}");
+          }
+        } catch (err2) {
+          if (process.env.VERBOSE) {
+            console.error("log parsing failed", err2);
+          }
+        }
+      }
+      return { tunnelID, connectorID, connections, metrics, config };
+    }
+    function clean() {
+      if (process.platform !== "darwin") {
+        throw new Error(`Not Implemented on platform ${process.platform}`);
+      }
+      if (exists()) {
+        throw new AlreadyInstalledError2();
+      }
+      import_node_fs.default.rmSync(MACOS_SERVICE_PATH2.OUT, { force: true });
+      import_node_fs.default.rmSync(MACOS_SERVICE_PATH2.ERR, { force: true });
+    }
+    function exists() {
+      if (process.platform === "darwin") {
+        return import_node_fs.default.existsSync(MACOS_SERVICE_PATH2.PLIST);
+      } else if (process.platform === "linux") {
+        return is_systemd() ? import_node_fs.default.existsSync(LINUX_SERVICE_PATH.SYSTEMD) : import_node_fs.default.existsSync(LINUX_SERVICE_PATH.SERVICE);
+      }
+      throw new Error(`Not Implemented on platform ${process.platform}`);
+    }
+    function is_root() {
+      var _a;
+      return ((_a = process.getuid) == null ? void 0 : _a.call(process)) === 0;
+    }
+    function is_systemd() {
+      return process.platform === "linux" && import_node_fs.default.existsSync("/run/systemd/system");
+    }
+  }
+});
+
+// node_modules/cloudflared/lib/lib.js
+var require_lib2 = __commonJS({
+  "node_modules/cloudflared/lib/lib.js"(exports2, module2) {
+    "use strict";
+    var __defProp = Object.defineProperty;
+    var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+    var __getOwnPropNames2 = Object.getOwnPropertyNames;
+    var __hasOwnProp = Object.prototype.hasOwnProperty;
+    var __export = (target, all) => {
+      for (var name in all)
+        __defProp(target, name, { get: all[name], enumerable: true });
+    };
+    var __copyProps = (to, from, except, desc) => {
+      if (from && typeof from === "object" || typeof from === "function") {
+        for (let key of __getOwnPropNames2(from))
+          if (!__hasOwnProp.call(to, key) && key !== except)
+            __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+      }
+      return to;
+    };
+    var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget && __copyProps(secondTarget, mod, "default"));
+    var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+    var lib_exports = {};
+    __export(lib_exports, {
+      AlreadyInstalledError: () => import_service.AlreadyInstalledError,
+      MACOS_SERVICE_PATH: () => import_service.MACOS_SERVICE_PATH,
+      NotInstalledError: () => import_service.NotInstalledError,
+      identifier: () => import_service.identifier,
+      service: () => import_service.service
+    });
+    module2.exports = __toCommonJS(lib_exports);
+    __reExport(lib_exports, require_constants2(), module2.exports);
+    __reExport(lib_exports, require_install(), module2.exports);
+    __reExport(lib_exports, require_tunnel(), module2.exports);
+    var import_service = require_service();
+    __reExport(lib_exports, require_handler(), module2.exports);
+  }
+});
+
+// js/tunnel.js
+var require_tunnel2 = __commonJS({
   "js/tunnel.js"(exports2, module2) {
-    var { spawn } = require("child_process");
+    var { spawn, spawnSync } = require("child_process");
+    var fs = require("fs");
+    var os = require("os");
+    var path = require("path");
     var PROVIDER_TIMEOUT = 2e4;
+    var INSTALL_TIMEOUT = 12e4;
+    var CLOUDFLARED_INSTALL_GRACE = 1e4;
+    var CLOUDFLARED_MIN_BYTES = 10 * 1024 * 1024;
+    var MAX_RESTART_ATTEMPTS = 2;
+    var cloudflaredInstallPromise = null;
+    var validatedCloudflaredPath = null;
+    var cloudflaredCheckFailedPath = null;
+    var cloudflaredCheckFailedAt = 0;
+    function getCloudflaredBinPath() {
+      const exe = process.platform === "win32" ? "cloudflared.exe" : "cloudflared";
+      return path.join(os.homedir(), ".liveshare", "cloudflared", exe);
+    }
+    function isBinaryUsable(binPath) {
+      try {
+        const result = spawnSync(binPath, ["--version"], {
+          timeout: 3e3,
+          stdio: "ignore",
+          windowsHide: true
+        });
+        return result.status === 0;
+      } catch (_) {
+        return false;
+      }
+    }
+    function isCloudflaredReady() {
+      const binPath = getCloudflaredBinPath();
+      if (validatedCloudflaredPath === binPath) return true;
+      if (cloudflaredCheckFailedPath === binPath && Date.now() - cloudflaredCheckFailedAt < 3e4) {
+        return false;
+      }
+      try {
+        const stat = fs.statSync(binPath);
+        if (!stat.isFile() || stat.size < CLOUDFLARED_MIN_BYTES) return false;
+        if (process.platform !== "win32" && (stat.mode & 73) === 0) return false;
+      } catch (_) {
+        return false;
+      }
+      if (!isBinaryUsable(binPath)) {
+        cloudflaredCheckFailedPath = binPath;
+        cloudflaredCheckFailedAt = Date.now();
+        return false;
+      }
+      validatedCloudflaredPath = binPath;
+      return true;
+    }
+    function installCloudflared(cloudflared, binPath) {
+      const binDir = path.dirname(binPath);
+      fs.mkdirSync(binDir, { recursive: true });
+      const tmpDir = fs.mkdtempSync(path.join(binDir, ".install-"));
+      const tmpPath = path.join(tmpDir, path.basename(binPath));
+      validatedCloudflaredPath = null;
+      cloudflaredCheckFailedPath = null;
+      cloudflaredCheckFailedAt = 0;
+      return cloudflared.install(tmpPath).then(() => {
+        if (process.platform !== "win32") fs.chmodSync(tmpPath, 493);
+        if (!isBinaryUsable(tmpPath)) {
+          throw new Error("downloaded cloudflared is not executable");
+        }
+        if (process.platform === "win32" && fs.existsSync(binPath)) {
+          fs.unlinkSync(binPath);
+        }
+        fs.renameSync(tmpPath, binPath);
+        validatedCloudflaredPath = binPath;
+        return binPath;
+      }).finally(() => {
+        try {
+          fs.rmSync(tmpDir, { recursive: true, force: true });
+        } catch (_) {
+        }
+      });
+    }
+    async function ensureCloudflared() {
+      const cloudflared = require_lib2();
+      const binPath = getCloudflaredBinPath();
+      cloudflared.use(binPath);
+      if (!isCloudflaredReady()) {
+        if (!cloudflaredInstallPromise) {
+          console.log("[LS] Downloading cloudflared binary...");
+          const install = installCloudflared(cloudflared, binPath);
+          let wrapped = null;
+          wrapped = install.finally(() => {
+            if (cloudflaredInstallPromise === wrapped) {
+              cloudflaredInstallPromise = null;
+            }
+          });
+          cloudflaredInstallPromise = wrapped;
+        }
+        const pending = cloudflaredInstallPromise;
+        try {
+          await withTimeout(pending, INSTALL_TIMEOUT);
+        } catch (e) {
+          if (cloudflaredInstallPromise === pending) {
+            cloudflaredInstallPromise = null;
+          }
+          if (!isCloudflaredReady()) throw e;
+        }
+      }
+      if (!isCloudflaredReady()) {
+        throw new Error("cloudflared binary is not ready");
+      }
+      return cloudflared;
+    }
     var tunnelInstance = null;
     var currentUrl = null;
-    var currentProviderName = null;
+    var restartAttempts = 0;
+    var intentionalStop = false;
+    var tunnelStarting = false;
+    var installRetryPending = false;
+    var urlChangeCallback = null;
+    var tunnelGeneration = 0;
     function wrapTunnel(url, closeFn) {
       const cbs = { close: [], error: [] };
       let closed = false;
@@ -27845,81 +29226,112 @@ var require_tunnel = __commonJS({
       return () => cleanupHandler(handler);
     }
     async function withTimeout(promise, ms) {
-      return Promise.race([
-        promise,
-        new Promise(
-          (_, reject) => setTimeout(() => reject(new Error("timeout")), ms)
-        )
-      ]);
+      let timer = null;
+      try {
+        return await Promise.race([
+          promise,
+          new Promise((_, reject) => {
+            timer = setTimeout(() => reject(new Error("timeout")), ms);
+          })
+        ]);
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
     }
-    function tryCloudflared(port) {
-      return new Promise((resolve, reject) => {
-        const child = spawn(
-          "cloudflared",
-          ["tunnel", "--url", `http://localhost:${port}`, "--no-autoupdate"],
-          {
-            stdio: ["ignore", "pipe", "pipe"]
-          }
-        );
-        let resolved = false;
-        let buffer = "";
-        const unreg = registerCancel(() => {
-          if (resolved) return;
-          resolved = true;
-          try {
-            child.kill("SIGTERM");
-          } catch (_) {
-          }
-          reject(new Error("cancelled"));
-        });
-        function onOutput(data) {
-          if (resolved) return;
-          buffer += data.toString();
-          const m = buffer.match(
-            /https:\/\/[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.trycloudflare\.com/
-          );
-          if (m) {
-            resolved = true;
-            unreg();
-            child.stdout.removeAllListeners("data");
-            child.stderr.removeAllListeners("data");
-            const tw = wrapTunnel(m[0], () => child.kill("SIGTERM"));
-            child.on("exit", () => tw._fireClose());
-            child.on("error", (err) => tw._fireError(err));
-            resolve(tw);
-          }
+    function forceKillAfterGrace(child) {
+      if (!child) return;
+      if (child.exitCode !== null || child.signalCode !== null) return;
+      const killTimer = setTimeout(() => {
+        try {
+          child.kill("SIGKILL");
+        } catch (_) {
         }
-        child.stdout.on("data", onOutput);
-        child.stderr.on("data", onOutput);
-        child.on("error", (err) => {
-          if (!resolved) {
-            resolved = true;
-            unreg();
-            reject(err);
+      }, 1e3);
+      child.once("exit", () => clearTimeout(killTimer));
+    }
+    function tryCloudflared(port, generation) {
+      return new Promise((resolve, reject) => {
+        if (generation !== tunnelGeneration) {
+          reject(new Error("cancelled"));
+          return;
+        }
+        const installWait = isCloudflaredReady() ? 1e3 : CLOUDFLARED_INSTALL_GRACE;
+        withTimeout(ensureCloudflared(), installWait).then((cloudflared) => {
+          if (generation !== tunnelGeneration) {
+            reject(new Error("cancelled"));
+            return;
           }
-        });
-        child.on("exit", (code) => {
-          if (!resolved) {
+          const tunnelUrl = `http://localhost:${port}`;
+          const tunnel = cloudflared.Tunnel.quick(tunnelUrl, {
+            "--no-autoupdate": true
+          });
+          let resolved = false;
+          const unreg = registerCancel(() => {
+            if (resolved) return;
             resolved = true;
-            unreg();
-            reject(new Error(`cloudflared exited with code ${code}`));
-          }
-        });
-        setTimeout(() => {
-          if (!resolved) {
-            resolved = true;
-            unreg();
             try {
-              child.kill("SIGTERM");
+              tunnel.stop();
             } catch (_) {
             }
-            reject(new Error("cloudflared timed out"));
-          }
-        }, PROVIDER_TIMEOUT);
+            forceKillAfterGrace(tunnel.process);
+            reject(new Error("cancelled"));
+          });
+          tunnel.on("url", (url) => {
+            if (resolved) return;
+            resolved = true;
+            unreg();
+            const tw = wrapTunnel(url, () => {
+              try {
+                tunnel.stop();
+              } catch (_) {
+              }
+              forceKillAfterGrace(tunnel.process);
+            });
+            tunnel.on("exit", () => tw._fireClose());
+            tunnel.on("error", (err) => tw._fireError(err));
+            resolve(tw);
+          });
+          tunnel.on("error", (err) => {
+            if (!resolved) {
+              resolved = true;
+              unreg();
+              reject(err);
+            }
+          });
+          tunnel.on("exit", (code) => {
+            if (!resolved) {
+              resolved = true;
+              unreg();
+              reject(new Error(`cloudflared exited with code ${code}`));
+            }
+          });
+          setTimeout(() => {
+            if (!resolved) {
+              resolved = true;
+              unreg();
+              try {
+                tunnel.stop();
+              } catch (_) {
+              }
+              forceKillAfterGrace(tunnel.process);
+              reject(new Error("cloudflared timed out"));
+            }
+          }, PROVIDER_TIMEOUT);
+        }).catch((err) => {
+          reject(
+            new Error(
+              `cloudflared unavailable: ${err.message || err}`.slice(0, 200)
+            )
+          );
+        });
       });
     }
-    function tryLocalhostRun(port) {
+    function tryLocalhostRun(port, generation) {
       return new Promise((resolve, reject) => {
+        if (generation !== tunnelGeneration) {
+          reject(new Error("cancelled"));
+          return;
+        }
         const child = spawn(
           "ssh",
           [
@@ -27927,6 +29339,12 @@ var require_tunnel = __commonJS({
             "StrictHostKeyChecking=no",
             "-o",
             "ServerAliveInterval=30",
+            "-o",
+            "ServerAliveCountMax=3",
+            "-o",
+            "ExitOnForwardFailure=yes",
+            "-o",
+            "TCPKeepAlive=yes",
             "-R",
             `80:localhost:${port}`,
             "nokey@localhost.run"
@@ -27993,60 +29411,141 @@ var require_tunnel = __commonJS({
       });
     }
     var PROVIDERS = [
-      { name: "localhost.run", fn: tryLocalhostRun },
-      { name: "cloudflared", fn: tryCloudflared }
+      { name: "cloudflared", fn: tryCloudflared },
+      { name: "localhost.run", fn: tryLocalhostRun }
     ];
-    async function startTunnel(port) {
+    async function startTunnel(port, isRestart = false) {
       stopTunnel();
+      const generation = ++tunnelGeneration;
       const errors = [];
-      for (const provider of PROVIDERS) {
-        console.log(`[LS] Tunnel: trying ${provider.name}...`);
-        try {
-          const instance = await withTimeout(provider.fn(port), PROVIDER_TIMEOUT);
-          cancelAllInFlight();
-          currentUrl = instance.url;
-          tunnelInstance = instance;
-          currentProviderName = provider.name;
-          instance.onClose(() => {
-            console.log(`[LS] Tunnel closed (${provider.name})`);
-            tunnelInstance = null;
-            currentUrl = null;
-            currentProviderName = null;
+      intentionalStop = false;
+      if (!isRestart) restartAttempts = 0;
+      tunnelStarting = true;
+      installRetryPending = false;
+      try {
+        if (!isCloudflaredReady()) {
+          ensureCloudflared().then(() => {
+            if (generation !== tunnelGeneration) return;
+            if (tunnelInstance || intentionalStop) return;
+            if (tunnelStarting) {
+              installRetryPending = true;
+              return;
+            }
+            console.log("[LS] cloudflared install finished, retrying tunnel");
+            tryRestart(port).catch(() => {
+            });
+          }).catch((e) => {
+            console.warn("[LS] cloudflared background install failed:", e.message);
           });
-          instance.onError((err) => {
-            console.error(`[LS] Tunnel error (${provider.name}):`, err);
-          });
-          console.log(`[LS] Tunnel started via ${provider.name}: ${currentUrl}`);
-          return { url: currentUrl, errors: [] };
-        } catch (e) {
-          cancelAllInFlight();
-          const msg = `${provider.name}: ${e.message || e}`;
-          errors.push(msg);
-          console.warn(
-            `[LS] Tunnel provider ${provider.name} failed: ${e.message || e}`
-          );
+        }
+        for (const provider of PROVIDERS) {
+          if (generation !== tunnelGeneration) {
+            return { url: null, errors };
+          }
+          console.log(`[LS] Tunnel: trying ${provider.name}...`);
+          try {
+            const instance = await withTimeout(
+              provider.fn(port, generation),
+              PROVIDER_TIMEOUT
+            );
+            if (generation !== tunnelGeneration) {
+              try {
+                instance.close();
+              } catch (_) {
+              }
+              return { url: null, errors };
+            }
+            cancelAllInFlight();
+            currentUrl = instance.url;
+            tunnelInstance = instance;
+            instance.onClose(() => {
+              if (tunnelInstance !== instance) return;
+              console.log(`[LS] Tunnel closed (${provider.name})`);
+              tunnelInstance = null;
+              currentUrl = null;
+              if (!intentionalStop) {
+                tryRestart(port).catch(() => {
+                });
+              }
+            });
+            instance.onError((err) => {
+              console.error(`[LS] Tunnel error (${provider.name}):`, err);
+            });
+            console.log(`[LS] Tunnel started via ${provider.name}: ${currentUrl}`);
+            return { url: currentUrl, errors: [] };
+          } catch (e) {
+            if (generation !== tunnelGeneration) {
+              return { url: null, errors };
+            }
+            cancelAllInFlight();
+            if (intentionalStop) {
+              return { url: null, errors };
+            }
+            const msg = `${provider.name}: ${e.message || e}`;
+            errors.push(msg);
+            console.warn(
+              `[LS] Tunnel provider ${provider.name} failed: ${e.message || e}`
+            );
+          }
+        }
+        console.error("[LS] All tunnel providers failed");
+        return { url: null, errors };
+      } finally {
+        if (generation === tunnelGeneration) {
+          tunnelStarting = false;
+          if (installRetryPending) {
+            installRetryPending = false;
+            if (!tunnelInstance && !intentionalStop) {
+              console.log("[LS] Retrying tunnel after cloudflared install");
+              tryRestart(port).catch(() => {
+              });
+            }
+          }
         }
       }
-      console.error("[LS] All tunnel providers failed");
-      return { url: null, errors };
     }
-    function getTunnelUrl() {
-      return currentUrl;
+    async function tryRestart(port) {
+      if (tunnelStarting || intentionalStop) return;
+      if (restartAttempts >= MAX_RESTART_ATTEMPTS) {
+        console.error("[LS] Tunnel restart limit reached");
+        if (urlChangeCallback) urlChangeCallback(null);
+        return;
+      }
+      restartAttempts++;
+      console.log(
+        `[LS] Attempting tunnel restart (${restartAttempts}/${MAX_RESTART_ATTEMPTS})...`
+      );
+      const result = await startTunnel(port, true);
+      if (result.url) {
+        console.log(`[LS] Tunnel restarted: ${result.url}`);
+        restartAttempts = 0;
+        if (urlChangeCallback) urlChangeCallback(result.url);
+      } else if (!tunnelStarting && !intentionalStop) {
+        console.error("[LS] Tunnel restart failed");
+        if (urlChangeCallback) urlChangeCallback(null);
+      }
+    }
+    function setUrlChangeCallback(cb) {
+      urlChangeCallback = cb;
     }
     function stopTunnel() {
+      tunnelGeneration++;
       cancelAllInFlight();
-      if (tunnelInstance) {
+      const inst = tunnelInstance;
+      tunnelInstance = null;
+      currentUrl = null;
+      tunnelStarting = false;
+      installRetryPending = false;
+      if (inst) {
         try {
-          tunnelInstance.close();
+          inst.close();
         } catch (e) {
           console.error("[LS] Error closing tunnel:", e);
         }
-        tunnelInstance = null;
-        currentUrl = null;
-        currentProviderName = null;
       }
+      intentionalStop = true;
     }
-    module2.exports = { startTunnel, getTunnelUrl, stopTunnel };
+    module2.exports = { startTunnel, stopTunnel, setUrlChangeCallback };
   }
 });
 
@@ -28055,7 +29554,8 @@ var require_net = __commonJS({
   "js/net.js"(exports2, module2) {
     var client = require_client();
     var server = require_server2();
-    var tunnel = require_tunnel();
+    var tunnel = require_tunnel2();
+    var fachada2 = require_fachada();
     var am_i_hosting = false;
     var am_i_connected = false;
     var activeTunnelUrl = null;
@@ -28094,12 +29594,19 @@ var require_net = __commonJS({
         await server.startServer(server.defaultPort);
         if (mode === "tunnel") {
           const port = server.getServerPort();
+          tunnel.setUrlChangeCallback((newUrl) => {
+            activeTunnelUrl = newUrl;
+            if (newUrl) {
+              fachada2.INFO("Tunnel URL changed: " + newUrl);
+            } else {
+              fachada2.WARN("Tunnel unavailable \u2014 LAN only.");
+            }
+          });
           const result = await tunnel.startTunnel(port);
           if (result.url) {
             activeTunnelUrl = result.url;
             console.log(`[LS] Tunnel URL: ${activeTunnelUrl}`);
           } else {
-            const fachada2 = require_fachada();
             const detail = result.errors.length > 0 ? " (" + result.errors.join("; ") + ")" : "";
             fachada2.WARN("Tunnel unavailable \u2014 LAN only." + detail);
           }
@@ -28155,10 +29662,8 @@ var require_net = __commonJS({
       resetSessionState();
     }
     function stopActiveTunnel() {
-      if (activeTunnelUrl) {
-        tunnel.stopTunnel();
-        activeTunnelUrl = null;
-      }
+      tunnel.stopTunnel();
+      activeTunnelUrl = null;
     }
     function endSession2() {
       if (am_i_connected) {
@@ -28207,12 +29712,6 @@ var require_net = __commonJS({
 var require_user_panel = __commonJS({
   "js/user-panel.js"(exports2, module2) {
     var client = require_client();
-    var WorkspaceManager;
-    try {
-      WorkspaceManager = brackets.getModule("view/WorkspaceManager");
-    } catch (e) {
-      WorkspaceManager = null;
-    }
     var UserPanel2 = class {
       constructor() {
         this.id = "liveshare.userpanel";
@@ -28434,7 +29933,6 @@ var require_user_panel = __commonJS({
 // main_src.js
 var fachada = require_fachada();
 var net = require_net();
-var flatted = require_cjs6();
 var UserPanel = require_user_panel();
 var userPanel = new UserPanel();
 async function startSession() {

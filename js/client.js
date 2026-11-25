@@ -14,32 +14,48 @@ let activeHighlights = {};
 let followingUserId = null;
 let userUpdateCallback = null;
 let originalGridVisible = true;
-let originalBackground = '';
 let followOverlay = null;
 let followStyleElement = null;
 
-let lastKnownMouse = { x: 0, y: 0, diagram: null };
+let lastKnownMouse = { x: null, y: null, diagram: null };
 let lastSentViewport = { originX: 0, originY: 0, zoom: 0, diagram: null };
 let lastViewportSyncTime = 0;
 let viewportWatcherInterval = null;
+const SIDEBAR_WIDTH = 220;
 const VIEWPORT_SYNC_THROTTLE = 30;
 const VIEWPORT_CHECK_INTERVAL = 50;
-
-let targetCamera = { x: 0, y: 0, zoom: 1, diagram: null };
-let currentCamera = { x: 0, y: 0, zoom: 1 };
-let followAnimationFrame = null;
-
-const ZOOM_PRECISION = 0.001;
-const SCROLL_PRECISION = 1.0;
+const REMOTE_OP_DEBOUNCE_MS = 150;
+const PROMOTION_DOC_TIMEOUT_MS = 4000;
 const LERP_SPEED = 0.3;
 
+let targetCamera = { x: 0, y: 0, zoom: 1, diagram: null };
+let followAnimationFrame = null;
+let promotionDocTimer = null;
+
+const ZOOM_PRECISION = 0.001;
+
 let lastAppliedSeq = 0;
+let documentSynced = false;
+let documentLoaded = false;
+let lastKnownRoomSeq = 0;
+let ownOpLog = [];
+let retainedRoom = null;
+let retainedSeq = 0;
 let selectionDebounceTimer = null;
+let remoteOpEndTime = 0;
+let pendingGapOp = null;
+let lastFailedApplySeq = null;
+let lastFailedApplyAt = 0;
+const MAX_OWN_OP_LOG = 200;
+let syncOpEmissionCount = 0;
+let syncAckCount = 0;
+let serverSupportsSyncAck = false;
 let currentLatency = -1;
 let latencyUpdateCallback = null;
 
 async function connectToServer(url, name, roomid) {
   removeChangesHook();
+  serverSupportsSyncAck = false;
 
   return new Promise((resolve, reject) => {
     socket = io(url, {
@@ -65,19 +81,43 @@ async function connectToServer(url, name, roomid) {
       data.forEach((u) => {
         if (!users[u.id]) users[u.id] = u.name;
       });
+      if (am_i_host && data.length === 0 && !documentLoaded) {
+        documentLoaded = true;
+        socket.emit('doc-ready', { seq: lastAppliedSeq });
+      }
       if (userUpdateCallback) userUpdateCallback();
     });
 
     socket.on('is-host', (is_host) => {
+      const wasHost = am_i_host;
       am_i_host = is_host;
-      if (!am_i_host) fachada.disableHostOptions();
-      if (am_i_host) fachada.hideLoadingOverlay();
-      if (am_i_host) fachada.INFO("You're the host");
+      if (!am_i_host) {
+        fachada.disableHostOptions();
+        return;
+      }
+      fachada.enableHostOptions();
+      fachada.INFO("You're the host");
+      if (!wasHost && documentLoaded) {
+        fachada.showLoadingOverlay();
+        if (promotionDocTimer) clearTimeout(promotionDocTimer);
+        promotionDocTimer = setTimeout(() => {
+          promotionDocTimer = null;
+          fachada.hideLoadingOverlay();
+        }, PROMOTION_DOC_TIMEOUT_MS);
+      }
+      documentSynced = true;
     });
 
     socket.on('host-left', () => {
       console.log('[LS] Host left, session continues with new host');
       fachada.WARN('Host changed. A new host has been assigned.');
+    });
+
+    socket.on('new-host', (newHostId) => {
+      console.log('[LS] New host assigned:', newHostId);
+      if (users[newHostId]) {
+        fachada.INFO(`${users[newHostId]} is now the host`);
+      }
     });
 
     socket.on('room-assigned', async (id) => {
@@ -95,13 +135,50 @@ async function connectToServer(url, name, roomid) {
     });
 
     socket.on('room-seq', (currentSeq) => {
-      if (currentSeq < lastAppliedSeq) {
+      lastKnownRoomSeq = currentSeq;
+      const retainedRegressed =
+        current_room === retainedRoom &&
+        retainedSeq > 0 &&
+        currentSeq < retainedSeq;
+      if (
+        (currentSeq < lastAppliedSeq || retainedRegressed) &&
+        documentLoaded
+      ) {
         console.log(
-          `[LS] Sequence reset: was ${lastAppliedSeq}, now ${currentSeq}`,
+          `[LS] Sequence reset: was ${Math.max(lastAppliedSeq, retainedSeq)}, now ${currentSeq}`,
         );
         lastAppliedSeq = 0;
+        documentSynced = false;
+        documentLoaded = false;
+        pendingGapOp = null;
+        lastFailedApplySeq = null;
+        lastFailedApplyAt = 0;
+        ownOpLog = [];
+        retainedRoom = null;
+        retainedSeq = 0;
+        requestDocument();
       }
-      if (currentSeq > lastAppliedSeq) {
+      if (
+        currentSeq > lastAppliedSeq &&
+        documentSynced &&
+        documentLoaded &&
+        !pendingGapOp
+      ) {
+        if (current_room === retainedRoom && retainedSeq > 0) {
+          if (currentSeq <= retainedSeq) {
+            console.log(
+              `[LS] Retained repo already has ops up to ${retainedSeq}, advancing`,
+            );
+            lastAppliedSeq = currentSeq;
+            return;
+          }
+          console.log(
+            `[LS] Room advanced beyond retained ${retainedSeq}, catching up`,
+          );
+          lastAppliedSeq = Math.max(lastAppliedSeq, retainedSeq);
+          retainedRoom = null;
+          retainedSeq = 0;
+        }
         console.log(
           `[LS] Requesting missed ops: ${lastAppliedSeq + 1} to ${currentSeq}`,
         );
@@ -110,12 +187,99 @@ async function connectToServer(url, name, roomid) {
     });
 
     socket.on('missed-ops', (data) => {
-      if (!data.ops || data.ops.length === 0) return;
+      const gapOp = pendingGapOp;
+      pendingGapOp = null;
+      if (!data.ops || data.ops.length === 0) {
+        if (gapOp) {
+          console.warn('[LS] Missed ops reply empty, dropped queued gap op');
+        }
+        if (lastKnownRoomSeq > lastAppliedSeq) {
+          console.warn('[LS] Missed ops unavailable, requesting full document');
+          requestDocument();
+        }
+        return;
+      }
       console.log(`[LS] Applying ${data.ops.length} missed operations`);
       data.ops.sort((a, b) => a.seq - b.seq);
+      let expectedSeq = lastAppliedSeq;
+      let headGap = false;
+      for (const entry of data.ops) {
+        if (entry.seq <= expectedSeq) continue;
+        if (entry.seq > expectedSeq + 1) {
+          headGap = true;
+          break;
+        }
+        expectedSeq = entry.seq;
+      }
+      if (headGap) {
+        console.warn(
+          '[LS] Missed ops reply is not contiguous (history pruned), requesting full document',
+        );
+        requestDocument();
+        return;
+      }
+      let applyFailed = false;
+      let failedSeq = null;
       data.ops.forEach((entry) => {
-        applyRemoteOperationWithSeq(entry.seq, entry.operation);
+        if (entry.socketId === socket.id) {
+          if (applyFailed) return;
+          lastAppliedSeq = Math.max(lastAppliedSeq, entry.seq);
+          return;
+        }
+        if (entry.seq <= lastAppliedSeq) return;
+        if (!applyRemoteOperationWithSeq(entry.seq, entry.operation)) {
+          applyFailed = true;
+          if (failedSeq === null) failedSeq = entry.seq;
+        }
       });
+      if (applyFailed) {
+        const repeatedWithinWindow =
+          failedSeq === lastFailedApplySeq &&
+          Date.now() - lastFailedApplyAt < 5000;
+        if (repeatedWithinWindow) {
+          console.error(
+            `[LS] Operation ${failedSeq} failed again, not requesting another document yet`,
+          );
+          return;
+        }
+        lastFailedApplySeq = failedSeq;
+        lastFailedApplyAt = Date.now();
+        console.warn(
+          '[LS] Failed to apply a missed operation, requesting full document',
+        );
+        requestDocument(true);
+        return;
+      }
+      lastFailedApplySeq = null;
+      if (lastAppliedSeq < lastKnownRoomSeq) {
+        const roomSeqAtReply = lastKnownRoomSeq;
+        setTimeout(() => {
+          if (lastAppliedSeq < roomSeqAtReply && socket && socket.connected) {
+            console.warn(
+              '[LS] Missed ops partial (history pruned), requesting full document',
+            );
+            requestDocument();
+          }
+        }, 300);
+        return;
+      }
+      if (gapOp && !data.ops.some((entry) => entry.seq === gapOp.seq)) {
+        console.warn(
+          `[LS] Gap op seq ${gapOp.seq} not in history, requesting full document`,
+        );
+        if (lastKnownRoomSeq > lastAppliedSeq) requestDocument();
+      }
+    });
+
+    socket.on('sync-ack', (data) => {
+      serverSupportsSyncAck = true;
+      syncAckCount++;
+      const entry = ownOpLog.find((e) => e.emitIdx === syncAckCount - 1);
+      if (entry) entry.seq = data.seq;
+    });
+
+    socket.on('sync-capabilities', (caps) => {
+      serverSupportsSyncAck = caps && caps.syncAck === true;
     });
 
     socket.on('update-mouse-pos', (data) => {
@@ -144,6 +308,7 @@ async function connectToServer(url, name, roomid) {
     socket.on('follower-sync-data', (data) => {
       if (followingUserId === data.id) {
         const viewportData = data.viewportData || data;
+
         applyViewportSync(
           {
             id: data.id,
@@ -167,6 +332,8 @@ async function connectToServer(url, name, roomid) {
         socket.emit('host-delivers-document', {
           to: data.requesterId,
           json: str,
+          seq: lastAppliedSeq,
+          forEviction: data.forEviction === true,
         });
       } catch (err) {
         fachada.ERR('Error sending whole document.');
@@ -174,6 +341,21 @@ async function connectToServer(url, name, roomid) {
     });
 
     socket.on('load-whole-document', (data) => {
+      const wasLoaded = documentLoaded;
+      if (promotionDocTimer) {
+        clearTimeout(promotionDocTimer);
+        promotionDocTimer = null;
+      }
+      if (data.seq !== undefined && data.seq <= lastAppliedSeq && documentLoaded) {
+        const evictionLoad =
+          data.forEviction === true && current_room !== retainedRoom;
+        if (!evictionLoad) {
+          ownOpLog = [];
+          socket.emit('doc-ready', { seq: lastAppliedSeq });
+          fachada.hideLoadingOverlay();
+          return;
+        }
+      }
       try {
         const projectObj = flatted.parse(data.json);
 
@@ -193,8 +375,11 @@ async function connectToServer(url, name, roomid) {
         }
 
         app.repository.bypassConfirmation = true;
-        app.project.loadFromJson(projectObj);
-        app.repository.bypassConfirmation = false;
+        try {
+          app.project.loadFromJson(projectObj);
+        } finally {
+          app.repository.bypassConfirmation = false;
+        }
 
         try {
           openDiagramIds.forEach((id) => {
@@ -213,6 +398,48 @@ async function connectToServer(url, name, roomid) {
           console.warn('[LS] Could not restore workspace state', e);
         }
 
+        if (data.seq !== undefined) {
+          lastAppliedSeq = data.seq;
+        }
+        documentSynced = true;
+        documentLoaded = true;
+        pendingGapOp = null;
+        lastFailedApplySeq = null;
+        lastFailedApplyAt = 0;
+        retainedRoom = null;
+        retainedSeq = 0;
+
+        const pendingOwnOps = ownOpLog;
+        ownOpLog = [];
+        const loadedSeq = data.seq !== undefined ? data.seq : lastAppliedSeq;
+        remoteOpInProgress = true;
+        try {
+          pendingOwnOps.forEach((entry) => {
+            // seq <= loadedSeq means the snapshot already contains that op.
+            // seq === null means the ack did not arrive before the snapshot.
+            // With an older server (no sync acks), unknown ops are only
+            // replayed while the initial document is loading; after that they
+            // may already be in the snapshot, so replaying would duplicate.
+            if (entry.seq !== null && entry.seq <= loadedSeq) return;
+            if (entry.seq === null && !serverSupportsSyncAck && wasLoaded) {
+              return;
+            }
+            try {
+              app.repository.doOperation(entry.operation);
+            } catch (e) {
+              console.warn('[LS] Replay pending own op failed:', e);
+            }
+          });
+        } finally {
+          remoteOpInProgress = false;
+        }
+        app.diagrams.repaint();
+        updateAllHighlights();
+        socket.emit('doc-ready', { seq: lastAppliedSeq });
+
+        if (data.seq !== undefined && lastKnownRoomSeq > data.seq) {
+          socket.emit('request-missed-ops', { fromSeq: data.seq });
+        }
         fachada.INFO('Document synchronized.');
       } catch (err) {
         fachada.ERR('Error loading remote document:', err);
@@ -223,20 +450,46 @@ async function connectToServer(url, name, roomid) {
     });
 
     socket.on('remote-operation', (data) => {
-      remoteOpInProgress = true;
-      try {
-        const isOwn = data.socketId === socket.id;
-        if (!isOwn) {
-          const operation = flatted.parse(data.operation);
-          app.repository.doOperation(operation);
+      const isOwn = data.socketId === socket.id;
+      if (isOwn) {
+        if (documentSynced && data.seq > lastAppliedSeq && !pendingGapOp) {
+          lastAppliedSeq = data.seq;
         }
-        lastAppliedSeq = data.seq;
         app.diagrams.repaint();
         updateAllHighlights();
+        return;
+      }
+
+      if (data.seq <= lastAppliedSeq) return;
+
+      if (!documentSynced) return;
+
+      if (data.seq > lastAppliedSeq + 1) {
+        const hadGap = !!pendingGapOp;
+        if (!hadGap || data.seq > pendingGapOp.seq) {
+          pendingGapOp = { operation: data.operation, seq: data.seq };
+        }
+        if (!hadGap) {
+          console.log(
+            `[LS] Detected gap: ${lastAppliedSeq} -> ${data.seq}, queuing op and requesting missed ops`,
+          );
+          socket.emit('request-missed-ops', { fromSeq: lastAppliedSeq });
+        }
+        return;
+      }
+
+      remoteOpInProgress = true;
+      try {
+        const operation = flatted.parse(data.operation);
+        app.repository.doOperation(operation);
+        lastAppliedSeq = data.seq;
       } catch (err) {
         console.error('[LS] Operation Error:', err);
       } finally {
         remoteOpInProgress = false;
+        remoteOpEndTime = Date.now();
+        app.diagrams.repaint();
+        updateAllHighlights();
       }
     });
 
@@ -264,18 +517,12 @@ async function connectToServer(url, name, roomid) {
 
     socket.on('connect', () => {
       address = url;
+      // Acks for ops emitted before a reconnect are lost with the old socket.
+      // Align the counters so the next ack still maps to its own emission.
+      syncAckCount = syncOpEmissionCount;
       cursors.addMouseMovementSharing(sendMousePosition);
       fachada.showLoadingOverlay();
-      if (socket.recovered) {
-        fachada.INFO('Connection recovered!');
-      }
       startPingMeasurement();
-      if (socket.io && socket.io.engine) {
-        socket.io.engine.on('pong', (latency) => {
-          currentLatency = Math.round(latency);
-          if (latencyUpdateCallback) latencyUpdateCallback(currentLatency);
-        });
-      }
     });
 
     socket.on('disconnect', (reason) => {
@@ -311,52 +558,81 @@ async function connectToServer(url, name, roomid) {
 }
 
 function applyRemoteOperationWithSeq(seq, opStr) {
-  if (seq <= lastAppliedSeq) return;
+  if (seq <= lastAppliedSeq) return true;
   remoteOpInProgress = true;
   try {
     const operation = flatted.parse(opStr);
     app.repository.doOperation(operation);
     lastAppliedSeq = seq;
-    app.diagrams.repaint();
-    updateAllHighlights();
+    return true;
   } catch (err) {
     console.error('[LS] Operation Error:', err);
+    return false;
   } finally {
     remoteOpInProgress = false;
+    remoteOpEndTime = Date.now();
+    app.diagrams.repaint();
+    updateAllHighlights();
   }
 }
 
 const handleOperation = (operation) => {
   if (remoteOpInProgress || app.repository.bypassConfirmation) return;
   if (socket && socket.connected && current_room) {
+    // Keep a bounded log of own ops since the last document load. It is
+    // replayed after a load that could have replaced local edits (promotion,
+    // resync, reconnect); the ack seq lets the replay skip ops already in
+    // the delivered snapshot.
+    if (ownOpLog.length >= MAX_OWN_OP_LOG) {
+      const ackedIdx = ownOpLog.findIndex((e) => e.seq !== null);
+      if (ackedIdx !== -1) {
+        ownOpLog.splice(ackedIdx, 1);
+      } else if (!serverSupportsSyncAck) {
+        // Legacy server: no acks, so the log cannot be replayed reliably.
+        // Keep a hard bound; with acks, keep unacked edits (soft cap).
+        ownOpLog.shift();
+      }
+    }
+    ownOpLog.push({
+      operation,
+      seq: null,
+      emitIdx: syncOpEmissionCount,
+    });
     const str = flatted.stringify(operation);
     socket.emit('sync-operation', str);
+    syncOpEmissionCount++;
   }
 };
 
 const handleSelection = (models, views) => {
   if (!socket || !socket.connected) return;
-  if (remoteOpInProgress) return;
+
+  const viewIds = views && views.length > 0
+    ? views.map((v) => v._id)
+    : null;
 
   if (selectionDebounceTimer) {
     clearTimeout(selectionDebounceTimer);
   }
 
-  selectionDebounceTimer = setTimeout(() => {
+  const emitLockChange = () => {
+    if (remoteOpInProgress) {
+      selectionDebounceTimer = setTimeout(emitLockChange, 50);
+      return;
+    }
     selectionDebounceTimer = null;
-    if (views && views.length > 0) {
-      socket.emit(
-        'lock-element',
-        views.map((v) => v._id),
-      );
+    if (viewIds) {
+      socket.emit('lock-element', viewIds);
     } else {
       socket.emit('unlock-elements');
     }
-  }, 80);
-};
+  };
 
-const handleCommands = (commandId) => {
-  if (remoteOpInProgress || !socket || !socket.connected) return;
+  const wait = Math.max(
+    80,
+    remoteOpEndTime + REMOTE_OP_DEBOUNCE_MS - Date.now(),
+  );
+  selectionDebounceTimer = setTimeout(emitLockChange, wait);
 };
 
 function onDiagramChanged() {
@@ -368,7 +644,6 @@ function addChangesHook() {
   removeChangesHook();
 
   app.repository.on('operationExecuted', handleOperation);
-  app.commands.on('afterExecute', handleCommands);
   app.selections.on('selectionChanged', handleSelection);
   app.diagrams.on('currentDiagramChanged', onDiagramChanged);
 
@@ -424,8 +699,6 @@ function startViewportWatcher() {
 
     if (!lastKnownMouse.diagram) {
       lastKnownMouse.diagram = currentDiagram._id;
-      lastKnownMouse.x = currentDiagram._originX;
-      lastKnownMouse.y = currentDiagram._originY;
     }
   }
 
@@ -445,14 +718,16 @@ function stopViewportWatcher() {
 function syncViewportThrottled() {
   const now = Date.now();
   if (now - lastViewportSyncTime >= VIEWPORT_SYNC_THROTTLE) {
-    sendMousePosition(lastKnownMouse);
+    const hasMouse =
+      lastKnownMouse.x != null && lastKnownMouse.y != null;
+    const payload = hasMouse ? lastKnownMouse : getCurrentViewportData();
+    if (payload) sendMousePosition(payload);
     lastViewportSyncTime = now;
   }
 }
 
 function removeChangesHook() {
   app.repository.off('operationExecuted', handleOperation);
-  app.commands.off('afterExecute', handleCommands);
   app.selections.off('selectionChanged', handleSelection);
   app.diagrams.off('currentDiagramChanged', onDiagramChanged);
 
@@ -461,24 +736,51 @@ function removeChangesHook() {
     diagramArea.removeEventListener('wheel', onDiagramWheel);
     diagramArea.removeEventListener('mousedown', onDiagramMouseDown);
   }
+
+  cleanupPanListeners();
 }
 
 let isPanning = false;
+let panningSafetyTimer = null;
+let panMoveHandler = null;
+let panUpHandler = null;
+
+function cleanupPanListeners() {
+  if (panMoveHandler) {
+    window.removeEventListener('mousemove', panMoveHandler);
+    panMoveHandler = null;
+  }
+  if (panUpHandler) {
+    window.removeEventListener('mouseup', panUpHandler);
+    panUpHandler = null;
+  }
+  if (panningSafetyTimer) {
+    clearTimeout(panningSafetyTimer);
+    panningSafetyTimer = null;
+  }
+  isPanning = false;
+}
+
 function onDiagramMouseDown() {
+  cleanupPanListeners();
   isPanning = true;
-  const onMouseMove = () => {
+  const armPanningSafety = () => {
+    if (panningSafetyTimer) clearTimeout(panningSafetyTimer);
+    panningSafetyTimer = setTimeout(cleanupPanListeners, 3000);
+  };
+  panMoveHandler = () => {
     if (isPanning) {
+      armPanningSafety();
       updateAllHighlights();
       syncViewportThrottled();
     }
   };
-  const onMouseUp = () => {
-    isPanning = false;
-    window.removeEventListener('mousemove', onMouseMove);
-    window.removeEventListener('mouseup', onMouseUp);
+  panUpHandler = () => {
+    cleanupPanListeners();
   };
-  window.addEventListener('mousemove', onMouseMove);
-  window.addEventListener('mouseup', onMouseUp);
+  window.addEventListener('mousemove', panMoveHandler);
+  window.addEventListener('mouseup', panUpHandler);
+  armPanningSafety();
 }
 
 function highlightElement(viewId, color) {
@@ -559,6 +861,8 @@ function sendMousePosition(mouseData) {
   try {
     const { x, y, diagram } = mouseData;
 
+    if (x == null || y == null) return;
+
     lastKnownMouse.x = x;
     lastKnownMouse.y = y;
     lastKnownMouse.diagram = diagram;
@@ -582,7 +886,11 @@ function sendMousePosition(mouseData) {
   }
 }
 
-function requestDocument() {
+function requestDocument(fromFailure = false) {
+  if (!fromFailure) {
+    lastFailedApplySeq = null;
+    lastFailedApplyAt = 0;
+  }
   if (!(socket && socket.connected)) return;
   fachada.showLoadingOverlay();
   socket.emit('request-doc');
@@ -620,6 +928,8 @@ function disconnect() {
   }
   currentLatency = -1;
   address = '';
+  retainedRoom = current_room;
+  retainedSeq = lastAppliedSeq;
   current_room = null;
   stopViewportWatcher();
   removeAllHighlights();
@@ -632,11 +942,28 @@ function disconnect() {
   am_i_host = false;
   followingUserId = null;
   remoteOpInProgress = false;
+  lastAppliedSeq = 0;
+  documentSynced = false;
+  documentLoaded = false;
+  lastKnownRoomSeq = 0;
+  ownOpLog = [];
+  syncOpEmissionCount = 0;
+  syncAckCount = 0;
+  serverSupportsSyncAck = false;
+  remoteOpEndTime = 0;
+  pendingGapOp = null;
+  lastFailedApplySeq = null;
+  lastFailedApplyAt = 0;
+  if (promotionDocTimer) {
+    clearTimeout(promotionDocTimer);
+    promotionDocTimer = null;
+  }
 
   if (selectionDebounceTimer) {
     clearTimeout(selectionDebounceTimer);
     selectionDebounceTimer = null;
   }
+  cleanupPanListeners();
 
   notifyDisconnect();
 }
@@ -678,7 +1005,6 @@ function setFollowingUserId(id) {
     }
 
     removeFollowEffects();
-    stopFollowAnimation();
   } else if (!followingUserId && id) {
     try {
       originalGridVisible = app.preferences.get('diagramEditor.showGrid');
@@ -689,9 +1015,10 @@ function setFollowingUserId(id) {
 
     const diag = app.diagrams.getCurrentDiagram();
     if (diag) {
-      currentCamera.x = diag._originX;
-      currentCamera.y = diag._originY;
-      currentCamera.zoom = app.diagrams.getZoomLevel();
+      // Initialize the follow target from the current viewport.
+      targetCamera.x = diag._originX;
+      targetCamera.y = diag._originY;
+      targetCamera.zoom = app.diagrams.getZoomLevel();
     }
     applyFollowEffects(id);
 
@@ -713,13 +1040,21 @@ function getCurrentViewportData() {
   try {
     const currentDiagram = app.diagrams.getCurrentDiagram();
     const zoom = app.diagrams.getZoomLevel();
+    const diagramArea = app.diagrams.$diagramArea[0];
+    const canvas = diagramArea ? diagramArea.querySelector('svg') : null;
+    const vw = canvas ? canvas.clientWidth : window.innerWidth - SIDEBAR_WIDTH;
+    const vh = canvas ? canvas.clientHeight : window.innerHeight;
+    const originX = currentDiagram ? currentDiagram._originX : 0;
+    const originY = currentDiagram ? currentDiagram._originY : 0;
+    const centerX = originX + vw / 2 / zoom;
+    const centerY = originY + vh / 2 / zoom;
     return {
-      x: lastKnownMouse.x,
-      y: lastKnownMouse.y,
+      x: lastKnownMouse.x != null ? lastKnownMouse.x : centerX,
+      y: lastKnownMouse.y != null ? lastKnownMouse.y : centerY,
       diagram: currentDiagram ? currentDiagram._id : null,
       zoom: zoom,
-      originX: currentDiagram ? currentDiagram._originX : 0,
-      originY: currentDiagram ? currentDiagram._originY : 0,
+      originX: originX,
+      originY: originY,
     };
   } catch (e) {
     console.error('[LS] Error getting current viewport data:', e);
@@ -727,7 +1062,37 @@ function getCurrentViewportData() {
   }
 }
 
-const FOLLOW_SCROLL_THRESHOLD = 200;
+const FOLLOW_SCROLL_THRESHOLD = 100;
+
+function startFollowAnimation() {
+  if (followAnimationFrame) return;
+
+  function animate() {
+    followAnimationFrame = null;
+    const diag = app.diagrams.getCurrentDiagram();
+    if (!diag || !followingUserId) return;
+
+    const dx = targetCamera.x - diag._originX;
+    const dy = targetCamera.y - diag._originY;
+    const dz = targetCamera.zoom - app.diagrams.getZoomLevel();
+
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(dz) < 0.001) {
+      return;
+    }
+
+    if (Math.abs(dz) > 0.001) {
+      app.diagrams.setZoomLevel(app.diagrams.getZoomLevel() + dz * LERP_SPEED);
+    }
+    app.diagrams.scrollTo(
+      diag._originX + dx * LERP_SPEED,
+      diag._originY + dy * LERP_SPEED,
+    );
+
+    followAnimationFrame = requestAnimationFrame(animate);
+  }
+
+  followAnimationFrame = requestAnimationFrame(animate);
+}
 
 function applyViewportSync(data, force = false) {
   try {
@@ -749,7 +1114,7 @@ function applyViewportSync(data, force = false) {
 
     const diagramArea = app.diagrams.$diagramArea[0];
     const canvas = diagramArea ? diagramArea.querySelector('svg') : null;
-    const viewWidth = canvas ? canvas.clientWidth : window.innerWidth - 220;
+    const viewWidth = canvas ? canvas.clientWidth : window.innerWidth - SIDEBAR_WIDTH;
     const viewHeight = canvas ? canvas.clientHeight : window.innerHeight;
     const targetOriginX = mouseX - viewWidth / 2 / zoom;
     const targetOriginY = mouseY - viewHeight / 2 / zoom;
@@ -762,9 +1127,6 @@ function applyViewportSync(data, force = false) {
       if (targetDiag && targetDiag instanceof type.Diagram) {
         app.diagrams.setCurrentDiagram(targetDiag);
         app.diagrams.repaint();
-        currentCamera.x = targetOriginX;
-        currentCamera.y = targetOriginY;
-        currentCamera.zoom = zoom;
       }
     }
 
@@ -791,55 +1153,13 @@ function applyViewportSync(data, force = false) {
     if (shouldScroll) {
       if (zoomDiff > ZOOM_PRECISION || force) {
         app.diagrams.setZoomLevel(targetCamera.zoom);
-        currentCamera.zoom = targetCamera.zoom;
       }
-
       startFollowAnimation();
 
       updateAllHighlights();
     }
   } catch (e) {
     console.error('[LS] Error syncing viewport following user:', e);
-  }
-}
-
-function startFollowAnimation() {
-  if (followAnimationFrame) return;
-
-  function animate() {
-    const diag = app.diagrams.getCurrentDiagram();
-    if (!diag || !followingUserId) {
-      followAnimationFrame = null;
-      return;
-    }
-
-    const dx = targetCamera.x - diag._originX;
-    const dy = targetCamera.y - diag._originY;
-    const dz = targetCamera.zoom - app.diagrams.getZoomLevel();
-
-    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(dz) < 0.001) {
-      followAnimationFrame = null;
-      return;
-    }
-
-    if (Math.abs(dz) > 0.001) {
-      app.diagrams.setZoomLevel(app.diagrams.getZoomLevel() + dz * LERP_SPEED);
-    }
-    app.diagrams.scrollTo(
-      diag._originX + dx * LERP_SPEED,
-      diag._originY + dy * LERP_SPEED,
-    );
-
-    followAnimationFrame = requestAnimationFrame(animate);
-  }
-
-  followAnimationFrame = requestAnimationFrame(animate);
-}
-
-function stopFollowAnimation() {
-  if (followAnimationFrame) {
-    cancelAnimationFrame(followAnimationFrame);
-    followAnimationFrame = null;
   }
 }
 

@@ -1,6 +1,5 @@
 const fachada = require('./js/fachada.js');
 const net = require('./js/net.js');
-const flatted = require('flatted'); //stringify json
 const UserPanel = require('./js/user-panel.js');
 
 const userPanel = new UserPanel();
@@ -107,7 +106,6 @@ function init() {
   app.commands.register('liveshare:pa', () => {
     console.log(app);
     console.log(app.project.getProject());
-    // console.log(flatted.stringify(app));
   });
 
   app.menu.updateStates(

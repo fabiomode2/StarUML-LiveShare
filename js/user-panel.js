@@ -1,12 +1,5 @@
 const client = require("./client.js");
 
-let WorkspaceManager;
-try {
-  WorkspaceManager = brackets.getModule("view/WorkspaceManager");
-} catch (e) {
-  WorkspaceManager = null;
-}
-
 class UserPanel {
   constructor() {
     this.id = "liveshare.userpanel";
